@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "App.Web", "App.Web\App.Web.csproj", "{F3ED2D1C-D0DA-4427-8584-8D9880800070}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NextAdminCommunity.Web", "NextAdminCommunity.Web\NextAdminCommunity.Web.csproj", "{F3ED2D1C-D0DA-4427-8584-8D9880800070}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "App.Windows", "App.Windows\App.Windows.csproj", "{B7CC7C96-DC45-4233-A09C-CBF98A5CC6AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NextAdminCommunity.Windows", "NextAdminCommunity.Windows\NextAdminCommunity.Windows.csproj", "{B7CC7C96-DC45-4233-A09C-CBF98A5CC6AB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NextAdmin.Core", "NextAdmin.Core\NextAdmin.Core.csproj", "{8FB495D8-A33E-4EC5-A8BF-7FDE8FAE4542}"
 EndProject

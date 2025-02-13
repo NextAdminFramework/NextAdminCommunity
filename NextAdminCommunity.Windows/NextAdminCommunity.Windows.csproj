@@ -1,0 +1,118 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon />
+    <StartupObject />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\css\all.css" Link="Content\Dependencies\Fonts\FontAwesome5Free\css\all.css" />
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\css\all.min.css" Link="Content\Dependencies\Fonts\FontAwesome5Free\css\all.min.css" />
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.eot" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.eot">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.ttf" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.woff" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.woff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.eot" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.eot">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.ttf" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.woff" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.woff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.eot" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.eot">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.ttf" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.woff" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.woff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\OpenSans-Regular.ttf" Link="Content\Dependencies\Fonts\OpenSans-Regular.ttf" />
+    <Content Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\Roboto-Regular.ttf" Link="Content\Dependencies\Fonts\Roboto-Regular.ttf" />
+    <Content Include="..\NextAdminCommunity.Web\Content\gcu_en.html" Link="Content\gcu_en.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\gcu_fr.html" Link="Content\gcu_fr.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Images\fav.png" Link="Content\Images\fav.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Images\login_bg.jpg" Link="Content\Images\login_bg.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\NextAdminCommunity.Web\Content\Images\logo.png" Link="Content\Images\logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1072.54" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NextAdminCommunity.Web\NextAdminCommunity.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Content\Dependencies\Fonts\FontAwesome5Free\css\" />
+    <Folder Include="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\" />
+    <Folder Include="Content\Dependencies\NextAdmin\" />
+    <Folder Include="Content\Images\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\NextAdminCommunity.Web\Content\App.js" Link="Content\App.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\App.js.map" Link="Content\App.js.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.svg" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.woff2" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-brands-400.woff2">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.svg" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.woff2" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-regular-400.woff2">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.svg" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.woff2" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.woff2">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\NextAdmin\NextAdmin.Core.d.ts" Link="Content\Dependencies\NextAdmin\NextAdmin.Core.d.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\NextAdmin\NextAdmin.Core.js" Link="Content\Dependencies\NextAdmin\NextAdmin.Core.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\NextAdmin\NextAdmin.Core.js.map" Link="Content\Dependencies\NextAdmin\NextAdmin.Core.js.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
