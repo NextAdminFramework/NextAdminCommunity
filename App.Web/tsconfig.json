@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "declaration": false,
+    "target": "ES2020",
+    "outFile": "Content/App.js"
+  },
+  "include": [
+    "licence.ts",
+    "Content/Dependencies/**/*",
+    "Models/**/*",
+    "ViewModels/**/*",
+    "Resources/**/*",
+    "Controllers/**/*",
+    "Views/**/*"
+  ]
+}

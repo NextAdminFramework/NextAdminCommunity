@@ -1,0 +1,77 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.1" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NextAdmin.Core\NextAdmin.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Base64DocumentEntity.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>Base64DocumentEntity.cs.d.ts</LastGenOutput>
+    </Compile>
+    <Compile Update="Entity.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>Entity.cs.d.ts</LastGenOutput>
+    </Compile>
+    <Compile Update="GuidEntity.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>GuidEntity.cs.d.ts</LastGenOutput>
+    </Compile>
+    <Compile Update="LongEntity.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>LongEntity.cs.d.ts</LastGenOutput>
+    </Compile>
+    <Compile Update="RightType.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>RightType.cs.d.ts</LastGenOutput>
+    </Compile>
+    <Compile Update="StrGuidEntity.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>StrGuidEntity.cs.d.ts</LastGenOutput>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Base64DocumentEntity.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Base64DocumentEntity.cs</DependentUpon>
+    </None>
+    <None Update="Entity.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Entity.cs</DependentUpon>
+    </None>
+    <None Update="GuidEntity.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>GuidEntity.cs</DependentUpon>
+    </None>
+    <None Update="LongEntity.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>LongEntity.cs</DependentUpon>
+    </None>
+    <None Update="RightType.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>RightType.cs</DependentUpon>
+    </None>
+    <None Update="StrGuidEntity.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>StrGuidEntity.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+
+</Project>

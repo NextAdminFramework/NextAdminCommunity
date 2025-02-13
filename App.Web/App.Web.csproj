@@ -1,0 +1,90 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<TypeScriptToolsVersion>4.3</TypeScriptToolsVersion>
+		<ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="Content\App.js.map" />
+		<None Remove="Views\Admin\Pages\ConcessionListPage.ts" />
+		<None Remove="Views\Admin\Pages\ConcessionTypeListPage.ts" />
+		<None Remove="Views\Admin\Pages\ContactListPage.ts" />
+		<None Remove="Views\Admin\Pages\CustomFieldPage.ts" />
+		<None Remove="Views\Admin\Pages\RightHolderListPage.ts" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <TypeScriptCompile Remove="licence.ts" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="licence.ts" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.9" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.9">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.9" />
+		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.3.2">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Controllers\AppController.cs">
+			<Generator></Generator>
+		</Compile>
+		<Compile Update="Models\AdminUser.cs">
+		  <Generator>DtsGenerator</Generator>
+		  <LastGenOutput>AdminUser.cs.d.ts</LastGenOutput>
+		</Compile>
+		<Compile Update="ViewModels\AdminAppConfig.cs">
+		  <Generator>DtsGenerator</Generator>
+		  <LastGenOutput>AdminAppConfig.cs.d.ts</LastGenOutput>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="ViewModels\AppConfig.d.ts">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AppConfig.cs</DependentUpon>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Content\**" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Content\Dependencies\NextAdmin\" />
+	  <Folder Include="Migrations\" />
+	  <Folder Include="Views\Admin\Modals\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\NextAdmin.Core.API\NextAdmin.Core.API.csproj" />
+	  <ProjectReference Include="..\NextAdmin.Core.Model\NextAdmin.Core.Model.csproj" />
+	  <ProjectReference Include="..\NextAdmin.Core\NextAdmin.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <TypeScriptCompile Update="Models\AdminUser.cs.d.ts">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>AdminUser.cs</DependentUpon>
+	  </TypeScriptCompile>
+	  <TypeScriptCompile Update="ViewModels\AdminAppConfig.cs.d.ts">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>AdminAppConfig.cs</DependentUpon>
+	  </TypeScriptCompile>
+	</ItemGroup>
+</Project>

@@ -1,0 +1,25 @@
+﻿@{
+    var appOptions = Model as NextAdminCommunity.Web.ViewModels.AdminAppOptions;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>@Html.Raw(appOptions?.AppName)</title>
+    <link rel="icon" type="image/png" href="/Content/Images/fav.png">
+    <link rel="stylesheet" href="/Content/Dependencies/Fonts/FontAwesome5Free/css/all.css" />
+    <script src="/Content/Dependencies/NextAdmin/NextAdmin.Core.js"></script>
+    <script src="/Content/App.js?nocache=@Guid.NewGuid().ToString()"></script>
+</head>
+<body>
+    <script type="text/javascript">
+        @if (appOptions != null && appOptions.RequestUrl != null)
+        {
+            @:history.replaceState(null, "@appOptions.RequestUrl", "@appOptions.RequestUrl")
+        }
+            new AdminAppController(JSON.parse(atob('@(NextAdmin.Core.Serialization.ToJSONBase64(appOptions, System.Text.Encoding.Latin1, true))'))).startApp();
+    </script>
+</body>
+</html>
+
