@@ -9,12 +9,11 @@
     <title>@Html.Raw(appOptions?.AppName)</title>
     <link rel="icon" type="image/png" href="/Content/Images/fav.png">
     <link rel="stylesheet" href="/Content/Dependencies/Fonts/FontAwesome5Free/css/all.css" />
-    <script src="/Content/Dependencies/NextAdmin/NextAdmin.Core.js"></script>
     <script src="/Content/App.js?nocache=@Guid.NewGuid().ToString()"></script>
 </head>
 <body>
     <script type="text/javascript">
-        @if (appOptions != null && appOptions.RequestUrl != null)
+        @if (appOptions?.RequestUrl != null)
         {
             @:history.replaceState(null, "@appOptions.RequestUrl", "@appOptions.RequestUrl")
         }

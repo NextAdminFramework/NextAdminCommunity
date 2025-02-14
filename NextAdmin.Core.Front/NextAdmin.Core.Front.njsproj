@@ -1,0 +1,194 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <Name>Next.Web.TS</Name>
+    <RootNamespace>Next.Web.TS</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>f1736c85-00ae-4a75-9296-fd5573877fa0</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>
+    </StartupFile>
+    <StartWebBrowser>False</StartWebBrowser>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
+    <EnableTypeScript>true</EnableTypeScript>
+    <StartWebBrowser>false</StartWebBrowser>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="package.json" />
+    <Content Include="tsconfig.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Out\" />
+    <Folder Include="Src\" />
+    <Folder Include="Src\Business\" />
+    <Folder Include="Src\Models\" />
+    <Folder Include="Src\Services\" />
+    <Folder Include="Src\Resources\" />
+    <Folder Include="Src\UI\" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="Src\Business\EntityHelper.ts" />
+    <TypeScriptCompile Include="Src\Models\Query.ts" />
+    <TypeScriptCompile Include="Src\FileExtension.ts" />
+    <TypeScriptCompile Include="licence.ts" />
+    <TypeScriptCompile Include="Src\Animation.ts" />
+    <TypeScriptCompile Include="Src\Array.ts" />
+    <TypeScriptCompile Include="Src\Business\QueryBuilder.ts" />
+    <TypeScriptCompile Include="Src\Cookies.ts" />
+    <TypeScriptCompile Include="Src\Copy.ts" />
+    <TypeScriptCompile Include="Src\CSV.ts" />
+    <TypeScriptCompile Include="Src\DateTime.ts" />
+    <TypeScriptCompile Include="Src\Models\ApiResponse.ts" />
+    <TypeScriptCompile Include="Src\Models\EntityInfo.ts" />
+    <TypeScriptCompile Include="Src\Models\SignUpUserArgs.ts" />
+    <TypeScriptCompile Include="Src\Models\ValueItem.ts" />
+    <TypeScriptCompile Include="Src\Business\DataController.ts" />
+    <TypeScriptCompile Include="Src\Business\DataControllerBase.ts" />
+    <TypeScriptCompile Include="Src\Business\DatasetController.ts" />
+    <TypeScriptCompile Include="Src\Business\EntityInfos.ts" />
+    <TypeScriptCompile Include="Src\Models\EntityArgs.ts" />
+    <TypeScriptCompile Include="Src\Resources\ResourcesEn.ts" />
+    <TypeScriptCompile Include="Src\Services\EntityClient.ts" />
+    <TypeScriptCompile Include="Src\Business\EntityDataController.ts" />
+    <TypeScriptCompile Include="Src\Business\EntityDatasetController.ts" />
+    <TypeScriptCompile Include="Src\Business\EntityDbSetHandler.ts" />
+    <TypeScriptCompile Include="Src\Models\EntityResponse.ts" />
+    <TypeScriptCompile Include="Src\Models\AuthTokenResponse.ts" />
+    <TypeScriptCompile Include="Src\Models\User.ts" />
+    <TypeScriptCompile Include="Src\Services\UserClient.ts" />
+    <TypeScriptCompile Include="Src\Models\UserResponse.ts" />
+    <TypeScriptCompile Include="Src\DateExtension.ts" />
+    <TypeScriptCompile Include="Src\DependenciesController.ts" />
+    <TypeScriptCompile Include="Src\Dictionary.ts" />
+    <TypeScriptCompile Include="Src\EventHandler .ts" />
+    <TypeScriptCompile Include="Src\FileExplorer.ts" />
+    <TypeScriptCompile Include="Src\Guid.ts" />
+    <TypeScriptCompile Include="Src\HTMLElementExtension.ts" />
+    <TypeScriptCompile Include="Src\Services\HttpClient.ts" />
+    <TypeScriptCompile Include="Src\Image.ts" />
+    <TypeScriptCompile Include="Src\Logger.ts" />
+    <TypeScriptCompile Include="Src\NavigationController.ts" />
+    <TypeScriptCompile Include="Src\NumberExtension.ts" />
+    <TypeScriptCompile Include="Src\Path.ts" />
+    <TypeScriptCompile Include="Src\PerfectScrollbarHandler.ts" />
+    <TypeScriptCompile Include="Src\QueryString.ts" />
+    <TypeScriptCompile Include="Src\ResourcesManager.ts" />
+    <TypeScriptCompile Include="Src\Resources\ResourcesBase.ts" />
+    <TypeScriptCompile Include="Src\Resources\ResourcesFr.ts" />
+    <TypeScriptCompile Include="Src\Script.ts" />
+    <TypeScriptCompile Include="Src\Serialization.ts" />
+    <TypeScriptCompile Include="Src\Spinner.ts" />
+    <TypeScriptCompile Include="Src\String.ts" />
+    <TypeScriptCompile Include="Src\Style.ts" />
+    <TypeScriptCompile Include="Src\Timer.ts" />
+    <TypeScriptCompile Include="Src\TypeScript.ts" />
+    <TypeScriptCompile Include="Src\UI\AspectRatioContainer.ts" />
+    <TypeScriptCompile Include="Src\UI\Button.ts" />
+    <TypeScriptCompile Include="Src\UI\ChangePasswordModal.ts" />
+    <TypeScriptCompile Include="Src\UI\CollapsibleFilterLayout.ts" />
+    <TypeScriptCompile Include="Src\UI\FlexLayout.ts" />
+    <TypeScriptCompile Include="Src\UI\FormModal.ts" />
+    <TypeScriptCompile Include="Src\UI\GridFormPanel.ts" />
+    <TypeScriptCompile Include="Src\UI\Link.ts" />
+    <TypeScriptCompile Include="Src\UI\MenuModal.ts" />
+    <TypeScriptCompile Include="Src\UI\NoUiModal.ts" />
+    <TypeScriptCompile Include="Src\UI\ScrollableHorizontalBar.ts" />
+    <TypeScriptCompile Include="Src\UI\SelectDropDownButton.ts" />
+    <TypeScriptCompile Include="Src\UI\Text.ts" />
+    <TypeScriptCompile Include="Src\UI\Title.ts" />
+    <TypeScriptCompile Include="Src\UI\UserInterfaceHelper.ts" />
+    <TypeScriptCompile Include="Src\UI\Progress.ts" />
+    <TypeScriptCompile Include="Src\UI\Collapsible.ts" />
+    <TypeScriptCompile Include="Src\UI\Control.ts" />
+    <TypeScriptCompile Include="Src\UI\DropDownButton.ts" />
+    <TypeScriptCompile Include="Src\UI\DropDownMenu.ts" />
+    <TypeScriptCompile Include="Src\UI\DataForm.ts" />
+    <TypeScriptCompile Include="Src\UI\FormControl.ts" />
+    <TypeScriptCompile Include="Src\UI\DataFormModal.ts" />
+    <TypeScriptCompile Include="Src\UI\FormPanel.ts" />
+    <TypeScriptCompile Include="Src\UI\DataGrid.ts" />
+    <TypeScriptCompile Include="Src\UI\FormLayout.ts" />
+    <TypeScriptCompile Include="Src\UI\IControl.ts" />
+    <TypeScriptCompile Include="Src\UI\IForm.ts" />
+    <TypeScriptCompile Include="Src\UI\IFormControl.ts" />
+    <TypeScriptCompile Include="Src\UI\Input.ts" />
+    <TypeScriptCompile Include="Src\UI\InputSelect.ts" />
+    <TypeScriptCompile Include="Src\UI\LabelFormControl.ts" />
+    <TypeScriptCompile Include="Src\UI\DataSelect.ts" />
+    <TypeScriptCompile Include="Src\UI\MessageBox.ts" />
+    <TypeScriptCompile Include="Src\UI\Modal.ts" />
+    <TypeScriptCompile Include="Src\UI\MultiInputSelect.ts" />
+    <TypeScriptCompile Include="Src\UI\Page.ts" />
+    <TypeScriptCompile Include="Src\UI\Panel.ts" />
+    <TypeScriptCompile Include="Src\UI\Popover.ts" />
+    <TypeScriptCompile Include="Src\UI\RecoverPasswordModal.ts" />
+    <TypeScriptCompile Include="Src\UI\ResisingContainer.ts" />
+    <TypeScriptCompile Include="Src\UI\RichTextEditor.ts" />
+    <TypeScriptCompile Include="Src\UI\Select.ts" />
+    <TypeScriptCompile Include="Src\UI\Sidebar.ts" />
+    <TypeScriptCompile Include="Src\UI\StretchLayout.ts" />
+    <TypeScriptCompile Include="Src\UI\DefaultStyle.ts" />
+    <TypeScriptCompile Include="Src\UI\Table.ts" />
+    <TypeScriptCompile Include="Src\UI\TabPanel.ts" />
+    <TypeScriptCompile Include="Src\UI\TextArea.ts" />
+    <TypeScriptCompile Include="Src\UI\Toolbar.ts" />
+    <TypeScriptCompile Include="Src\UI\View.ts" />
+    <TypeScriptCompile Include="Src\Url.ts" />
+    <TypeScriptCompile Include="Src\UserAgent.ts" />
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:48022/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>True</UseCustomServer>
+          <CustomServerUrl>http://localhost:1337</CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

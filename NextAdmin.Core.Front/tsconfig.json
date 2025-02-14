@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "declaration": true,
+    "target": "ES2020",
+    "outFile": "Out/NextAdmin.Core.js"
+  },
+  "include": [
+    "licence.ts",
+    "Src/**/*"
+  ]
+}

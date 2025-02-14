@@ -64,7 +64,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Content\Dependencies\NextAdmin\" />
 	  <Folder Include="Migrations\" />
 	  <Folder Include="Views\Admin\Modals\" />
 	</ItemGroup>

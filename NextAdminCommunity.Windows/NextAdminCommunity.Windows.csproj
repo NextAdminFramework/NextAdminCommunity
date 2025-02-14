@@ -75,7 +75,6 @@
   <ItemGroup>
     <Folder Include="Content\Dependencies\Fonts\FontAwesome5Free\css\" />
     <Folder Include="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\" />
-    <Folder Include="Content\Dependencies\NextAdmin\" />
     <Folder Include="Content\Images\" />
   </ItemGroup>
 
@@ -102,15 +101,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\NextAdminCommunity.Web\Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.woff2" Link="Content\Dependencies\Fonts\FontAwesome5Free\webfonts\fa-solid-900.woff2">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\NextAdmin\NextAdmin.Core.d.ts" Link="Content\Dependencies\NextAdmin\NextAdmin.Core.d.ts">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\NextAdmin\NextAdmin.Core.js" Link="Content\Dependencies\NextAdmin\NextAdmin.Core.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\NextAdminCommunity.Web\Content\Dependencies\NextAdmin\NextAdmin.Core.js.map" Link="Content\Dependencies\NextAdmin\NextAdmin.Core.js.map">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

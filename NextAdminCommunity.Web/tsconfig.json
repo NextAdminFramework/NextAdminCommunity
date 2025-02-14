@@ -10,6 +10,9 @@
   },
   "include": [
     "licence.ts",
+    "../NextAdmin.Core.Model/**/*",
+    "../NextAdmin.Core.API/**/*",
+    "../NextAdmin.Core.Front/Src/**/*",
     "Content/Dependencies/**/*",
     "Models/**/*",
     "ViewModels/**/*",
