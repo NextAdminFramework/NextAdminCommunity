@@ -13,6 +13,7 @@
     "../NextAdmin.Core.Model/**/*",
     "../NextAdmin.Core.API/**/*",
     "../NextAdmin.Core.Front/Src/**/*",
+    "../NextAdmin.BackEnd.Front/Src/**/*",
     "Content/Dependencies/**/*",
     "Models/**/*",
     "ViewModels/**/*",
