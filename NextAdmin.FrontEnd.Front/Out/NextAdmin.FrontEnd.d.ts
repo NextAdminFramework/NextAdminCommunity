@@ -285,10 +285,11 @@ declare namespace NextAdmin.UI {
         static style: string;
         constructor(options?: NavigationTopBarOptions);
         setStyle(style: NavigationTopBarStyle): void;
-        addLeftNavigationLink(pageName: string, label: string): NavigationLink;
-        addRightNavigationLink(pageName: string, label: string): NavigationLink;
-        appendRightLink(text: string, action?: () => void): NavigationLink;
+        addLeftNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink;
+        addRightNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink;
         private addNavigationLink;
+        appendRightLink(text: string, action?: () => void, style?: LinkStyle): NavigationLink;
+        getDefaultLinkStyle(): LinkStyle;
     }
     class NavigationLink extends Link {
         static style: string;

@@ -3305,6 +3305,7 @@ declare namespace NextAdmin.UI {
         setText(text: string): Link;
         getText(): string;
         setActive(value?: boolean): void;
+        setStyle(style?: LinkStyle): void;
         startSpin(): {
             spinnerContainer: HTMLDivElement;
             spinner: HTMLImageElement;
@@ -3316,7 +3317,13 @@ declare namespace NextAdmin.UI {
         popover?: string;
         htmlTag?: string;
         href?: string;
+        style?: LinkStyle;
         action?: (link: Link) => void;
+    }
+    enum LinkStyle {
+        blue = 0,
+        dark = 1,
+        white = 2
     }
 }
 declare namespace NextAdmin.UI {

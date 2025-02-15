@@ -1293,26 +1293,37 @@ var NextAdmin;
                         break;
                 }
             }
-            addLeftNavigationLink(pageName, label) {
-                return this.leftToolbar.appendControl(this.addNavigationLink(pageName, label));
+            addLeftNavigationLink(url, label, style) {
+                return this.leftToolbar.appendControl(this.addNavigationLink(url, label, style));
             }
-            addRightNavigationLink(pageName, label) {
-                return this.rightToolbar.appendControl(this.addNavigationLink(pageName, label));
+            addRightNavigationLink(url, label, style) {
+                return this.rightToolbar.appendControl(this.addNavigationLink(url, label, style));
             }
-            appendRightLink(text, action) {
-                return this.rightToolbar.appendControl(new NavigationLink({
-                    text: text,
-                    action: action
-                }));
-            }
-            addNavigationLink(pageName, label) {
+            addNavigationLink(url, label, style) {
                 let link = new NavigationLink({
                     text: label,
-                    href: '/' + pageName
+                    href: '/' + url,
+                    style: style ?? this.getDefaultLinkStyle()
                 });
                 link.element.classList.add('next-admin-top-bar-link');
-                this.pageLinks.add(pageName, link);
+                this.pageLinks.add(url, link);
                 return link;
+            }
+            appendRightLink(text, action, style) {
+                return this.rightToolbar.appendControl(new NavigationLink({
+                    text: text,
+                    action: action,
+                    style: style ?? this.getDefaultLinkStyle()
+                }));
+            }
+            getDefaultLinkStyle() {
+                switch (this.options.style) {
+                    default:
+                    case NavigationTopBarStyle.white:
+                        return UI.LinkStyle.blue;
+                    case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
+                        return UI.LinkStyle.white;
+                }
             }
         }
         NavigationTopBar.style = `
@@ -1384,17 +1395,23 @@ var NextAdmin;
         NavigationLink.style = `
 
         .next-admin-navigation-link{
-            color:#333;
             font-size:16px;
             margin-left:10px;
             margin-right:10px;
         }
 
-        .next-admin-navigation-link-active{
+        .next-admin-navigation-link-active.dark{
             color:` + UI.FrontDefaultStyle.PrimaryColor + `;
-
         }
 
+        .next-admin-navigation-link-active.blue{
+            color:` + UI.DefaultStyle.BlueTwo + `;
+        }
+
+        .next-admin-navigation-link-active.white{
+            color:#fff;
+            font-weight:600;
+        }
 
         `;
         UI.NavigationLink = NavigationLink;

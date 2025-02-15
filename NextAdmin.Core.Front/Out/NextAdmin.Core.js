@@ -13167,6 +13167,7 @@ var NextAdmin;
                 if (this.options.href) {
                     this.element.href = this.options.href;
                 }
+                this.setStyle(this.options.style);
             }
             isEnable() {
                 return !this.element.classList.contains('next-admin-link-disabled');
@@ -13203,6 +13204,19 @@ var NextAdmin;
                     this.element.classList.remove('next-admin-link-active');
                 }
             }
+            setStyle(style) {
+                switch (style) {
+                    case LinkStyle.blue:
+                    default:
+                        this.element.classList.add('blue');
+                        break;
+                    case LinkStyle.dark:
+                        this.element.classList.add('dark');
+                        break;
+                    case LinkStyle.white:
+                        this.element.classList.add('white');
+                }
+            }
             startSpin() {
                 return this.element.startSpin('rgba(255,255,255,0.5)', 20);
             }
@@ -13213,10 +13227,21 @@ var NextAdmin;
         Link.style = `
         .next-admin-link{
             cursor:pointer;
-            color:` + UI.DefaultStyle.BlueOne + `;
             text-shadow: 0px 0px 2px rgba(0,0,0,0.40);
             text-decoration:none;
         }
+        .next-admin-link.blue{
+            color:` + UI.DefaultStyle.BlueOne + `;
+        }
+
+        .next-admin-link.dark{
+            color:#222;
+        }
+
+        .next-admin-link.white {
+            color:#fff;
+        }
+
         .next-admin-link:hover{
             text-decoration: underline;
         }
@@ -13231,6 +13256,12 @@ var NextAdmin;
 
         `;
         UI.Link = Link;
+        let LinkStyle;
+        (function (LinkStyle) {
+            LinkStyle[LinkStyle["blue"] = 0] = "blue";
+            LinkStyle[LinkStyle["dark"] = 1] = "dark";
+            LinkStyle[LinkStyle["white"] = 2] = "white";
+        })(LinkStyle = UI.LinkStyle || (UI.LinkStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;

@@ -16,10 +16,21 @@ namespace NextAdmin.UI {
         public static style = `
         .next-admin-link{
             cursor:pointer;
-            color:` + DefaultStyle.BlueOne + `;
             text-shadow: 0px 0px 2px rgba(0,0,0,0.40);
             text-decoration:none;
         }
+        .next-admin-link.blue{
+            color:` + DefaultStyle.BlueOne + `;
+        }
+
+        .next-admin-link.dark{
+            color:#222;
+        }
+
+        .next-admin-link.white {
+            color:#fff;
+        }
+
         .next-admin-link:hover{
             text-decoration: underline;
         }
@@ -55,6 +66,7 @@ namespace NextAdmin.UI {
             if (this.options.href) {
                 this.element.href = this.options.href;
             }
+            this.setStyle(this.options.style);
         }
 
 
@@ -100,6 +112,20 @@ namespace NextAdmin.UI {
             }
         }
 
+        setStyle(style?: LinkStyle) {
+            switch (style) {
+                case LinkStyle.blue:
+                default:
+                    this.element.classList.add('blue');
+                    break;
+                case LinkStyle.dark:
+                    this.element.classList.add('dark');
+                    break;
+                case LinkStyle.white:
+                    this.element.classList.add('white');
+            }
+        }
+
         public startSpin(): { spinnerContainer: HTMLDivElement, spinner: HTMLImageElement } {
             return this.element.startSpin('rgba(255,255,255,0.5)', 20);
         }
@@ -121,7 +147,17 @@ namespace NextAdmin.UI {
 
         href?: string;
 
+        style?: LinkStyle;
+
         action?: (link: Link) => void;
     }
+
+
+    export enum LinkStyle {
+        blue,
+        dark,
+        white,
+    }
+
 
 }

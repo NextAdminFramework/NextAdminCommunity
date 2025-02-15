@@ -143,30 +143,45 @@ namespace NextAdmin.UI {
 
         }
 
-        addLeftNavigationLink(pageName: string, label: string): NavigationLink {
-            return this.leftToolbar.appendControl(this.addNavigationLink(pageName, label));
+        addLeftNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink {
+            return this.leftToolbar.appendControl(this.addNavigationLink(url, label, style));
         }
 
-        addRightNavigationLink(pageName: string, label: string): NavigationLink {
-            return this.rightToolbar.appendControl(this.addNavigationLink(pageName, label));
+        addRightNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink {
+            return this.rightToolbar.appendControl(this.addNavigationLink(url, label, style));
         }
 
-        appendRightLink(text: string, action?: () => void): NavigationLink {
+        private addNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink {
+            let link = new NavigationLink({
+                text: label,
+                href: '/' + url,
+                style: style ?? this.getDefaultLinkStyle()
+            });
+            link.element.classList.add('next-admin-top-bar-link');
+            this.pageLinks.add(url, link);
+            return link;
+        }
+
+        appendRightLink(text: string, action?: () => void, style?: LinkStyle): NavigationLink {
             return this.rightToolbar.appendControl(new NavigationLink({
                 text: text,
-                action: action
+                action: action,
+                style: style ?? this.getDefaultLinkStyle()
             }));
         }
 
-        private addNavigationLink(pageName: string, label: string): NavigationLink {
-            let link = new NavigationLink({
-                text: label,
-                href: '/' + pageName
-            });
-            link.element.classList.add('next-admin-top-bar-link');
-            this.pageLinks.add(pageName, link);
-            return link;
+        public getDefaultLinkStyle(): LinkStyle {
+            switch (this.options.style) {
+                default:
+                case NavigationTopBarStyle.white:
+                    return LinkStyle.blue;
+                case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
+                    return LinkStyle.white;
+
+            }
+
         }
+
     }
 
     export class NavigationLink extends Link {
@@ -174,17 +189,23 @@ namespace NextAdmin.UI {
         public static style = `
 
         .next-admin-navigation-link{
-            color:#333;
             font-size:16px;
             margin-left:10px;
             margin-right:10px;
         }
 
-        .next-admin-navigation-link-active{
+        .next-admin-navigation-link-active.dark{
             color:` + FrontDefaultStyle.PrimaryColor + `;
-
         }
 
+        .next-admin-navigation-link-active.blue{
+            color:` + DefaultStyle.BlueTwo + `;
+        }
+
+        .next-admin-navigation-link-active.white{
+            color:#fff;
+            font-weight:600;
+        }
 
         `;
 
@@ -203,7 +224,6 @@ namespace NextAdmin.UI {
                 this.element.classList.remove('next-admin-navigation-link-active');
             }
         }
-
 
     }
 
