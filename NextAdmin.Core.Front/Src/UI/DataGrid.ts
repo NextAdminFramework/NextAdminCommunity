@@ -117,7 +117,7 @@ namespace NextAdmin.UI {
 
         filtersContainer: HTMLDivElement;
 
-        viewFiltersLayout: CollapsibleFilterLayout<T>;
+        viewFiltersLayout: CollapsibleFilter<T>;
 
         options: DataGridOptions_;
 
@@ -216,6 +216,7 @@ namespace NextAdmin.UI {
                 viewsGridIdPropertyName: 'controlData',
                 loadingMode: DataLoadingMode.selectColumns,
                 displayNoDataMessage: true,
+                minHeight: '200px',
                 canSelectView: options?.views?.length > 1,
                 enableDoubleClickOpenModal: true,
                 hasTopBar: true,
@@ -386,7 +387,8 @@ namespace NextAdmin.UI {
 
             let elementDisplayName = this?.datasetController?.getDataDisplayName();
             this.buttonAdd = this.toolBar.appendControl(new Button({
-                text: elementDisplayName ? Resources.addIcon + ' ' + Resources.add + ' : ' + this?.datasetController?.getDataDisplayName() : Resources.addIcon + ' ' + Resources.add, style: ButtonStyle.blue,
+                text: this.options.buttonAddText ?? (elementDisplayName ? Resources.addIcon + ' ' + Resources.add + ' : ' + this?.datasetController?.getDataDisplayName() : Resources.addIcon + ' ' + Resources.add),
+                style: ButtonStyle.blue,
                 action: () => {
                     if (this.options.addAction != null) {
                         this.options.addAction(this);
@@ -429,6 +431,14 @@ namespace NextAdmin.UI {
 
                 this.buttonMultiDelete.disable();
                 this.onDatasetChanged.subscribe(() => {
+                    if (this.getRows().where(a => a.isSelected()).length > 0) {
+                        this.buttonMultiDelete.enable();
+                    }
+                    else {
+                        this.buttonMultiDelete.disable();
+                    }
+                });
+                this.onSelectedRowsChanged.subscribe((sender, selectedRows) => {
                     if (this.getRows().where(a => a.isSelected()).length > 0) {
                         this.buttonMultiDelete.enable();
                     }
@@ -595,16 +605,18 @@ namespace NextAdmin.UI {
                     else {
                         this.datasetController.select();
                     }
-                    if (this.buttonAdd.isEnable()) {
-                        this.buttonAdd.startSpin();
+                    if (!this._suspendUpdateDataFromDataController) {
+                        if (this.buttonAdd.isEnable()) {
+                            this.buttonAdd.startSpin();
+                        }
+                        if (this.buttonSave.isEnable()) {
+                            this.buttonSave.startSpin();
+                        }
+                        if (this.buttonRefresh.isEnable()) {
+                            this.buttonRefresh.startSpin();
+                        }
+                        this.startSpin();
                     }
-                    if (this.buttonSave.isEnable()) {
-                        this.buttonSave.startSpin();
-                    }
-                    if (this.buttonRefresh.isEnable()) {
-                        this.buttonRefresh.startSpin();
-                    }
-                    this.startSpin();
                 });
                 this.datasetController.onEndRequest.subscribe(() => {
                     this.buttonAdd.stopSpin();
@@ -691,9 +703,10 @@ namespace NextAdmin.UI {
                 };
             }
             this.setStyle(this.options.style);
-
+            if (this.options.minHeight) {
+                this.stretchContainer.style.minHeight = this.options.minHeight;
+            }
             if (this.options.displayNoDataMessage) {
-                this.stretchContainer.style.minHeight = '200px';
                 this.noDataMessageContainer = this.stretchContainer.appendHTML('div', (noDataMessageContainer) => {
                     noDataMessageContainer.style.pointerEvents = 'none';
                     noDataMessageContainer.style.position = 'absolute';
@@ -821,8 +834,12 @@ namespace NextAdmin.UI {
             }
             let previousDataset = this.datasetController.dataset;
             this._suspendUpdateDataFromDataController = true;
+            if (!options?.updateOnlyIfDataChanged || !previousDataset?.length) {
+                this.startSpin();
+            }
             let result = await this.datasetController.load();
             this._suspendUpdateDataFromDataController = false;
+            this.stopSpin();
             if (!result?.success) {
                 return null;
             }
@@ -1136,7 +1153,7 @@ namespace NextAdmin.UI {
             }
             if (this.options.datasetController != null) {
                 if (view != null && view.filters?.length) {
-                    this.viewFiltersLayout = this.filtersContainer.appendControl(new CollapsibleFilterLayout({
+                    this.viewFiltersLayout = this.filtersContainer.appendControl(new CollapsibleFilter({
                         title: NextAdmin.Resources.searchIcon + ' ' + NextAdmin.Resources.userFilters,
                         items: view.filters
                     }));
@@ -1260,6 +1277,9 @@ namespace NextAdmin.UI {
 
             let queryBuilder = new NextAdmin.Business.QueryBuilder().where(wjereQuery, ...whereArgs);
             this.onUpdateWhereQuery.dispatch(this, queryBuilder);
+            if (this.options.onUpdateWhereQuery) {
+                this.options.onUpdateWhereQuery(this, queryBuilder);
+            }
             this.options.datasetController.where(queryBuilder.query.whereQuery, ...queryBuilder.query.whereQueryArgs);
         }
 
@@ -1508,7 +1528,7 @@ namespace NextAdmin.UI {
                 label: " Action",
                 width: this.options.actionColumnWidth,
                 orderable: false,
-                customCellContent: (cell, value) => {
+                onRenderCell: (cell, value) => {
                     cell.element.classList.add('next-admin-table-action-column-cell');
                     if (this.options.renderActionColumnCell) {
                         this.options.renderActionColumnCell(cell);
@@ -1708,7 +1728,11 @@ namespace NextAdmin.UI {
             }
             this.onRowRemoved.dispatch(this, row);
             if (row.isSelected()) {
-                this.onSelectedRowsChanged.dispatch(this, this.getSelectedRows());
+                let selectedRows = this.getSelectedRows();
+                this.onSelectedRowsChanged.dispatch(this, selectedRows);
+                if (this.options.onSelectedRowsChanged) {
+                    this.options.onSelectedRowsChanged(this, selectedRows)
+                }
             }
             if (fireChange) {
                 this.fireChange();
@@ -1951,7 +1975,11 @@ namespace NextAdmin.UI {
             row.select();
             if (dispatch) {
                 this.onRowSelected.dispatch(this, row);
-                this.onSelectedRowsChanged.dispatch(this, this.getSelectedRows());
+                let selectedRows = this.getSelectedRows();
+                this.onSelectedRowsChanged.dispatch(this, selectedRows);
+                if (this.options.onSelectedRowsChanged) {
+                    this.options.onSelectedRowsChanged(this, selectedRows)
+                }
             }
             this.onDrawRow.dispatch(this, row);
         }
@@ -2082,7 +2110,11 @@ namespace NextAdmin.UI {
             row.unselect();
             if (dispatch) {
                 this.onRowUnselected.dispatch(this, row);
-                this.onSelectedRowsChanged.dispatch(this, this.getSelectedRows());
+                let selectedRows = this.getSelectedRows()
+                this.onSelectedRowsChanged.dispatch(this, selectedRows);
+                if (this.options.onSelectedRowsChanged) {
+                    this.options.onSelectedRowsChanged(this, selectedRows)
+                }
             }
             this.onDrawRow.dispatch(this, row);
         }
@@ -3065,7 +3097,11 @@ namespace NextAdmin.UI {
                         }
                         this.grid.selectRow(this, false);
                     }
-                    this.grid.onSelectedRowsChanged.dispatch(this.grid, this.grid.getSelectedRows());
+                    let selectedRows = this.grid.getSelectedRows();
+                    this.grid.onSelectedRowsChanged.dispatch(this.grid, selectedRows);
+                    if (this.grid.options.onSelectedRowsChanged) {
+                        this.grid.options.onSelectedRowsChanged(this.grid, selectedRows)
+                    }
                 }
             });
 
@@ -3271,9 +3307,10 @@ namespace NextAdmin.UI {
                 this.element.innerHTML = '';
                 this.element.appendChild(Helper.getDefaultPropertyHtmlElement(this.propertyInfo, value));
             }
-            if (this.column.options.customCellContent != null) {
-                let elementToRender = this.column.options.customCellContent(this, value);
+            if (this.column.options.onRenderCell != null) {
+                let elementToRender = this.column.options.onRenderCell(this, value);
                 if (elementToRender) {
+                    this.element.innerHTML = '';
                     if (typeof elementToRender === 'string' || elementToRender instanceof String) {
                         this.element.innerHTML = elementToRender as string;
                     }
@@ -3690,25 +3727,33 @@ namespace NextAdmin.UI {
 
         reports?: DataGridReportOptions[];
 
-        openAction?: (row: DataGridRow_) => void;
+        openAction?: (row: DataGridRow<T>) => void;
 
         refreshAction?: (grid: DataGrid<T>) => void;
 
-        addAction?: (grid: DataGrid_) => void;
+        addAction?: (grid: DataGrid<T>) => void;
 
-        deleteAction?: (grid: DataGrid_, rows: Array<DataGridRow_>) => void;
+        deleteAction?: (grid: DataGrid<T>, rows: Array<DataGridRow<T>>) => void;
 
         hasContextMenu?: boolean;
 
-        onOpenContextMenu?: (grid: DataGrid_, args: OpenContextMenuArgs) => void;
+        onOpenContextMenu?: (grid: DataGrid<T>, args: OpenContextMenuArgs) => void;
 
-        onFormModalCreated?: (grid: DataGrid_, args: { modal: DataFormModal_, data: any }) => void;
+        onFormModalCreated?: (grid: DataGrid<T>, args: { modal: DataFormModal_, data: any }) => void;
+
+        onSelectedRowsChanged?: (grid: DataGrid<T>, args: DataGridRow<T>[]) => void;
+
+        onUpdateWhereQuery?: (grid: DataGrid<T>, args: Business.QueryBuilder) => void;
 
         style?: TableStyle | any;
 
         displayNoDataMessage?: boolean;
 
+        minHeight?: string;
+
         isAutoLoaded?: boolean;
+
+        buttonAddText?: string;
 
     }
 
@@ -3757,7 +3802,7 @@ namespace NextAdmin.UI {
 
         controlFactory?: (cell: DataGridCell<T>) => FormControl;
 
-        customCellContent?: (cell: DataGridCell<T>, value: any) => string | Control | HTMLElement | void;
+        onRenderCell?: (cell: DataGridCell<T>, value: any) => string | Control | HTMLElement | void;
 
         orderingFunc?: (rowData: T, dataset: Array<T>) => number | string;
 

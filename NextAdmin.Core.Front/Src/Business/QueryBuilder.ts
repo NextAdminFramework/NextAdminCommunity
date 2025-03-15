@@ -66,13 +66,13 @@ namespace NextAdmin.Business {
             if (String.isNullOrEmpty(search) || !clumns?.length) {
                 return this;
             }
-            let args = [];
+            let values = [];
             let queryPart = [];
             for (let columns of clumns) {
                 queryPart.add('LOWER(' + columns + ')' + ' LIKE LOWER(?)');
-                args.add('%' + search + '%');
+                values.add('%' + search + '%');
             }
-            return this.where('(' + queryPart.join(' OR ') + ')', args);
+            return this.where('(' + queryPart.join(' OR ') + ')', ...values);
         }
 
         searchMany(searches: string[], clumns: string[], mode = SearchManyMode.and): QueryBuilder {
@@ -110,6 +110,24 @@ namespace NextAdmin.Business {
             }
             else {
                 return this.where(clumn + ' NOT LIKE ?', '%' + search + '%');
+            }
+        }
+
+        whereStartsWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder {
+            if (invariantCase) {
+                return this.where('LOWER(' + clumn + ')' + ' LIKE LOWER(?)', search + '%');
+            }
+            else {
+                return this.where(clumn + ' LIKE ?', search + '%');
+            }
+        }
+
+        whereEndsWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder {
+            if (invariantCase) {
+                return this.where('LOWER(' + clumn + ')' + ' LIKE LOWER(?)', '%' + search);
+            }
+            else {
+                return this.where(clumn + ' LIKE ?', '%' + search);
             }
         }
 

@@ -2772,8 +2772,9 @@ var NextAdmin;
                     ...args
                 };
                 return new Promise(async (resolve) => {
+                    let dataToSave = NextAdmin.Copy.clone(this.data);
                     let saveDataEventArgs = {
-                        data: this.data,
+                        data: dataToSave,
                         dataState: this.getDataState(),
                         errors: [],
                         warnings: [],
@@ -2803,7 +2804,7 @@ var NextAdmin;
                         this.form.startSpin();
                     }
                     if (this.saveAction != null) {
-                        this.saveAction(this.data, (result) => {
+                        this.saveAction(dataToSave, (result) => {
                             if (args.onGetResponse != null) {
                                 args.onGetResponse(result);
                             }
@@ -3985,13 +3986,13 @@ var NextAdmin;
                 if (NextAdmin.String.isNullOrEmpty(search) || !clumns?.length) {
                     return this;
                 }
-                let args = [];
+                let values = [];
                 let queryPart = [];
                 for (let columns of clumns) {
                     queryPart.add('LOWER(' + columns + ')' + ' LIKE LOWER(?)');
-                    args.add('%' + search + '%');
+                    values.add('%' + search + '%');
                 }
-                return this.where('(' + queryPart.join(' OR ') + ')', args);
+                return this.where('(' + queryPart.join(' OR ') + ')', ...values);
             }
             searchMany(searches, clumns, mode = SearchManyMode.and) {
                 if (!searches?.length || !clumns?.length) {
@@ -4025,6 +4026,22 @@ var NextAdmin;
                 }
                 else {
                     return this.where(clumn + ' NOT LIKE ?', '%' + search + '%');
+                }
+            }
+            whereStartsWith(clumn, search, invariantCase) {
+                if (invariantCase) {
+                    return this.where('LOWER(' + clumn + ')' + ' LIKE LOWER(?)', search + '%');
+                }
+                else {
+                    return this.where(clumn + ' LIKE ?', search + '%');
+                }
+            }
+            whereEndsWith(clumn, search, invariantCase) {
+                if (invariantCase) {
+                    return this.where('LOWER(' + clumn + ')' + ' LIKE LOWER(?)', '%' + search);
+                }
+                else {
+                    return this.where(clumn + ' LIKE ?', '%' + search);
                 }
             }
             whereIsNullOrEmpty(clumn) {
@@ -4071,8 +4088,8 @@ var NextAdmin;
     var Business;
     (function (Business) {
         class DbSetHandler extends Business.QueryBuilder {
-            constructor(entityName, entityClient, queryData) {
-                super(queryData);
+            constructor(entityName, entityClient, query, writeIntoOriginalQuery) {
+                super(query, writeIntoOriginalQuery);
                 this.entityName = entityName;
                 this.entityClient = entityClient;
             }
@@ -4156,10 +4173,10 @@ var NextAdmin;
             async deleteRange(ids, parameters) {
                 return await this.entityClient.saveEntities({ entityName: this.entityName, entitiesToDeleteIds: ids, parameters: parameters });
             }
-            async get(id, parameters) {
+            async get(id, parameters, detailToLoadNames) {
                 if (id == null)
                     return null;
-                return (await this.entityClient.getEntity({ entityName: this.entityName, entityId: id, parameters: parameters })).entity;
+                return (await this.entityClient.getEntity({ entityName: this.entityName, entityId: id, parameters: parameters, detailToLoadNames: detailToLoadNames })).entity;
             }
             async count() {
                 return (await this.entityClient.countEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: this.query.columnToSelectNames, orderColumnNames: this.query.orderColumnNames })).data;
@@ -4176,8 +4193,8 @@ var NextAdmin;
         }
         Business.DbSetHandler = DbSetHandler;
         class EntityDbSetHandler extends DbSetHandler {
-            constructor(entityInfo, entityClient, query) {
-                super(entityInfo.name, entityClient, query);
+            constructor(entityInfo, entityClient, query, writeIntoOriginalQuery) {
+                super(entityInfo.name, entityClient, query, writeIntoOriginalQuery);
                 this.entityInfo = entityInfo;
             }
             clone() {
@@ -4235,6 +4252,12 @@ var NextAdmin;
             }
             whereNotContains_(property, search, invariantCase) {
                 return super.whereNotContains(this.entityInfo.getPropertyName(property), search, invariantCase);
+            }
+            whereStartsWith_(property, search, invariantCase) {
+                return super.whereStartsWith(this.entityInfo.getPropertyName(property), search, invariantCase);
+            }
+            whereEndsWith_(property, search, invariantCase) {
+                return super.whereEndsWith(this.entityInfo.getPropertyName(property), search, invariantCase);
             }
             whereIsNullOrEmpty_(property) {
                 return this.whereIsNullOrEmpty(this.entityInfo.getPropertyName(property));
@@ -4509,6 +4532,7 @@ var NextAdmin;
             this.unknownError = "An unknown error has occurred.";
             this.success = "Success";
             this.search = "Search";
+            this.searching = "Search";
             this.lostDataNotSavedMessage = 'If you validate, not saved data will be lost, what do you want to do ?';
             this.formDeleteMessageTitle = 'Delete data';
             this.formDeleteMessage = 'If you validate, data will be permanently deleted, do you want to tontinue ?';
@@ -4662,6 +4686,7 @@ var NextAdmin;
             this.unknownError = "Une erreur inconnue s'est produite.";
             this.success = "Succès";
             this.search = "Rechercher";
+            this.searching = "Recherche";
             this.lostDataNotSavedMessage = 'Si vous continuez, les données non sauvegardées pourraient être perdues, que voulez-vous faire?';
             this.formDeleteMessageTitle = 'Suppression définitive';
             this.formDeleteMessage = 'Si vous validez, cet élément sera supprimé de manière permanente, voulez-vous continuer ?';
@@ -6822,10 +6847,11 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
-        class CollapsibleFilterLayout extends NextAdmin.UI.Control {
+        class CollapsibleFilter extends NextAdmin.UI.Control {
             constructor(options) {
                 super('div', {
                     throttle: 50,
+                    autoUdateSearch: true,
                     title: NextAdmin.Resources.searchIcon + ' ' + NextAdmin.Resources.filters,
                     ...options
                 });
@@ -6860,16 +6886,28 @@ var NextAdmin;
             addItem(item) {
                 let control = this.formLayout.addItem(item);
                 if (control instanceof UI.FormControl) {
-                    control.onValueChanged.subscribe(() => {
-                        this.timer.throttle(() => {
-                            if (this.grid) {
-                                this.grid.updateWhereQuery();
-                                this.grid.datasetController.load();
-                            }
-                        }, this.options.throttle);
-                    });
+                    if (this.options.autoUdateSearch) {
+                        control.onValueChanged.subscribe(() => {
+                            this.updateSearch();
+                        });
+                    }
                 }
                 return control;
+            }
+            updateSearch(throttle = this.options.throttle) {
+                if (!this.grid) {
+                    return;
+                }
+                if (throttle) {
+                    this.timer.throttle(() => {
+                        this.grid.updateWhereQuery();
+                        this.grid.datasetController.load();
+                    }, throttle);
+                }
+                else {
+                    this.grid.updateWhereQuery();
+                    this.grid.datasetController.load();
+                }
             }
             updateQuery(queryBuilder) {
                 if (this.options.onUpdateQuery) {
@@ -6878,7 +6916,7 @@ var NextAdmin;
                 return queryBuilder;
             }
         }
-        UI.CollapsibleFilterLayout = CollapsibleFilterLayout;
+        UI.CollapsibleFilter = CollapsibleFilter;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 /// <reference path="Control.ts"/>
@@ -6974,6 +7012,9 @@ var NextAdmin;
                     hasBodyOverflow: true,
                     hasFooterCloseButton: true,
                     dataController: options.dataController == null && NextAdmin.Business.DataController_.factory ? NextAdmin.Business.DataController_.factory(options.dataName) : options.dataController,
+                    canSave: true,
+                    canDelete: true,
+                    canCancel: true,
                     ...options
                 });
                 this.onValidate = new NextAdmin.EventHandler();
@@ -7007,12 +7048,15 @@ var NextAdmin;
                 }
                 this.rightFooterToolBar = this.rightFooter.appendControl(new UI.Toolbar(), (toolBar) => {
                     toolBar.element.style.cssFloat = 'right';
-                    toolBar.appendControl(this.cancelButton = new UI.Button({
+                    this.cancelButton = new UI.Button({
                         text: NextAdmin.Resources.refreshIcon + ' ' + NextAdmin.Resources.cancel, action: () => {
                             this.dataController.cancel();
                         }
-                    }));
-                    toolBar.appendControl(this.deleteButton = new UI.Button({
+                    });
+                    if (this.options.canCancel) {
+                        toolBar.appendControl(this.cancelButton);
+                    }
+                    this.deleteButton = new UI.Button({
                         text: NextAdmin.Resources.deleteIcon + ' ' + NextAdmin.Resources.delete,
                         style: UI.ButtonStyle.red,
                         action: () => {
@@ -7025,14 +7069,20 @@ var NextAdmin;
                                 }
                             });
                         }
-                    }));
-                    toolBar.appendControl(this.saveButton = new UI.Button({
+                    });
+                    if (this.options.canDelete) {
+                        toolBar.appendControl(this.deleteButton);
+                    }
+                    this.saveButton = new UI.Button({
                         text: NextAdmin.Resources.saveIcon + ' ' + NextAdmin.Resources.save,
                         style: UI.ButtonStyle.green,
                         action: () => {
                             this.dataController.save();
                         }
-                    }));
+                    });
+                    if (this.options.canSave) {
+                        toolBar.appendControl(this.saveButton);
+                    }
                     if (this.options.hasFooterCloseButton) {
                         toolBar.appendControl(this.footerCloseButton = new UI.Button({
                             text: NextAdmin.Resources.closeIcon + ' ' + NextAdmin.Resources.close,
@@ -7130,6 +7180,12 @@ var NextAdmin;
                 }
             }
             async initialize(data, dataState) {
+                if (this.options.onInitialize) {
+                    this.options.onInitialize(this, {
+                        data: data,
+                        dataState: dataState
+                    });
+                }
             }
             async beforeSave(args) {
             }
@@ -7322,12 +7378,23 @@ var NextAdmin;
                 this._viewsDictionary = new NextAdmin.Dictionary();
                 this.dataController = this.options.dataController;
                 NextAdmin.Style.append('NextAdmin.UI.FormLayout', FormLayout_.style);
+                this.element.classList.add('next-admin-form-layout');
                 this.element.style.width = '100%';
                 this.table = this.element.appendHTML('table', (table) => {
                     table.style.width = '100%';
                 });
+                this.setStyle(this.options.style);
                 this.addView(FormLayout.defaultViewName, [], true);
                 this.initialize(this.options.columnCount, this.options.rowCount, this.options.items);
+            }
+            setStyle(style) {
+                switch (style) {
+                    case FormLayoutStyle.thinLabels:
+                        this.element.classList.add('thin-label');
+                        break;
+                    default:
+                        break;
+                }
             }
             initialize(colCount, rowCount, items) {
                 this._columnCount = colCount;
@@ -7546,8 +7613,7 @@ var NextAdmin;
                 if (item.labelWidth && control instanceof UI.LabelFormControl) {
                     control.setLabelWidth(item.labelWidth);
                 }
-                //formControlLabelWidth
-                if (!(control instanceof FormLayout)) { //control is sub FormLayout so we remove padding on cell
+                if (!(control instanceof FormLayout)) {
                     cell.classList.add('next-admin-form-layout-cell');
                 }
                 if (control) {
@@ -7677,15 +7743,28 @@ var NextAdmin;
         FormLayout.defaultViewName = 'DEFAULT';
         FormLayout.style = `
 
-        .next-admin-form-layout-cell{
-            padding:5px;
+        .next-admin-form-layout{
+
+            .next-admin-form-layout-cell{
+                padding:5px;
+            }
         }
+        .next-admin-form-layout.thin-label{
+            .next-admin-layout-form-control-label-container{
+                padding-left:4px;font-size:12px
+            }
+        }
+
 
         `;
         UI.FormLayout = FormLayout;
         class FormLayout_ extends FormLayout {
         }
         UI.FormLayout_ = FormLayout_;
+        let FormLayoutStyle;
+        (function (FormLayoutStyle) {
+            FormLayoutStyle[FormLayoutStyle["thinLabels"] = 0] = "thinLabels";
+        })(FormLayoutStyle = UI.FormLayoutStyle || (UI.FormLayoutStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 /// <reference path="FormControl.ts"/>
@@ -7714,6 +7793,7 @@ var NextAdmin;
                     viewsGridIdPropertyName: 'controlData',
                     loadingMode: DataLoadingMode.selectColumns,
                     displayNoDataMessage: true,
+                    minHeight: '200px',
                     canSelectView: options?.views?.length > 1,
                     enableDoubleClickOpenModal: true,
                     hasTopBar: true,
@@ -7894,7 +7974,8 @@ var NextAdmin;
                 }
                 let elementDisplayName = this?.datasetController?.getDataDisplayName();
                 this.buttonAdd = this.toolBar.appendControl(new UI.Button({
-                    text: elementDisplayName ? NextAdmin.Resources.addIcon + ' ' + NextAdmin.Resources.add + ' : ' + this?.datasetController?.getDataDisplayName() : NextAdmin.Resources.addIcon + ' ' + NextAdmin.Resources.add, style: UI.ButtonStyle.blue,
+                    text: this.options.buttonAddText ?? (elementDisplayName ? NextAdmin.Resources.addIcon + ' ' + NextAdmin.Resources.add + ' : ' + this?.datasetController?.getDataDisplayName() : NextAdmin.Resources.addIcon + ' ' + NextAdmin.Resources.add),
+                    style: UI.ButtonStyle.blue,
                     action: () => {
                         if (this.options.addAction != null) {
                             this.options.addAction(this);
@@ -7932,6 +8013,14 @@ var NextAdmin;
                     }
                     this.buttonMultiDelete.disable();
                     this.onDatasetChanged.subscribe(() => {
+                        if (this.getRows().where(a => a.isSelected()).length > 0) {
+                            this.buttonMultiDelete.enable();
+                        }
+                        else {
+                            this.buttonMultiDelete.disable();
+                        }
+                    });
+                    this.onSelectedRowsChanged.subscribe((sender, selectedRows) => {
                         if (this.getRows().where(a => a.isSelected()).length > 0) {
                             this.buttonMultiDelete.enable();
                         }
@@ -8085,16 +8174,18 @@ var NextAdmin;
                         else {
                             this.datasetController.select();
                         }
-                        if (this.buttonAdd.isEnable()) {
-                            this.buttonAdd.startSpin();
+                        if (!this._suspendUpdateDataFromDataController) {
+                            if (this.buttonAdd.isEnable()) {
+                                this.buttonAdd.startSpin();
+                            }
+                            if (this.buttonSave.isEnable()) {
+                                this.buttonSave.startSpin();
+                            }
+                            if (this.buttonRefresh.isEnable()) {
+                                this.buttonRefresh.startSpin();
+                            }
+                            this.startSpin();
                         }
-                        if (this.buttonSave.isEnable()) {
-                            this.buttonSave.startSpin();
-                        }
-                        if (this.buttonRefresh.isEnable()) {
-                            this.buttonRefresh.startSpin();
-                        }
-                        this.startSpin();
                     });
                     this.datasetController.onEndRequest.subscribe(() => {
                         this.buttonAdd.stopSpin();
@@ -8175,8 +8266,10 @@ var NextAdmin;
                     };
                 }
                 this.setStyle(this.options.style);
+                if (this.options.minHeight) {
+                    this.stretchContainer.style.minHeight = this.options.minHeight;
+                }
                 if (this.options.displayNoDataMessage) {
-                    this.stretchContainer.style.minHeight = '200px';
                     this.noDataMessageContainer = this.stretchContainer.appendHTML('div', (noDataMessageContainer) => {
                         noDataMessageContainer.style.pointerEvents = 'none';
                         noDataMessageContainer.style.position = 'absolute';
@@ -8298,8 +8391,12 @@ var NextAdmin;
                 }
                 let previousDataset = this.datasetController.dataset;
                 this._suspendUpdateDataFromDataController = true;
+                if (!options?.updateOnlyIfDataChanged || !previousDataset?.length) {
+                    this.startSpin();
+                }
                 let result = await this.datasetController.load();
                 this._suspendUpdateDataFromDataController = false;
+                this.stopSpin();
                 if (!result?.success) {
                     return null;
                 }
@@ -8583,7 +8680,7 @@ var NextAdmin;
                 }
                 if (this.options.datasetController != null) {
                     if (view != null && view.filters?.length) {
-                        this.viewFiltersLayout = this.filtersContainer.appendControl(new UI.CollapsibleFilterLayout({
+                        this.viewFiltersLayout = this.filtersContainer.appendControl(new UI.CollapsibleFilter({
                             title: NextAdmin.Resources.searchIcon + ' ' + NextAdmin.Resources.userFilters,
                             items: view.filters
                         }));
@@ -8696,6 +8793,9 @@ var NextAdmin;
                 }
                 let queryBuilder = new NextAdmin.Business.QueryBuilder().where(wjereQuery, ...whereArgs);
                 this.onUpdateWhereQuery.dispatch(this, queryBuilder);
+                if (this.options.onUpdateWhereQuery) {
+                    this.options.onUpdateWhereQuery(this, queryBuilder);
+                }
                 this.options.datasetController.where(queryBuilder.query.whereQuery, ...queryBuilder.query.whereQueryArgs);
             }
             getCurrentView() {
@@ -8912,7 +9012,7 @@ var NextAdmin;
                     label: " Action",
                     width: this.options.actionColumnWidth,
                     orderable: false,
-                    customCellContent: (cell, value) => {
+                    onRenderCell: (cell, value) => {
                         cell.element.classList.add('next-admin-table-action-column-cell');
                         if (this.options.renderActionColumnCell) {
                             this.options.renderActionColumnCell(cell);
@@ -9085,7 +9185,11 @@ var NextAdmin;
                 }
                 this.onRowRemoved.dispatch(this, row);
                 if (row.isSelected()) {
-                    this.onSelectedRowsChanged.dispatch(this, this.getSelectedRows());
+                    let selectedRows = this.getSelectedRows();
+                    this.onSelectedRowsChanged.dispatch(this, selectedRows);
+                    if (this.options.onSelectedRowsChanged) {
+                        this.options.onSelectedRowsChanged(this, selectedRows);
+                    }
                 }
                 if (fireChange) {
                     this.fireChange();
@@ -9302,7 +9406,11 @@ var NextAdmin;
                 row.select();
                 if (dispatch) {
                     this.onRowSelected.dispatch(this, row);
-                    this.onSelectedRowsChanged.dispatch(this, this.getSelectedRows());
+                    let selectedRows = this.getSelectedRows();
+                    this.onSelectedRowsChanged.dispatch(this, selectedRows);
+                    if (this.options.onSelectedRowsChanged) {
+                        this.options.onSelectedRowsChanged(this, selectedRows);
+                    }
                 }
                 this.onDrawRow.dispatch(this, row);
             }
@@ -9418,7 +9526,11 @@ var NextAdmin;
                 row.unselect();
                 if (dispatch) {
                     this.onRowUnselected.dispatch(this, row);
-                    this.onSelectedRowsChanged.dispatch(this, this.getSelectedRows());
+                    let selectedRows = this.getSelectedRows();
+                    this.onSelectedRowsChanged.dispatch(this, selectedRows);
+                    if (this.options.onSelectedRowsChanged) {
+                        this.options.onSelectedRowsChanged(this, selectedRows);
+                    }
                 }
                 this.onDrawRow.dispatch(this, row);
             }
@@ -10308,7 +10420,11 @@ var NextAdmin;
                             }
                             this.grid.selectRow(this, false);
                         }
-                        this.grid.onSelectedRowsChanged.dispatch(this.grid, this.grid.getSelectedRows());
+                        let selectedRows = this.grid.getSelectedRows();
+                        this.grid.onSelectedRowsChanged.dispatch(this.grid, selectedRows);
+                        if (this.grid.options.onSelectedRowsChanged) {
+                            this.grid.options.onSelectedRowsChanged(this.grid, selectedRows);
+                        }
                     }
                 });
                 if (this.grid.options.rowHoverable || this.grid.hasDragAndDropEnabled()) {
@@ -10466,9 +10582,10 @@ var NextAdmin;
                     this.element.innerHTML = '';
                     this.element.appendChild(UI.Helper.getDefaultPropertyHtmlElement(this.propertyInfo, value));
                 }
-                if (this.column.options.customCellContent != null) {
-                    let elementToRender = this.column.options.customCellContent(this, value);
+                if (this.column.options.onRenderCell != null) {
+                    let elementToRender = this.column.options.onRenderCell(this, value);
                     if (elementToRender) {
+                        this.element.innerHTML = '';
                         if (typeof elementToRender === 'string' || elementToRender instanceof NextAdmin.String) {
                             this.element.innerHTML = elementToRender;
                         }
@@ -11361,7 +11478,7 @@ var NextAdmin;
                     autoFill: true,
                     usePerfectScrollbar: false,
                     localOrdering: true,
-                    inputSearchDelay: 50,
+                    throttle: 50,
                     canSearchData: true,
                     maxDropDownHeight: '250px', ...options
                 });
@@ -11370,6 +11487,7 @@ var NextAdmin;
                 this.onDropdownClose = new NextAdmin.EventHandler();
                 this.timer = new NextAdmin.Timer();
                 NextAdmin.Style.append("InputSelect", InputSelect.style);
+                this.input.type = 'text';
                 //used to kill chrome autcompletion dropdown
                 this.input.setAttribute('autocomplete', 'one-time-code');
                 this.input.setAttribute('readonly', 'true');
@@ -11539,10 +11657,10 @@ var NextAdmin;
                 }
                 if (this.options.canSearchData) {
                     if (this.options.searchAction != null) {
-                        if (this.options.inputSearchDelay) {
+                        if (this.options.throttle) {
                             this.timer.throttle(() => {
                                 this.distantSearch(super.getValue());
-                            }, this.options.inputSearchDelay);
+                            }, this.options.throttle);
                         }
                         else {
                             this.distantSearch(super.getValue());
@@ -11682,10 +11800,13 @@ var NextAdmin;
                 }
             }
             addSelectItems(items) {
-                console.log('add items');
                 for (let item of items) {
                     this.addSelectItem(item);
                 }
+            }
+            setSelectItems(items) {
+                this.clearItems();
+                this.addSelectItems(items);
             }
             addSelectItem(item) {
                 this.addItem(item.value, item.label, item.selected);
@@ -13640,14 +13761,14 @@ var NextAdmin;
                     canSearchData: false,
                     ...options
                 });
-                this._selectedItems = [];
+                this._selectedItemValues = [];
                 this.dropDownTable.options.rowSelectionMode = UI.RowSelectionMode.multiSelect;
                 this.dropDownTable.onRowUnselected.subscribe((sender, row) => {
                     this.unselectItem(row['_value']);
                 });
                 if (this.options.canAddCustomValue) {
                     this.addLeftAddon(new NextAdmin.UI.Button({
-                        text: '+', style: NextAdmin.UI.ButtonStyle.noBg, action: () => {
+                        text: NextAdmin.Resources.addIcon, style: NextAdmin.UI.ButtonStyle.noBg, action: () => {
                             let addValueModal = new NextAdmin.UI.Modal({
                                 title: NextAdmin.Resources.addNewItems,
                                 size: UI.ModalSize.smallFitContent
@@ -13679,6 +13800,70 @@ var NextAdmin;
                         }
                     }));
                 }
+                if (this.options.canSearchData && this.options.searchAction) {
+                    this.controlContainer.disable();
+                    this.addLeftAddon(new NextAdmin.UI.Button({
+                        text: NextAdmin.Resources.searchIcon, style: NextAdmin.UI.ButtonStyle.noBg, action: () => {
+                            let searchModal = new NextAdmin.UI.Modal({ size: NextAdmin.UI.ModalSize.smallFitContent, title: NextAdmin.Resources.searching, canChangeScreenMode: false });
+                            searchModal.body.appendHTML('div', (container) => {
+                                container.style.height = '400px';
+                                container.style.padding = '10px';
+                                let grid = container.appendControl(new NextAdmin.UI.DataGrid({
+                                    rowHoverable: true,
+                                    stretchHeight: true,
+                                    displayNoDataMessage: false,
+                                    minHeight: '300px',
+                                    canAdd: false,
+                                    deleteMode: NextAdmin.UI.DataDeleteMode.disable,
+                                    hasActionColumn: false,
+                                    rowSelectionMode: NextAdmin.UI.RowSelectionMode.multiSelect_CtrlShift,
+                                    columns: [
+                                        { propertyName: 'label' }
+                                    ]
+                                }), (grid) => {
+                                    grid.onDoubleClickRow.subscribe((row, ev) => {
+                                        validateButton.executeAction();
+                                    });
+                                    grid.tHead.style.display = 'none';
+                                    grid.toolBar.element.style.display = 'none';
+                                    grid.topBar.style.border = '0px';
+                                    let searchBox = grid.topBar.appendControl(new NextAdmin.UI.Input({
+                                        onValueChanged: (sender, args) => {
+                                            this.timer.throttle(() => {
+                                                this.options.searchAction(args.value, (items) => {
+                                                    grid.setDataset(items);
+                                                });
+                                            }, this.options.throttle);
+                                        }
+                                    }));
+                                    searchBox.element.style.marginBottom = '10px';
+                                });
+                                this.options.searchAction('', (items) => {
+                                    grid.setDataset(items);
+                                });
+                                let validateButton = searchModal.rightFooter.appendControl(new NextAdmin.UI.Button({
+                                    css: { cssFloat: 'right' },
+                                    text: NextAdmin.Resources.validate, action: () => {
+                                        let selectedItems = grid.getSelectedRows().select(a => a.data);
+                                        this.clearAll();
+                                        this.addSelectItems(selectedItems);
+                                        this.setValue(selectedItems.select(a => a.value));
+                                        searchModal.close();
+                                    }
+                                }));
+                            });
+                            searchModal.open();
+                        }
+                    }));
+                    this.addLeftAddon(new NextAdmin.UI.Button({
+                        text: NextAdmin.Resources.closeIcon,
+                        style: NextAdmin.UI.ButtonStyle.noBg,
+                        //disabled: true,
+                        action: () => {
+                            this.clearAll();
+                        }
+                    }));
+                }
             }
             onInputKeyDown(event) {
                 if (this.dropDown.style.display == 'none') {
@@ -13700,8 +13885,8 @@ var NextAdmin;
                             this.addItem(value);
                         }
                     }
-                    if (!this._selectedItems.contains(value)) {
-                        let clonedvalues = this._selectedItems.clone();
+                    if (!this._selectedItemValues.contains(value)) {
+                        let clonedvalues = this._selectedItemValues.clone();
                         clonedvalues.add(value);
                         this.updateValue(clonedvalues);
                     }
@@ -13716,9 +13901,9 @@ var NextAdmin;
                         }
                     }
                 }
-                let clonedvalues = this._selectedItems.clone();
+                let clonedvalues = this._selectedItemValues.clone();
                 for (let value of values) {
-                    if (!this._selectedItems.contains(value)) {
+                    if (!this._selectedItemValues.contains(value)) {
                         clonedvalues.add(value);
                     }
                 }
@@ -13727,8 +13912,8 @@ var NextAdmin;
             unselectItem(value) {
                 if (value != null) {
                     value = value + '';
-                    if (this._selectedItems.contains(value)) {
-                        let clonedvalues = this._selectedItems.clone();
+                    if (this._selectedItemValues.contains(value)) {
+                        let clonedvalues = this._selectedItemValues.clone();
                         clonedvalues.remove(value);
                         this.updateValue(clonedvalues);
                     }
@@ -13744,37 +13929,36 @@ var NextAdmin;
             }
             openDropDown() {
                 super.openDropDown();
-                let selectItems = this.getItems().where(e => this._selectedItems.contains(e['_value'] + ''));
+                let selectItems = this.getItems().where(e => this._selectedItemValues.contains(e['_value'] + ''));
                 this.dropDownTable.getSelectedRows().forEach(e => this.dropDownTable.unselectRow(e));
                 selectItems.forEach(e => this.dropDownTable.selectRow(e));
             }
             setValue(value) {
                 if (Array.isArray(value)) {
-                    this._selectedItems = value.select(e => e + '');
+                    this._selectedItemValues = value.select(e => e + '');
                 }
                 else {
-                    this._selectedItems = value != null ? value.split(this.options.valueCharSeparator) : [];
+                    this._selectedItemValues = value != null ? value.split(this.options.valueCharSeparator) : [];
                 }
-                this._selectedItems = this._selectedItems.distinct();
-                let selectItems = this.getItems().where(e => this._selectedItems.contains(e['_value'] + ''));
+                this._selectedItemValues = this._selectedItemValues.distinct();
+                let selectItems = this.getItems().where(e => this._selectedItemValues.contains(e['_value'] + ''));
                 let displayValue = selectItems.select(e => e.innerText).join(this.options.displayCharSeparator + ' ');
                 this.input.value = displayValue;
             }
             getValue() {
-                let items = this._selectedItems;
+                let items = this._selectedItemValues;
                 if (!items?.length && this.options.outputAllItemValuesIfNoSelect) {
                     items = this.getItems().select(a => a['_value']);
-                    console.log(items);
                 }
                 if (this.options.outputArray) {
-                    return items;
+                    return [...items];
                 }
                 else {
                     return items.where(a => !NextAdmin.String.isNullOrWhiteSpace(a + '')).join(this.options.valueCharSeparator);
                 }
             }
-            getSelectItems() {
-                return this._selectedItems;
+            getSelectItemValues() {
+                return [...this._selectedItemValues];
             }
         }
         UI.MultiInputSelect = MultiInputSelect;
@@ -15373,7 +15557,9 @@ var NextAdmin;
             list-style:none;
             overflow:hidden;
             transition:max-height 2s cubic-bezier(0, .55, .45, 1);
-            padding-left:1.5rem
+            padding-left:1.5rem;
+            background:rgba(37, 42, 73, 0.4);
+            border-radius:10px;
         }
 
         .sidebar-wrapper .menu .caret{

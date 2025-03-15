@@ -9,8 +9,8 @@ namespace NextAdmin.Business {
 
         entityClient: Services.EntityClient;
 
-        public constructor(entityName: string, entityClient: Services.EntityClient, queryData?: Models.Query) {
-            super(queryData);
+        public constructor(entityName: string, entityClient: Services.EntityClient, query?: Models.Query, writeIntoOriginalQuery?: boolean) {
+            super(query, writeIntoOriginalQuery);
             this.entityName = entityName;
             this.entityClient = entityClient;
         }
@@ -114,10 +114,10 @@ namespace NextAdmin.Business {
             return await this.entityClient.saveEntities({ entityName: this.entityName, entitiesToDeleteIds: ids, parameters: parameters });
         }
 
-        async get(id?: any, parameters?: Record<string, any>): Promise<TEntity> {
+        async get(id?: any, parameters?: Record<string, any>, detailToLoadNames?: Array<string>): Promise<TEntity> {
             if (id == null)
                 return null;
-            return (await this.entityClient.getEntity({ entityName: this.entityName, entityId: id, parameters: parameters })).entity;
+            return (await this.entityClient.getEntity({ entityName: this.entityName, entityId: id, parameters: parameters, detailToLoadNames: detailToLoadNames })).entity;
         }
 
         async count(): Promise<number> {
@@ -143,8 +143,8 @@ namespace NextAdmin.Business {
 
         entityInfo: EntityInfo<TEntity>;
 
-        public constructor(entityInfo: EntityInfo_, entityClient: Services.EntityClient, query?: Models.Query) {
-            super(entityInfo.name, entityClient, query);
+        public constructor(entityInfo: EntityInfo_, entityClient: Services.EntityClient, query?: Models.Query, writeIntoOriginalQuery?: boolean) {
+            super(entityInfo.name, entityClient, query, writeIntoOriginalQuery);
             this.entityInfo = entityInfo;
         }
 
@@ -217,6 +217,14 @@ namespace NextAdmin.Business {
 
         whereNotContains_(property: (dataDef: TEntity) => any, search: string, invariantCase?: boolean): EntityDbSetHandler<TEntity> {
             return super.whereNotContains(this.entityInfo.getPropertyName(property), search, invariantCase) as EntityDbSetHandler<TEntity>;
+        }
+
+        whereStartsWith_(property: (dataDef: TEntity) => any, search: string, invariantCase?: boolean): EntityDbSetHandler<TEntity> {
+            return super.whereStartsWith(this.entityInfo.getPropertyName(property), search, invariantCase) as EntityDbSetHandler<TEntity>;
+        }
+
+        whereEndsWith_(property: (dataDef: TEntity) => any, search: string, invariantCase?: boolean): EntityDbSetHandler<TEntity> {
+            return super.whereEndsWith(this.entityInfo.getPropertyName(property), search, invariantCase) as EntityDbSetHandler<TEntity>;
         }
 
         whereIsNullOrEmpty_(property: (dataDef: TEntity) => any): EntityDbSetHandler<TEntity> {

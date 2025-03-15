@@ -2,10 +2,10 @@
 namespace NextAdmin.UI {
 
 
-    export class CollapsibleFilterLayout<T> extends NextAdmin.UI.Control {
+    export class CollapsibleFilter<T> extends NextAdmin.UI.Control {
 
 
-        options: CollapsibleFilterLayoutOptions;
+        options: CollapsibleFilterOptions;
 
         collapsible: Collapsible;
 
@@ -15,12 +15,13 @@ namespace NextAdmin.UI {
 
         timer = new NextAdmin.Timer();
 
-        public constructor(options?: CollapsibleFilterLayoutOptions) {
+        public constructor(options?: CollapsibleFilterOptions) {
             super('div', {
                 throttle: 50,
+                autoUdateSearch: true,
                 title: NextAdmin.Resources.searchIcon + ' ' + NextAdmin.Resources.filters,
                 ...options
-            } as CollapsibleFilterLayoutOptions);
+            } as CollapsibleFilterOptions);
             this.element.style.paddingTop = '6px';
             this.element.style.paddingLeft = '6px';
             this.element.style.paddingRight = '6px';
@@ -54,16 +55,29 @@ namespace NextAdmin.UI {
         addItem<TElement extends Control | HTMLElement>(item: FormLayoutControlItem<TElement>): TElement {
             let control = this.formLayout.addItem(item);
             if (control instanceof FormControl) {
-                control.onValueChanged.subscribe(() => {
-                    this.timer.throttle(() => {
-                        if (this.grid) {
-                            this.grid.updateWhereQuery();
-                            this.grid.datasetController.load();
-                        }
-                    }, this.options.throttle);
-                });
+                if (this.options.autoUdateSearch) {
+                    control.onValueChanged.subscribe(() => {
+                        this.updateSearch();
+                    });
+                }
             }
             return control;
+        }
+
+        updateSearch(throttle = this.options.throttle) {
+            if (!this.grid) {
+                return;
+            }
+            if (throttle) {
+                this.timer.throttle(() => {
+                    this.grid.updateWhereQuery();
+                    this.grid.datasetController.load();
+                }, throttle);
+            }
+            else {
+                this.grid.updateWhereQuery();
+                this.grid.datasetController.load();
+            }
         }
 
         updateQuery(queryBuilder: Business.QueryBuilder): Business.QueryBuilder {
@@ -75,7 +89,7 @@ namespace NextAdmin.UI {
 
     }
 
-    export interface CollapsibleFilterLayoutOptions extends ControlOptions {
+    export interface CollapsibleFilterOptions extends ControlOptions {
 
         throttle?: number;
 
@@ -88,6 +102,8 @@ namespace NextAdmin.UI {
         isOpen?: boolean;
 
         onUpdateQuery?: (queryBuilder: Business.QueryBuilder) => Business.QueryBuilder;
+
+        autoUdateSearch?: boolean;
 
     }
 

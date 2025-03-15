@@ -34,9 +34,18 @@ namespace NextAdmin.UI {
 
         public static style = `
 
-        .next-admin-form-layout-cell{
-            padding:5px;
+        .next-admin-form-layout{
+
+            .next-admin-form-layout-cell{
+                padding:5px;
+            }
         }
+        .next-admin-form-layout.thin-label{
+            .next-admin-layout-form-control-label-container{
+                padding-left:4px;font-size:12px
+            }
+        }
+
 
         `;
 
@@ -45,13 +54,24 @@ namespace NextAdmin.UI {
             super('div', { rowCount: 0, columnCount: 0, ...options } as FormLayoutOptions);
             this.dataController = this.options.dataController;
             Style.append('NextAdmin.UI.FormLayout', FormLayout_.style);
+            this.element.classList.add('next-admin-form-layout');
             this.element.style.width = '100%';
             this.table = this.element.appendHTML('table', (table) => {
                 table.style.width = '100%';
             });
-
+            this.setStyle(this.options.style);
             this.addView(FormLayout.defaultViewName, [], true);
             this.initialize(this.options.columnCount, this.options.rowCount, this.options.items);
+        }
+
+        public setStyle(style?: FormLayoutStyle) {
+            switch (style) {
+                case FormLayoutStyle.thinLabels:
+                    this.element.classList.add('thin-label');
+                    break;
+                default:
+                    break;
+            }
         }
 
 
@@ -295,11 +315,9 @@ namespace NextAdmin.UI {
             if (item.labelWidth && control instanceof LabelFormControl) {
                 control.setLabelWidth(item.labelWidth);
             }
-            //formControlLabelWidth
-            if (!(control instanceof FormLayout)) {//control is sub FormLayout so we remove padding on cell
+            if (!(control instanceof FormLayout)) {
                 cell.classList.add('next-admin-form-layout-cell');
             }
-
 
             if (control) {
                 if (control instanceof Control) {
@@ -464,7 +482,15 @@ namespace NextAdmin.UI {
 
         dataController?: NextAdmin.Business.DataController_;
 
+        style?: FormLayoutStyle;
+
     }
+
+    export enum FormLayoutStyle {
+        thinLabels,
+    }
+
+
 
     export interface FormLayoutViewItem {
 

@@ -72,8 +72,11 @@ namespace NextAdmin.UI {
             super({
                 hasBodyOverflow: true,
                 hasFooterCloseButton: true,
-                dataController: options.dataController == null && NextAdmin.Business.DataController_.factory ? NextAdmin.Business.DataController_.factory(options.dataName) : options.dataController
-                , ...options
+                dataController: options.dataController == null && NextAdmin.Business.DataController_.factory ? NextAdmin.Business.DataController_.factory(options.dataName) : options.dataController,
+                canSave: true,
+                canDelete: true,
+                canCancel: true,
+                ...options
             } as DataFormModalOptions);
             Style.append('NextAdmin.UI.FormModal', DataFormModal_.Style);
             this.dataController = this.options.dataController;
@@ -108,13 +111,17 @@ namespace NextAdmin.UI {
             this.rightFooterToolBar = this.rightFooter.appendControl(new Toolbar(), (toolBar) => {
                 toolBar.element.style.cssFloat = 'right';
 
-                toolBar.appendControl(this.cancelButton = new Button({
+                this.cancelButton = new Button({
                     text: Resources.refreshIcon + ' ' + Resources.cancel, action: () => {
                         this.dataController.cancel();
                     }
-                }));
+                });
 
-                toolBar.appendControl(this.deleteButton = new Button({
+                if (this.options.canCancel) {
+                    toolBar.appendControl(this.cancelButton);
+                }
+
+                this.deleteButton = new Button({
                     text: Resources.deleteIcon + ' ' + Resources.delete,
                     style: ButtonStyle.red,
                     action: () => {
@@ -123,20 +130,27 @@ namespace NextAdmin.UI {
                             let result = await this.dataController.delete();
                             this.stopSpin();
                             if (result.success) {
-                                this.close({ chackDataState:false });
+                                this.close({ chackDataState: false });
                             }
                         });
                     }
-                }));
+                });
 
+                if (this.options.canDelete) {
+                    toolBar.appendControl(this.deleteButton);
+                }
 
-                toolBar.appendControl(this.saveButton = new Button({
+                this.saveButton = new Button({
                     text: Resources.saveIcon + ' ' + Resources.save,
                     style: ButtonStyle.green,
                     action: () => {
                         this.dataController.save();
                     }
-                }));
+                })
+                if (this.options.canSave) {
+                    toolBar.appendControl(this.saveButton);
+                }
+
 
                 if (this.options.hasFooterCloseButton) {
                     toolBar.appendControl(this.footerCloseButton = new Button({
@@ -250,8 +264,12 @@ namespace NextAdmin.UI {
         }
 
         protected async initialize(data: T, dataState?: Business.DataState) {
-
-
+            if (this.options.onInitialize) {
+                this.options.onInitialize(this, {
+                    data: data,
+                    dataState: dataState
+                });
+            }
         }
 
         protected async beforeSave(args?: Business.SaveDataEventArgs) {
@@ -310,9 +328,17 @@ namespace NextAdmin.UI {
 
         hasFooterCloseButton?: boolean;
 
+        canSave?: boolean;
+
+        canDelete?: boolean;
+
+        canCancel?: boolean;
+
         onDataSaved?: (sender: DataFormModal_, args: NextAdmin.Business.SaveDataResult) => void;
 
         onDataDeleted?: (sender: DataFormModal_, data: any) => void;
+
+        onInitialize?: (sender: DataFormModal_, args: InitializeArgs) => void;
 
     }
 
@@ -339,6 +365,15 @@ namespace NextAdmin.UI {
     export interface CloseFormModalArgs extends CloseModalArgs {
 
         chackDataState?: boolean;
+
+    }
+
+
+    export interface InitializeArgs {
+
+        data: any;
+
+        dataState: Business.DataState;
 
     }
 }

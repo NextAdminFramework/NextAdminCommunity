@@ -872,6 +872,8 @@ declare namespace NextAdmin.Business {
         searchMany(searches: string[], clumns: string[], mode?: SearchManyMode): QueryBuilder;
         whereContains(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
         whereNotContains(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
+        whereStartsWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
+        whereEndsWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
         whereIsNullOrEmpty(clumn: string): QueryBuilder;
         whereIsNotNullOrEmpty(clumn: string): QueryBuilder;
         orderBy(...fields: Array<string>): QueryBuilder;
@@ -888,7 +890,7 @@ declare namespace NextAdmin.Business {
     class DbSetHandler<TEntity extends {}> extends QueryBuilder {
         entityName: string;
         entityClient: Services.EntityClient;
-        constructor(entityName: string, entityClient: Services.EntityClient, queryData?: Models.Query);
+        constructor(entityName: string, entityClient: Services.EntityClient, query?: Models.Query, writeIntoOriginalQuery?: boolean);
         select(...fields: Array<string>): DbSetHandler<TEntity>;
         distinct(value?: boolean): DbSetHandler<TEntity>;
         where(query: string, ...args: Array<any>): DbSetHandler<TEntity>;
@@ -907,7 +909,7 @@ declare namespace NextAdmin.Business {
         create(parameters?: Record<string, any>): Promise<TEntity>;
         delete(id?: any, parameters?: Record<string, any>): Promise<NextAdmin.Models.UpdateEntitiesResponse>;
         deleteRange(ids?: Array<any>, parameters?: Record<string, any>): Promise<NextAdmin.Models.SaveEntitiesResponse<TEntity>>;
-        get(id?: any, parameters?: Record<string, any>): Promise<TEntity>;
+        get(id?: any, parameters?: Record<string, any>, detailToLoadNames?: Array<string>): Promise<TEntity>;
         count(): Promise<number>;
         sum(member: string): Promise<number>;
         min(propertyName?: string): Promise<number>;
@@ -915,7 +917,7 @@ declare namespace NextAdmin.Business {
     }
     class EntityDbSetHandler<TEntity> extends DbSetHandler<TEntity> {
         entityInfo: EntityInfo<TEntity>;
-        constructor(entityInfo: EntityInfo_, entityClient: Services.EntityClient, query?: Models.Query);
+        constructor(entityInfo: EntityInfo_, entityClient: Services.EntityClient, query?: Models.Query, writeIntoOriginalQuery?: boolean);
         clone(): EntityDbSetHandler<TEntity>;
         getPropertyName(dataDefPropertyAction: (dataDef: TEntity) => any): any;
         toArray_<TProp>(property: (dataDef: TEntity) => TProp, parameters?: Record<string, any>): Promise<Array<TProp>>;
@@ -931,6 +933,8 @@ declare namespace NextAdmin.Business {
         whereNotIn_(property: (dataDef: TEntity) => any, ...args: Array<any>): EntityDbSetHandler<TEntity>;
         whereContains_(property: (dataDef: TEntity) => any, search: string, invariantCase?: boolean): EntityDbSetHandler<TEntity>;
         whereNotContains_(property: (dataDef: TEntity) => any, search: string, invariantCase?: boolean): EntityDbSetHandler<TEntity>;
+        whereStartsWith_(property: (dataDef: TEntity) => any, search: string, invariantCase?: boolean): EntityDbSetHandler<TEntity>;
+        whereEndsWith_(property: (dataDef: TEntity) => any, search: string, invariantCase?: boolean): EntityDbSetHandler<TEntity>;
         whereIsNullOrEmpty_(property: (dataDef: TEntity) => any): EntityDbSetHandler<TEntity>;
         whereIsNotNullOrEmpty_(property: (dataDef: TEntity) => any): EntityDbSetHandler<TEntity>;
         search_(search?: string, ...properties: Array<(dataDef: TEntity) => any>): EntityDbSetHandler<TEntity>;
@@ -1195,6 +1199,7 @@ declare namespace NextAdmin {
         unknownError: string;
         success: string;
         search: string;
+        searching: string;
         lostDataNotSavedMessage: string;
         formDeleteMessageTitle: string;
         formDeleteMessage: string;
@@ -1342,6 +1347,7 @@ declare namespace NextAdmin {
         unknownError: string;
         success: string;
         search: string;
+        searching: string;
         lostDataNotSavedMessage: string;
         formDeleteMessageTitle: string;
         formDeleteMessage: string;
@@ -2149,24 +2155,26 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
-    class CollapsibleFilterLayout<T> extends NextAdmin.UI.Control {
-        options: CollapsibleFilterLayoutOptions;
+    class CollapsibleFilter<T> extends NextAdmin.UI.Control {
+        options: CollapsibleFilterOptions;
         collapsible: Collapsible;
         formLayout: FormLayout_;
         grid: DataGrid<T>;
         timer: Timer;
-        constructor(options?: CollapsibleFilterLayoutOptions);
+        constructor(options?: CollapsibleFilterOptions);
         addView(viewName: string, items?: Array<FormLayoutViewItem>, active?: boolean): FormLayoutView;
         addItem<TElement extends Control | HTMLElement>(item: FormLayoutControlItem<TElement>): TElement;
+        updateSearch(throttle?: number): void;
         updateQuery(queryBuilder: Business.QueryBuilder): Business.QueryBuilder;
     }
-    interface CollapsibleFilterLayoutOptions extends ControlOptions {
+    interface CollapsibleFilterOptions extends ControlOptions {
         throttle?: number;
         grid?: DataGrid_;
         items?: Array<FormLayoutControlItem<any>>;
         title?: string;
         isOpen?: boolean;
         onUpdateQuery?: (queryBuilder: Business.QueryBuilder) => Business.QueryBuilder;
+        autoUdateSearch?: boolean;
     }
 }
 declare namespace NextAdmin.UI {
@@ -2231,8 +2239,12 @@ declare namespace NextAdmin.UI {
         dataPrimaryKey?: any;
         isDetailFormModal?: boolean;
         hasFooterCloseButton?: boolean;
+        canSave?: boolean;
+        canDelete?: boolean;
+        canCancel?: boolean;
         onDataSaved?: (sender: DataFormModal_, args: NextAdmin.Business.SaveDataResult) => void;
         onDataDeleted?: (sender: DataFormModal_, data: any) => void;
+        onInitialize?: (sender: DataFormModal_, args: InitializeArgs) => void;
     }
     interface FormModalOpenArgs<T> {
         data?: T;
@@ -2245,6 +2257,10 @@ declare namespace NextAdmin.UI {
     }
     interface CloseFormModalArgs extends CloseModalArgs {
         chackDataState?: boolean;
+    }
+    interface InitializeArgs {
+        data: any;
+        dataState: Business.DataState;
     }
 }
 declare namespace NextAdmin.UI {
@@ -2310,6 +2326,7 @@ declare namespace NextAdmin.UI {
         protected _activeViewName?: string;
         static style: string;
         constructor(options?: FormLayoutOptions);
+        setStyle(style?: FormLayoutStyle): void;
         initialize(colCount: number, rowCount: number, items?: Array<FormLayoutItem>): void;
         getView(viewName: string): FormLayoutView;
         addView(viewName: string, items?: Array<FormLayoutViewItem>, active?: boolean): FormLayoutView;
@@ -2342,6 +2359,10 @@ declare namespace NextAdmin.UI {
         rowCount?: number;
         items?: FormLayoutItem[];
         dataController?: NextAdmin.Business.DataController_;
+        style?: FormLayoutStyle;
+    }
+    enum FormLayoutStyle {
+        thinLabels = 0
     }
     interface FormLayoutViewItem {
         id?: string;
@@ -2435,7 +2456,7 @@ declare namespace NextAdmin.UI {
         exportButton: Button;
         generateReportButton: DropDownButton;
         filtersContainer: HTMLDivElement;
-        viewFiltersLayout: CollapsibleFilterLayout<T>;
+        viewFiltersLayout: CollapsibleFilter<T>;
         options: DataGridOptions_;
         datasetController?: Business.DatasetController<T>;
         noDataMessageContainer: HTMLElement;
@@ -2667,19 +2688,23 @@ declare namespace NextAdmin.UI {
         defaultViewId?: string;
         views?: GridViewOptions[];
         reports?: DataGridReportOptions[];
-        openAction?: (row: DataGridRow_) => void;
+        openAction?: (row: DataGridRow<T>) => void;
         refreshAction?: (grid: DataGrid<T>) => void;
-        addAction?: (grid: DataGrid_) => void;
-        deleteAction?: (grid: DataGrid_, rows: Array<DataGridRow_>) => void;
+        addAction?: (grid: DataGrid<T>) => void;
+        deleteAction?: (grid: DataGrid<T>, rows: Array<DataGridRow<T>>) => void;
         hasContextMenu?: boolean;
-        onOpenContextMenu?: (grid: DataGrid_, args: OpenContextMenuArgs) => void;
-        onFormModalCreated?: (grid: DataGrid_, args: {
+        onOpenContextMenu?: (grid: DataGrid<T>, args: OpenContextMenuArgs) => void;
+        onFormModalCreated?: (grid: DataGrid<T>, args: {
             modal: DataFormModal_;
             data: any;
         }) => void;
+        onSelectedRowsChanged?: (grid: DataGrid<T>, args: DataGridRow<T>[]) => void;
+        onUpdateWhereQuery?: (grid: DataGrid<T>, args: Business.QueryBuilder) => void;
         style?: TableStyle | any;
         displayNoDataMessage?: boolean;
+        minHeight?: string;
         isAutoLoaded?: boolean;
+        buttonAddText?: string;
     }
     export interface DataGridOptions_ extends DataGridOptions<any> {
     }
@@ -2702,7 +2727,7 @@ declare namespace NextAdmin.UI {
     }
     export interface DataGridColumnOption<T> extends DataGridViewColumnOptions {
         controlFactory?: (cell: DataGridCell<T>) => FormControl;
-        customCellContent?: (cell: DataGridCell<T>, value: any) => string | Control | HTMLElement | void;
+        onRenderCell?: (cell: DataGridCell<T>, value: any) => string | Control | HTMLElement | void;
         orderingFunc?: (rowData: T, dataset: Array<T>) => number | string;
     }
     export interface DataGridColumnOptions_ extends DataGridColumnOption<any> {
@@ -2940,6 +2965,7 @@ declare namespace NextAdmin.UI {
         getFilteredItems(): Array<HTMLTableRowElement>;
         setPropertyInfo(propertyInfo: NextAdmin.Business.DataPropertyInfo): void;
         addSelectItems(items: SelectItem[]): void;
+        setSelectItems(items: SelectItem[]): void;
         addSelectItem(item: SelectItem): void;
         removeItem(rowElement: HTMLTableRowElement): void;
         getItemsValues(): Array<string>;
@@ -2966,7 +2992,7 @@ declare namespace NextAdmin.UI {
         resetSearchAtOpen?: boolean;
         usePerfectScrollbar?: boolean;
         localOrdering?: boolean;
-        inputSearchDelay?: number;
+        throttle?: number;
         size?: InputSize;
         onDropdownOpen?: (sender: InputSelect, args: HTMLElement) => void;
     }
@@ -3384,10 +3410,10 @@ declare namespace NextAdmin.UI {
         protected updateValue(value: any[]): void;
         cancelSelect(): void;
         openDropDown(): void;
-        private _selectedItems;
+        private _selectedItemValues;
         setValue(value: any): void;
         getValue(): any;
-        getSelectItems(): any[];
+        getSelectItemValues(): any[];
     }
     interface MultiInputSelectOptions extends InputSelectOptions {
         valueCharSeparator?: string;

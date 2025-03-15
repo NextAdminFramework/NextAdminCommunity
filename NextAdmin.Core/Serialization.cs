@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Text;
@@ -25,6 +26,11 @@ namespace NextAdmin.Core
         public static object FromJSON(this string _this)
         {
             return JsonConvert.DeserializeObject(_this);
+        }
+
+        public static JObject ToJObject(this string _this)
+        {
+            return JsonConvert.DeserializeObject<JObject>(_this);
         }
 
         public static object FromJSON(this string _this, Type type)

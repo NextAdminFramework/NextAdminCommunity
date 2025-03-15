@@ -101,7 +101,7 @@
     <TypeScriptCompile Include="Src\UI\AspectRatioContainer.ts" />
     <TypeScriptCompile Include="Src\UI\Button.ts" />
     <TypeScriptCompile Include="Src\UI\ChangePasswordModal.ts" />
-    <TypeScriptCompile Include="Src\UI\CollapsibleFilterLayout.ts" />
+    <TypeScriptCompile Include="Src\UI\CollapsibleFilter.ts" />
     <TypeScriptCompile Include="Src\UI\FlexLayout.ts" />
     <TypeScriptCompile Include="Src\UI\FormModal.ts" />
     <TypeScriptCompile Include="Src\UI\GridFormPanel.ts" />

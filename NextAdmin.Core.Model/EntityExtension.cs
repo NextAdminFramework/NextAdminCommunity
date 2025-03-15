@@ -124,7 +124,7 @@ namespace NextAdmin.Core.Model
             var memberNames = new Dictionary<string, int>();
             foreach (var property in entityType.GetProperties())
             {
-                PreviewAttribute displayMemberAttribute = property.GetCustomAttribute<PreviewAttribute>();
+                PreviewableAttribute displayMemberAttribute = property.GetCustomAttribute<PreviewableAttribute>();
                 if (displayMemberAttribute == null)
                     continue;
                 memberNames.Add(property.Name, displayMemberAttribute.Index);

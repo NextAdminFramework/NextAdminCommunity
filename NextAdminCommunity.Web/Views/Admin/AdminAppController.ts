@@ -56,7 +56,7 @@ class AdminAppController extends NextAdmin.BackEndAppController {
         }
         this.entityClient = new AdminEntityClient(this.options.adminEntityControllerUrl, this.options.adminAuthTokenName, authToken);
         this.serviceClient = new AdminServiceClient(this.options.adminServiceControllerUrl, this.options.adminAuthTokenName, authToken);
-        this.onStartInitializeApp.dispatch();
+        this.onStartInitializeApp.dispatch(this, this.options);
 
         this.appConfig = await this.serviceClient.getAppConfig();
         if (this.appConfig == null) {

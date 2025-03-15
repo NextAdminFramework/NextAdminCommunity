@@ -16,7 +16,7 @@ namespace NextAdmin {
 
         public onUserLoggedOut = new NextAdmin.EventHandler<BackEndAppController, NextAdmin.Models.User>();
 
-        public onStartInitializeApp = new NextAdmin.EventHandlerBase();
+        public onStartInitializeApp = new NextAdmin.EventHandler<BackEndAppController, BackEndAppControllerOptions>();
 
         public onAppInitialized = new NextAdmin.EventHandlerBase();
 
@@ -143,10 +143,10 @@ namespace NextAdmin {
             let user = await this.userClient.getUserByToken();
             document.body.stopSpin();
             if (user) {
-                this.logUser(user);
+                await this.logUser(user);
             }
             else {
-                this.navigateTo(this.options.defaultPage);
+                await this.navigateTo(this.options.defaultPage);
             }
         }
 
@@ -173,7 +173,7 @@ namespace NextAdmin {
             return this._currentLanguage;
         }
 
-        getCurrentLenguage() {
+        getCurrentLanguage() {
             return this._currentLanguage ?? 'en';
         }
 
@@ -214,21 +214,6 @@ namespace NextAdmin {
             if (this.user == null || NextAdmin.String.isNullOrEmpty(authToken)) {
                 return false;
             }
-            /*
-            this.entityClient = new AdminEntityClient(this.options.adminEntityControllerUrl, this.options.adminAuthTokenName, authToken);
-            this.serviceClient = new AdminServiceClient(this.options.adminServiceControllerUrl, this.options.adminAuthTokenName, authToken);
-            this.onStartInitializeApp.dispatch();
-    
-            this.appConfig = await this.serviceClient.getAppConfig();
-            if (this.appConfig == null) {
-                NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, Resources.invalidCredentials, () => {
-                    this.logOutUser();
-                });
-                return false;
-            }
-            this.entityInfos = new NextAdmin.Business.EntityInfos(this.appConfig.entityInfos);
-            */
-
 
             this.initializeResources(this.user.culture);
             NextAdmin.Business.DatasetController_.factory = (dataName) => dataName == null ? null : new NextAdmin.Business.EntityDatasetController({
@@ -241,6 +226,8 @@ namespace NextAdmin {
                 dataInfos: this.entityInfos,
                 dataName: dataName
             });
+
+            this.onStartInitializeApp.dispatch(this, this.options);
 
             this.leftContainer = document.body.appendHTML('div', (leftContainer) => {
                 leftContainer.classList.add('next-admin-side-container');

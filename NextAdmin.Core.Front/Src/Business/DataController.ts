@@ -213,8 +213,11 @@ namespace NextAdmin.Business {
                 ...args
             };
             return new Promise(async (resolve) => {
+
+                let dataToSave = NextAdmin.Copy.clone(this.data);
+
                 let saveDataEventArgs = {
-                    data: this.data,
+                    data: dataToSave,
                     dataState: this.getDataState(),
                     errors: [],
                     warnings:[],
@@ -228,6 +231,7 @@ namespace NextAdmin.Business {
                         message: Resources.requiredField
                     });
                 }
+
                 await this.onStartSaveData.dispatch(this, saveDataEventArgs);
 
                 if (saveDataEventArgs.errors?.length || saveDataEventArgs.warnings?.length || saveDataEventArgs.message) {
@@ -239,7 +243,8 @@ namespace NextAdmin.Business {
                     });
                 }
 
-                if (saveDataEventArgs.cancel || saveDataEventArgs.errors?.length) {                    
+                if (saveDataEventArgs.cancel || saveDataEventArgs.errors?.length) {    
+                    
                     return;
                 }
                 if (this.form != null) {
@@ -247,7 +252,7 @@ namespace NextAdmin.Business {
                 }
 
                 if (this.saveAction != null) {
-                    this.saveAction(this.data, (result: SaveDataResult) => {
+                    this.saveAction(dataToSave, (result: SaveDataResult) => {
                         if (args.onGetResponse != null) {
                             args.onGetResponse(result);
                         }

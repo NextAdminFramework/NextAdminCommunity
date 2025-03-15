@@ -96,7 +96,9 @@ namespace NextAdmin.UI {
             list-style:none;
             overflow:hidden;
             transition:max-height 2s cubic-bezier(0, .55, .45, 1);
-            padding-left:1.5rem
+            padding-left:1.5rem;
+            background:rgba(37, 42, 73, 0.4);
+            border-radius:10px;
         }
 
         .sidebar-wrapper .menu .caret{

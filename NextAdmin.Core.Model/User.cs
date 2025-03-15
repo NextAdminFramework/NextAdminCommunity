@@ -12,7 +12,7 @@ namespace NextAdmin.Core.Model
     [Index(nameof(UserName), IsUnique = true), Label()]
     public abstract class User : StrGuidEntity, IUser
     {
-        [Required, Label, Preview]
+        [Required, Label, Previewable]
         public string UserName { get; set; }
 
         [NotMapped, Label]

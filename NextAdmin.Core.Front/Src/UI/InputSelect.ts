@@ -47,11 +47,12 @@ namespace NextAdmin.UI {
                 autoFill: true,
                 usePerfectScrollbar: false,
                 localOrdering: true,
-                inputSearchDelay: 50,
+                throttle: 50,
                 canSearchData: true,
                 maxDropDownHeight: '250px', ...options
             } as InputSelectOptions);
             Style.append("InputSelect", InputSelect.style);
+            this.input.type = 'text';
 
             //used to kill chrome autcompletion dropdown
             this.input.setAttribute('autocomplete', 'one-time-code');
@@ -254,10 +255,10 @@ namespace NextAdmin.UI {
             }
             if (this.options.canSearchData) {
                 if (this.options.searchAction != null) {
-                    if (this.options.inputSearchDelay) {
+                    if (this.options.throttle) {
                         this.timer.throttle(() => {
                             this.distantSearch(super.getValue());
-                        }, this.options.inputSearchDelay);
+                        }, this.options.throttle);
                     }
                     else {
                         this.distantSearch(super.getValue());
@@ -417,10 +418,14 @@ namespace NextAdmin.UI {
         }
 
         addSelectItems(items: SelectItem[]) {
-            console.log('add items');
             for (let item of items) {
                 this.addSelectItem(item);
             }
+        }
+
+        setSelectItems(items: SelectItem[]) {
+            this.clearItems();
+            this.addSelectItems(items);
         }
 
         addSelectItem(item: SelectItem) {
@@ -597,7 +602,7 @@ namespace NextAdmin.UI {
 
         localOrdering?: boolean;
 
-        inputSearchDelay?: number;//used to reduce number of server call
+        throttle?: number;//used to reduce number of server call
 
         size?: InputSize;
 

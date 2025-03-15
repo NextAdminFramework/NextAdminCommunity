@@ -46,6 +46,8 @@ namespace NextAdmin {
 
         search = "Rechercher";
 
+        searching = "Recherche";
+
         lostDataNotSavedMessage = 'Si vous continuez, les données non sauvegardées pourraient être perdues, que voulez-vous faire?';
 
         formDeleteMessageTitle = 'Suppression définitive';

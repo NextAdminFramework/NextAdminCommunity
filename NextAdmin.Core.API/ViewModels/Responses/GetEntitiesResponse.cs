@@ -1,12 +1,26 @@
 ﻿namespace NextAdmin.Core.API.ViewModels.Responses
 {
-    public class GetEntitiesResponse : ApiResponse
+
+    public class GetEntitiesResponse<TEntity> : ApiResponse
     {
 
-        public List<object>? Entities { get; set; }
+        public List<TEntity>? Entities { get; set; }
 
 
-        public static GetEntitiesResponse Error(ApiResponseCode errorCode, string? message = null)
+        public static GetEntitiesResponse<TEntity> Error(ApiResponseCode errorCode, string? message = null)
+        {
+            return new GetEntitiesResponse<TEntity>
+            {
+                Code = errorCode.ToString(),
+                Message = message
+            };
+        }
+
+    }
+
+    public class GetEntitiesResponse : GetEntitiesResponse<object>
+    {
+        public static new GetEntitiesResponse Error(ApiResponseCode errorCode, string? message = null)
         {
             return new GetEntitiesResponse
             {
@@ -14,6 +28,5 @@
                 Message = message
             };
         }
-
     }
 }

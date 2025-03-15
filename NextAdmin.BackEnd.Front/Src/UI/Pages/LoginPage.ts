@@ -132,7 +132,7 @@ namespace NextAdmin.UI {
                                     }
                                 }));
                                 if (this.options.gcuInfos?.length) {
-                                    let currentLanguage = this.navigationController.getCurrentLenguage();
+                                    let currentLanguage = this.navigationController.getCurrentLanguage();
                                     let gcuInfo = this.options.gcuInfos.firstOrDefault(a => a.language == currentLanguage) ?? this.options.gcuInfos.firstOrDefault(a => a.language == 'en') ?? this.options.gcuInfos.firstOrDefault();
                                     if (gcuInfo) {
                                         footer.appendControl(new NextAdmin.UI.Button({

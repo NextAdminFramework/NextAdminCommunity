@@ -46,6 +46,8 @@ namespace NextAdmin {
 
         search = "Search";
 
+        searching = "Search";
+
         lostDataNotSavedMessage = 'If you validate, not saved data will be lost, what do you want to do ?';
 
         formDeleteMessageTitle = 'Delete data';

@@ -14,7 +14,7 @@ namespace NextAdminCommunity.Web.Models
     {
         public static string SuperAdminUserId = "61ff244a-21d5-4f07-b370-57cfb97273bd";
 
-        [Required, Preview, Label("AdminUser_UserName")]
+        [Required, Previewable, Label("AdminUser_UserName")]
         public string? UserName { get; set; }
 
         [NotMapped, Label("AdminUser_Password")]
