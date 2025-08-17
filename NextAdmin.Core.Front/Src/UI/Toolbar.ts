@@ -98,7 +98,7 @@ namespace NextAdmin.UI {
         }
 
         public insertControl<TElement extends Control | HTMLElement>(elementOrControl: TElement, index: number, setControlPropertiesAction?: (control: TElement) => void): TElement {
-            let td = this.row.insertCell(index);
+            let td = this.row.childNodes.length < index ? this.row.addCell() : this.row.insertCell(index);
             td.classList.add('toolbar-cell');
             if (elementOrControl instanceof Control) {
                 td.appendControl(elementOrControl);

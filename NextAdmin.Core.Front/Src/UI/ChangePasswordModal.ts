@@ -19,7 +19,7 @@ namespace NextAdmin.UI {
 
                 let newPassword1 = container.appendControl(new NextAdmin.UI.Input({
                     label: Resources.newPassword,
-                    layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                    labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                     inputType: NextAdmin.UI.InputType.password
                 }), (input) => {
                     input.element.style.marginBottom = '20px';
@@ -27,7 +27,7 @@ namespace NextAdmin.UI {
 
                 let newPassword2 = container.appendControl(new NextAdmin.UI.Input({
                     label: Resources.newPasswordRepeat,
-                    layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                    labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                     inputType: NextAdmin.UI.InputType.password
                 }), (input) => {
                     input.element.style.marginBottom = '20px';

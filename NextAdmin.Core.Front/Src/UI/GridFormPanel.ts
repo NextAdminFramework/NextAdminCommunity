@@ -2,12 +2,12 @@
 
 namespace NextAdmin.UI {
 
-    export class GridFormPanel extends Control {
+    export class GridFormPanel<T> extends Control {
 
 
         options: GridFormPanelOptions;
 
-        grid: DataGrid_;
+        grid: DataGrid<T>;
 
         formPanel: FormPanel;
 
@@ -21,6 +21,8 @@ namespace NextAdmin.UI {
 
             .next-admin-grid-form-left-container{
                 width:50%;
+                min-width:50%;
+                max-width:50%;
                 min-height:100%;
                 padding-right:15px;
             }
@@ -36,6 +38,8 @@ namespace NextAdmin.UI {
             .next-admin-grid-form{
                 .next-admin-grid-form-left-container{
                     width:800px;
+                    min-width:800px;
+                    max-width:800px;
                 }
             }
         }
@@ -95,12 +99,25 @@ namespace NextAdmin.UI {
                         this.options.onSelectedDataChanged(row, this.formPanel);
                     }
                     if (this.formPanel.dataController != null) {
-                        this.formPanel.dataController.load(row.data[this.formPanel.dataController.options.dataName])
+                        this.formPanel.display();
+                        this.formPanel.startSpin();
+                        this.formPanel.dataController.load(row.data[this.formPanel.dataController.options.dataPrimaryKeyName], {
+                            onGetResponse: () => {
+                                this.formPanel.stopSpin();
+                            }
+                        })
                     }
                 });
                 this.grid.onRowAdded.subscribe((sender, row) => {
-                    if (this.grid.getSelectedDataRows().length == 0) {
-                        this.grid.selectRow(row);
+                    setTimeout(() => {
+                        if (this.grid.getSelectedDataRows().length == 0) {
+                            this.grid.selectRow(row);
+                        }
+                    }, 20);
+                });
+                this.grid.onDatasetChanged.subscribe((sender, items) => {
+                    if (!items?.length) {
+                        this.formPanel.hide();
                     }
                 });
 
@@ -113,23 +130,18 @@ namespace NextAdmin.UI {
                     ...this.options.formPanelOption
                 }));
                 if (this.formPanel.dataController) {
-                    this.formPanel.dataController.onDataDeleted.subscribe(() => {
+                    this.formPanel.dataController.onDataDeleted.subscribe((sender, result) => {
                         if (this.grid.datasetController) {
-                            this.grid.datasetController.load();
-                        }
-                        else {
-
+                            this.grid.load({ tryPreserveSelectionAndScroll: true });
                         }
                     });
-                    this.formPanel.dataController.onDataSaved.subscribe(() => {
-                        if (this.grid.datasetController) {
-                            this.grid.datasetController.load();
-                        }
-                        else {
-
+                    this.formPanel.dataController.onDataSaved.subscribe((sender, result) => {
+                        if (result.success && this.grid.datasetController) {
+                            this.grid.load({ tryPreserveSelectionAndScroll: true });
                         }
                     });
                 }
+                this.formPanel.hide();
             });
             if (this.grid.noDataMessageContainer) {
                 this.element.appendChild(this.grid.noDataMessageContainer);
@@ -146,7 +158,16 @@ namespace NextAdmin.UI {
 
         onSelectedDataChanged?: (row: DataGridRow_, panel: FormPanel) => void;
 
-        onAppendDataItem?: (sender: GridFormPanel, data: any) => void;
+        onAppendDataItem?: (sender: GridFormPanel_, data: any) => void;
+
+    }
+
+
+    export class GridFormPanel_ extends GridFormPanel<any> {
+
+
+
+
 
     }
 

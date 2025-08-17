@@ -97,7 +97,7 @@ namespace NextAdmin.Core.API.Controllers
             {
                 return null;
             }
-            return Model.User.FindUserFromToken<TUser>(DbContext, new AuthTokenSerializer(), AuthTokenIssuer, GetUserAuthToken());
+            return UserHelper.FindUserFromToken<TUser>(DbContext, new AuthTokenSerializer(), AuthTokenIssuer, GetUserAuthToken());
         }
 
 

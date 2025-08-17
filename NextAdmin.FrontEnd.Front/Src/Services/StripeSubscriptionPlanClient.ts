@@ -1,9 +1,18 @@
 
 namespace NextAdmin.Services {
-    export class SubscriptionPlanClient extends HttpClient {
+    export class StripeSubscriptionPlanClient extends HttpClient {
 
-        public constructor(rootServiceURL = '/api/subscription') {
-            super(rootServiceURL);
+        public authTokenName?: string;
+
+        public static defaultControllerUrl = '/api/stripe/subscription';
+
+        public constructor(rootServiceURL?: string, authTokenName?: string) {
+            super(rootServiceURL ?? StripeSubscriptionPlanClient.defaultControllerUrl);
+            this.authTokenName = authTokenName;
+        }
+
+        setAuthToken(authToken: string) {
+            this.headerParams[this.authTokenName] = authToken;
         }
 
         public async getSubscriptionStripePaymentLink(planId: string): Promise<NextAdmin.Models.ApiResponse<string>> {

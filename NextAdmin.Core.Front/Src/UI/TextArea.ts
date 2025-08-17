@@ -59,9 +59,15 @@ namespace NextAdmin.UI {
                 this.onValueChanged.dispatch(this, { value: this.textArea.value } as ValueChangeEventArgs);
             });
             this.controlContainer.appendChild(this.textArea);
-            if (this.options.fillHeight) {
+            if (this.options.displayMode == TextAreaDisplayMode.stretchHeight) {
                 this.element.style.height = '100%';
                 this.textArea.style.height = '100%';
+            }
+            else if (this.options.displayMode == TextAreaDisplayMode.fitContent) {
+                this.textArea.addEventListener('input', () => {
+                    this.textArea.style.height = "";
+                    this.textArea.style.height = this.textArea.scrollHeight + "px"
+                });
             }
             this.setStyle(this.options.style);
             TextArea.onCreated.dispatch(this, this.options);
@@ -104,7 +110,7 @@ namespace NextAdmin.UI {
 
     export interface TextAreaOptions extends LabelFormControlOptions {
 
-        fillHeight?: boolean;
+        displayMode?: TextAreaDisplayMode;
 
         style?: TextAreaStyle | any;
 
@@ -113,6 +119,12 @@ namespace NextAdmin.UI {
     export enum TextAreaStyle {
         default,
         modern
+    }
+
+    export enum TextAreaDisplayMode {
+        default,
+        stretchHeight,
+        fitContent
     }
 
 }

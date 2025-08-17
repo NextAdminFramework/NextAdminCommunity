@@ -310,9 +310,10 @@ namespace NextAdmin.UI {
                 this.tableContainer.style.left = '0px';
                 this.tableContainer.style.top = '0px';
                 this.tableContainer.style.overflow = 'auto';
+                /*
                 if (UserAgent.isDesktop()) {
                     this.tableContainer.appendPerfectScrollbar();
-                }
+                }*/
             }
 
             this.table = this.tableContainer.appendHTML('table');
@@ -1221,6 +1222,7 @@ namespace NextAdmin.UI {
 
             let wjereQuery = '';
             let whereArgs = [];
+            this._previousScrollTop = 0;
 
             if (view != null && !String.isNullOrWhiteSpace(view.filterQuery)) {
                 wjereQuery = view.filterQuery == null ? '' : view.filterQuery.toString();
@@ -1679,17 +1681,16 @@ namespace NextAdmin.UI {
         }
 
 
-
+        private _previousScrollTop = 0;
         protected enableScrollLoading() {
             let isLoading = false;
 
-            let previousScrollTop = 0;
             this.tableContainer.addEventListener('scroll', async (ev) => {
                 if (isLoading || this.datasetController.dataset == null || this.datasetController.dataset.count() == 0)
                     return;
 
-                if (this.tableContainer.scrollTop > previousScrollTop && this.tableContainer.scrollTop + this.tableContainer.offsetHeight > this.tableContainer.scrollHeight - 200) {
-                    previousScrollTop = this.tableContainer.scrollTop;
+                if (this.tableContainer.scrollTop > this._previousScrollTop && this.tableContainer.scrollTop + this.tableContainer.offsetHeight > this.tableContainer.scrollHeight - 200) {
+                    this._previousScrollTop = this.tableContainer.scrollTop;
                     isLoading = true;
                     this.datasetController.skip(this.datasetController.dataset.count());
                     await this.datasetController.loadAdd();

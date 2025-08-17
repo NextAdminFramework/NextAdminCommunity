@@ -5,7 +5,9 @@ namespace NextAdmin.UI {
 
         options: NavigationTopBarOptions;
 
-        container?: FlexLayout;
+        container?: HTMLDivElement;
+
+        layout?: FlexLayout;
 
         logoImage?: HTMLImageElement;
 
@@ -26,11 +28,27 @@ namespace NextAdmin.UI {
             height:50px;
             z-index:100;
 
+            .next-admin-top-bar-container{
+                position:relative;
+                padding-left:10px;
+                padding-right:10px;
+                height:100%;
+            }
+
             .top-bar-logo-link{
                 height:100%;
                 text-decoration:none;
                 font-size:30px;
                 font-weight:bold;
+            }
+
+            .top-bar-logo{
+                margin-right:20px;
+                max-height:100%;
+                @media (max-width: 512px) {
+                    margin-right:5px;
+                    max-width:120px;
+                }
             }
             
             .next-admin-top-bar-center-container{
@@ -38,8 +56,6 @@ namespace NextAdmin.UI {
                 left:50%;
                 height:100%;
                 transform:perspective(1px) translateX(-50%);
-                padding-left:5px;
-                padding-right:5px;
             }
             .next-admin-top-bar-link{
 
@@ -83,31 +99,39 @@ namespace NextAdmin.UI {
                 this.element.style.position = 'fixed';
             }
 
-            this.container = this.element.appendControl(new NextAdmin.UI.FlexLayout({ direction: NextAdmin.UI.FlexLayoutDirection.horizontal }), (container) => {
-                container.element.classList.add('next-admin-top-bar-center-container');
-                container.element.style.maxWidth = this.options.maxContainerWidth;
+            this.container = this.element.appendHTML('div', (container) => {
+                container.classList.add('next-admin-top-bar-container');
 
-                this.logoLink = container.appendHTML('a', (logoLink) => {
-                    logoLink.classList.add('top-bar-logo-link');
-                    logoLink.centerContentVertically();
-                    if (this.options.textLogoHtmlContent) {
-                        logoLink.innerHTML = this.options.textLogoHtmlContent;
+                this.layout = container.appendControl(new NextAdmin.UI.FlexLayout({ direction: NextAdmin.UI.FlexLayoutDirection.horizontal }), (layout) => {
+                    layout.element.classList.add('next-admin-top-bar-center-container');
+                    if (this.options.maxContainerWidth) {
+                        layout.element.style.maxWidth = this.options.maxContainerWidth;
                     }
-                    if (this.options?.navigationController?.options?.defaultPage) {
-                        logoLink.href = this.options.navigationController.options.defaultPage;
-                    }
-                    if (this.options.imageLogoUrl) {
-                        this.logoImage = logoLink.appendHTML('img', (logoImage) => {
-                            logoImage.style.marginRight = '20px';
-                            logoImage.src = this.options.imageLogoUrl;
-                            logoImage.style.height = '100%';
-                        });
-                    }
+
+                    this.logoLink = layout.appendHTML('a', (logoLink) => {
+                        logoLink.classList.add('top-bar-logo-link');
+                        logoLink.centerContentVertically();
+                        if (this.options.textLogoHtmlContent) {
+                            logoLink.innerHTML = this.options.textLogoHtmlContent;
+                        }
+                        if (this.options?.navigationController?.options?.defaultPage) {
+                            logoLink.href = this.options.navigationController.options.defaultPage;
+                        }
+                        if (this.options.imageLogoUrl) {
+                            this.logoImage = logoLink.appendHTML('img', (logoImage) => {
+                                logoImage.classList.add('top-bar-logo');
+                                logoImage.src = this.options.imageLogoUrl;
+                            });
+                        }
+                    });
+                    this.leftToolbar = layout.appendControl(new Toolbar());
+                    this.stretchArea = layout.appendHTMLStretch('div');
+                    this.rightToolbar = layout.appendControl(new Toolbar());
                 });
-                this.leftToolbar = container.appendControl(new Toolbar());
-                this.stretchArea = container.appendHTMLStretch('div');
-                this.rightToolbar = container.appendControl(new Toolbar());
+
             });
+
+
 
             if (this.options.navigationController) {
                 this.options.navigationController.onPageChanged.subscribe((sender, page) => {

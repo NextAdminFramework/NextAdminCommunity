@@ -6,52 +6,74 @@ namespace NextAdmin.Business {
 
         public query: Models.Query;
 
-        public writeIntoOriginalQuery?: boolean;
+        public writeQueryMode?: WriteQueryMode;
 
-        public constructor(query?: Models.Query, writeIntoOriginalQuery?: boolean) {
-            this.writeIntoOriginalQuery = writeIntoOriginalQuery;
-            if (query) {
-                this.query = writeIntoOriginalQuery ? query : { ...query };
+        public constructor(query?: Models.Query, writeQueryMode?: WriteQueryMode) {
+            this.query = query ?? {};
+            this.writeQueryMode = writeQueryMode;
+        }
+
+        clone(): QueryBuilder {
+            return new QueryBuilder(NextAdmin.Copy.clone(this.query), this.writeQueryMode);
+        }
+
+        orderBy(...fields: Array<string>): QueryBuilder {
+            let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+            if (_this.query.orderColumnNames?.length) {
+                _this.query.orderColumnNames.addRange(fields);
             }
             else {
-                this.query = {};
+                _this.query.orderColumnNames = fields;
             }
+            return _this;
+        }
+
+        skip(n: number): QueryBuilder {
+            let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+            _this.query.skipRecordCount = n;
+            return _this;
+        }
+
+        take(n: number): QueryBuilder {
+            let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+            _this.query.takeRecordCount = n;
+            return _this;
         }
 
         select(...fields: Array<string>): QueryBuilder {
-            let clone = this.clone();
-            if (clone.query.columnToSelectNames?.length) {
-                clone.query.columnToSelectNames.addRange(fields);
+            let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+            if (_this.query.columnToSelectNames?.length) {
+                _this.query.columnToSelectNames.addRange(fields);
             }
             else {
-                clone.query.columnToSelectNames = fields;
+                _this.query.columnToSelectNames = fields;
             }
-            return clone;
+            return _this;
         }
 
         distinct(value = true): QueryBuilder {
-            let clone = this.clone();
-            clone.query.isSelectDistinctQuery = value;
-            return clone;
+            let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+            _this.query.isSelectDistinctQuery = value;
+            return _this;
         }
 
         where(query: string, ...args: Array<any>): QueryBuilder {
-            let clone = this.clone();
+            let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
             
-            if (NextAdmin.String.isNullOrWhiteSpace(clone.query.whereQuery)) {
-                clone.query.whereQuery = query;
+            if (NextAdmin.String.isNullOrWhiteSpace(_this.query.whereQuery)) {
+                _this.query.whereQuery = query;
             }
             else {
-                clone.query.whereQuery = '(' + clone.query.whereQuery + ')' + ' AND ' + query;
+                _this.query.whereQuery = '(' + _this.query.whereQuery + ')' + ' AND ' + query;
             }
 
-            if (clone.query.whereQueryArgs == null) {
-                clone.query.whereQueryArgs = [];
+            if (_this.query.whereQueryArgs == null) {
+                _this.query.whereQueryArgs = [];
             }
             for (let arg of args) {
-                clone.query.whereQueryArgs.add(arg);
+                _this.query.whereQueryArgs.add(arg);
             }
-            return clone;
+            return _this;
         }
 
         whereIn(clumn: string, ...args: Array<any>): QueryBuilder {
@@ -139,38 +161,17 @@ namespace NextAdmin.Business {
             return this.where(clumn + ' IS NOT NULL AND ' + clumn + ' != ?', '');
         }
 
-
-        orderBy(...fields: Array<string>): QueryBuilder {
-            let clone = this.clone();
-            if (clone.query.orderColumnNames?.length) {
-                clone.query.orderColumnNames.addRange(fields);
-            }
-            else {
-                clone.query.orderColumnNames = fields;
-            }
-            return clone;
-        }
-
-        skip(n: number): QueryBuilder {
-            let clone = this.clone();
-            clone.query.skipRecordCount = n;
-            return clone;
-        }
-
-        take(n: number): QueryBuilder {
-            let clone = this.clone();
-            clone.query.takeRecordCount = n;
-            return clone;
-        }
-
-        clone(): QueryBuilder {
-            return new QueryBuilder(this.query, this.writeIntoOriginalQuery);
-        }
     }
 
     export enum SearchManyMode {
         and,
         or,
+    }
+
+
+    export enum WriteQueryMode {
+        instanciateNewQueryPerCommand,
+        keepOriginalQuery
     }
 
 }

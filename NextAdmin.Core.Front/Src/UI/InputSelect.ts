@@ -106,12 +106,13 @@ namespace NextAdmin.UI {
                     return;
                 }
                 this.input.focus();
-                this.input.setSelectionRange(0, 0);
+                if (this.input.type != 'number') {
+                    this.input.setSelectionRange(0, 0);
+                }
                 suspendBlur = true;
                 this.input.blur();
                 suspendBlur = false;
             });
-            //this.input.setSelectionRange(0, 0);
 
             this.openDropDownButton = this.addRightAddon(new Button({
                 style: ButtonStyle.bgWhite,
@@ -232,14 +233,16 @@ namespace NextAdmin.UI {
         public selectItem(value: any) {
             this.closeDropDown();
             this.updateValue(value);
-            this.input.setSelectionRange(0, 0);
+            if (this.input.type != 'number') {
+                this.input.setSelectionRange(0, 0);
+            }
         }
 
 
         public cancelSelect() {
             this.updateValue(this.getValue());
             this.closeDropDown();
-            if (this.options.canSearchData) {
+            if (this.options.canSearchData && this.input.type != 'number') {
                 this.input.setSelectionRange(0, 0);
             }
         }
@@ -326,7 +329,7 @@ namespace NextAdmin.UI {
             for (let item of this.dropDownTable.getBodyRows()) {
                 if (item == this._customValueItem)
                     continue;
-                if (item['_search'].toLowerCase().indexOf(searchValue.toLowerCase().removeDiacritics()) != -1) {
+                if ((item['_search'] ?? '').toLowerCase().indexOf((searchValue ?? '').toLowerCase().removeDiacritics()) != -1) {
                     item.style.display = '';
                     if ((this._customValueItem == null || this._customValueItem.style.display == 'none') && !hasRowSelected) {
                         this.dropDownTable.selectRow(item, false);

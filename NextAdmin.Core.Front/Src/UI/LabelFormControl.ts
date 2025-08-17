@@ -56,7 +56,7 @@ namespace NextAdmin.UI {
             this.element.style.borderCollapse = 'collapse';
 
             this.element.style.width = '100%';
-            if (this.options.layout == LabelFormControlLayout.multiLine) {
+            if (this.options.labelPosition == FormControlLabelPosition.top) {
                 this.element.appendHTML('tr', tr => {
                     this.labelContainer = tr.appendHTML('td');
                     this.labelContainer.colSpan = 10;
@@ -268,7 +268,7 @@ namespace NextAdmin.UI {
 
         label?: string;
 
-        layout?: LabelFormControlLayout;
+        labelPosition?: FormControlLabelPosition;
 
         labelWidth?: string;
 
@@ -282,9 +282,9 @@ namespace NextAdmin.UI {
         clipboardCopy = 1
     }
 
-    export enum LabelFormControlLayout {
-        inline = "inline",
-        multiLine = "multiLine",
+    export enum FormControlLabelPosition {
+        left = "left",
+        top = "top",
     }
 
 }

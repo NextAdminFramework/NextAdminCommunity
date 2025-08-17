@@ -4,5 +4,6 @@
         id: string;
         userName: string;
         culture?: string;
+        password?: string;
     }
 }

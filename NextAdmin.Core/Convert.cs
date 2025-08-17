@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -218,6 +220,13 @@ namespace NextAdmin.Core
             return targetDataset;
         }
 
+        /*Convert using json*/
+        public static TTarget ConvertAs<TTarget>(this object _this)
+            where TTarget : class
+        {
+            string objectAsJson = JsonConvert.SerializeObject(_this, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+            return JsonConvert.DeserializeObject<TTarget>(objectAsJson);
+        }
 
     }
 }

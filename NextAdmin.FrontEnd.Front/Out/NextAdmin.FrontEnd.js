@@ -141,7 +141,7 @@ var NextAdmin;
             this.onCultureChanged.dispatch(this, culture);
             await this.refresh();
             if (updateUserCulture && this.user) {
-                this.userClient.setUserCulture(culture);
+                await this.userClient.setUserCulture(culture);
             }
         }
         initializeResources(language) {
@@ -181,13 +181,28 @@ var NextAdmin;
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
 (function (NextAdmin) {
-    class FrontEndResourcesEn {
+    class FrontEndResourcesBase {
         constructor() {
+            this.googleIcon = '<i class="fab fa-google"></i>';
+        }
+    }
+    NextAdmin.FrontEndResourcesBase = FrontEndResourcesBase;
+})(NextAdmin || (NextAdmin = {}));
+/// <reference path="FrontEndResourcesBase.ts"/>
+var NextAdmin;
+(function (NextAdmin) {
+    class FrontEndResourcesEn extends NextAdmin.FrontEndResourcesBase {
+        constructor() {
+            super(...arguments);
             this.contact = 'Contact';
             this.send = 'Send';
             this.messageSentTitle = 'Message sent';
             this.messageSentText = 'Your message has been sent, we will respond to you as soon as possible.';
             this.display = 'Display';
+            this.verifyInformations = 'Verify the information';
+            this.or = 'Or';
+            this.signInWithGoogle = 'Sign-in with Google';
+            this.signUpWithGoogle = 'Sign-up with Google';
         }
     }
     NextAdmin.FrontEndResourcesEn = FrontEndResourcesEn;
@@ -203,6 +218,10 @@ var NextAdmin;
             this.messageSentTitle = 'Message envoyé';
             this.messageSentText = 'Votre message a bien été envoyé, nous vous répondrons dans les plus brefs délais.';
             this.display = 'Afficher';
+            this.verifyInformations = 'Vérifier les informations';
+            this.or = 'Ou';
+            this.signInWithGoogle = 'Se connecter avec Google';
+            this.signUpWithGoogle = "S'inscrire avec Google";
         }
     }
     NextAdmin.FrontEndResourcesFr = FrontEndResourcesFr;
@@ -217,8 +236,21 @@ var NextAdmin;
     var Services;
     (function (Services) {
         class FrontEndServiceClient extends Services.HttpClient {
-            constructor(rootServiceURL = '/api/frontEnd/service') {
+            constructor(rootServiceURL = '/api/frontEnd/service', authTokenName, authToken) {
                 super(rootServiceURL);
+                this.authTokenName = authTokenName;
+                if (authToken) {
+                    this.setAuthToken(authToken);
+                }
+            }
+            setAuthToken(authToken) {
+                this.headerParams[this.authTokenName] = authToken;
+            }
+            getAuthToken() {
+                if (this.authTokenName == null) {
+                    return null;
+                }
+                return this.headerParams[this.authTokenName];
             }
             async sendSupportMessage(message, email) {
                 let httpResponse = await this.get('sendSupportMessage', { message: message, email: email });
@@ -295,6 +327,15 @@ var NextAdmin;
                 }
                 return httpResponse.parseJson();
             }
+            async isUserAccountExist(email) {
+                let httpResponse = await this.get('isUserAccountExist', {
+                    email: email
+                });
+                if (httpResponse == null || !httpResponse.success) {
+                    return null;
+                }
+                return httpResponse.parseJson();
+            }
         }
         Services.FrontEndUserClient = FrontEndUserClient;
     })(Services = NextAdmin.Services || (NextAdmin.Services = {}));
@@ -303,9 +344,40 @@ var NextAdmin;
 (function (NextAdmin) {
     var Services;
     (function (Services) {
-        class SubscriptionPlanClient extends Services.HttpClient {
-            constructor(rootServiceURL = '/api/subscription') {
-                super(rootServiceURL);
+        class StripePaymentClient extends Services.HttpClient {
+            constructor(rootServiceURL, authTokenName, authToken) {
+                super(rootServiceURL ?? StripePaymentClient.defaultControllerUrl);
+                this.authTokenName = authTokenName;
+                if (authToken) {
+                    this.setAuthToken(authToken);
+                }
+            }
+            setAuthToken(authToken) {
+                this.headerParams[this.authTokenName] = authToken;
+            }
+            async getItemStripePaymentLink(itemId) {
+                let httpResponse = await this.get('getItemStripePaymentLink', { itemId: itemId });
+                if (httpResponse == null || !httpResponse.success) {
+                    return null;
+                }
+                return httpResponse.parseJson();
+            }
+        }
+        StripePaymentClient.defaultControllerUrl = '/api/stripe/payment';
+        Services.StripePaymentClient = StripePaymentClient;
+    })(Services = NextAdmin.Services || (NextAdmin.Services = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var Services;
+    (function (Services) {
+        class StripeSubscriptionPlanClient extends Services.HttpClient {
+            constructor(rootServiceURL, authTokenName) {
+                super(rootServiceURL ?? StripeSubscriptionPlanClient.defaultControllerUrl);
+                this.authTokenName = authTokenName;
+            }
+            setAuthToken(authToken) {
+                this.headerParams[this.authTokenName] = authToken;
             }
             async getSubscriptionStripePaymentLink(planId) {
                 let httpResponse = await this.get('getSubscriptionStripePaymentLink', { planId: planId });
@@ -336,7 +408,8 @@ var NextAdmin;
                 return httpResponse.parseJson();
             }
         }
-        Services.SubscriptionPlanClient = SubscriptionPlanClient;
+        StripeSubscriptionPlanClient.defaultControllerUrl = '/api/stripe/subscription';
+        Services.StripeSubscriptionPlanClient = StripeSubscriptionPlanClient;
     })(Services = NextAdmin.Services || (NextAdmin.Services = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -473,11 +546,104 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
+        class Card extends UI.Control {
+            constructor(options) {
+                super('div', {
+                    imageSize: 'cover',
+                    imagePosition: 'center center',
+                    isResponsive: true,
+                    ...options
+                });
+                NextAdmin.Style.append('NextAdmin.UI.Card', Card.style);
+                this.element.classList.add('next-admin-card');
+                if (this.options.isResponsive) {
+                    this.element.classList.add('responsive');
+                }
+                this.element.appendControl(new NextAdmin.UI.HorizontalFlexLayout(), (layout) => {
+                    if (this.options.imageUrl) {
+                        layout.appendHTML('div', (imageContainer) => {
+                            imageContainer.classList.add('card-image');
+                            imageContainer.style.background = 'url("' + this.options.imageUrl + '")';
+                            imageContainer.style.backgroundSize = this.options.imageSize;
+                            imageContainer.style.backgroundRepeat = 'no-repeat';
+                            imageContainer.style.backgroundPosition = this.options.imagePosition;
+                        });
+                    }
+                    layout.appendHTML('div', (cardBody) => {
+                        cardBody.classList.add('card-body');
+                        cardBody.appendControl(new NextAdmin.UI.VerticalFlexLayout(), (bodyLayout) => {
+                            this.body = bodyLayout.appendHTMLStretch('div', (stretchContainer) => {
+                                if (this.options.title) {
+                                    this.title = stretchContainer.appendControl(new NextAdmin.UI.Title({
+                                        size: NextAdmin.UI.TitleSize.medium,
+                                        text: this.options.title
+                                    }));
+                                }
+                                if (this.options.text) {
+                                    this.textContainer = stretchContainer.appendHTML('div', (textContainer) => {
+                                        textContainer.innerHTML = this.options.text;
+                                    });
+                                }
+                                if (this.options.content) {
+                                    stretchContainer.appendChild(this.options.content);
+                                }
+                            });
+                            this.footer = bodyLayout.appendHTML('div', (footer) => {
+                            });
+                        });
+                    });
+                });
+            }
+        }
+        Card.style = `
+
+        .next-admin-card{
+            width:100%;
+            min-height:50px;
+            margin-top:20px;
+            margin-bottom:20px;
+            box-shadow: 0px 0px 2px rgba(0,0,0,0.25);
+            border-radius:10px;
+
+            .card-image{
+                height:100%;
+                min-height:200px;
+                width:200px;
+                min-width:200px;
+                max-width:200px;
+            }
+
+            .card-body{
+                padding:10px;
+            }
+        }
+        .next-admin-card.responsive{
+
+            @media (max-width: 768px) {
+                .card-image{
+                    height:100%;
+                    min-height:164px;
+                    width:128px;
+                    min-width:128px;
+                    max-width:128px;
+                }
+            }
+        }
+
+
+        `;
+        UI.Card = Card;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
         class CardsGrid extends NextAdmin.UI.Control {
-            constructor(args) {
+            constructor(options) {
                 super('div', {
                     margin: '10px',
-                    ...args
+                    ...options
                 });
                 NextAdmin.Style.append('NextAdmin.UI.CardsGrid', CardsGrid.style);
                 this.element.classList.add('next-admin-cards-grid');
@@ -492,7 +658,7 @@ var NextAdmin;
                 card.element.style.margin = this.options.margin;
             }
             clear() {
-                this.element.innerHTML = '';
+                this.body.innerHTML = '';
             }
         }
         CardsGrid.style = `
@@ -539,6 +705,94 @@ var NextAdmin;
             }
         }
         UI.CardsDataGrid = CardsDataGrid;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
+        class IconCard extends UI.Control {
+            constructor(options) {
+                super('div', {
+                    ...options
+                });
+                NextAdmin.Style.append('next-admin-icon-card', IconCard.style);
+                this.element.classList.add('next-admin-icon-card');
+                this.element.appendHTML('div', (iconAndLabel) => {
+                    iconAndLabel.classList.add('icon-card-icon-and-label');
+                    iconAndLabel.appendHTML('div', async (icon) => {
+                        icon.classList.add('icon-card-icon');
+                        if (this.options.imageUrl) {
+                            icon.style.backgroundImage = 'url(' + this.options.imageUrl + ')';
+                            icon.style.backgroundRepeat = 'no-repeat';
+                            icon.style.backgroundSize = 'cover';
+                        }
+                        else if (this.options.icon) {
+                            icon.innerHTML = this.options.icon;
+                            icon.style.backgroundColor = '#f0f0f0';
+                        }
+                        icon.addEventListener('click', () => {
+                            if (this.options.action) {
+                                this.options.action();
+                            }
+                        });
+                    });
+                    iconAndLabel.appendHTML('div', (span) => {
+                        span.classList.add('icon-card-icon-label');
+                        span.innerHTML = this.options.text;
+                    });
+                });
+            }
+        }
+        IconCard.style = `
+
+        .next-admin-icon-card{
+            width:140px;
+            height:140px;
+            display:inline-block;
+            position:relative;
+
+            .icon-card-icon-and-label{
+                width:120px;
+                height:120px;
+                margin:10px;
+                display:block;
+                position:absolute;
+
+                .icon-card-icon{
+                    background:#fff;
+                    border-radius:4px;
+                    box-shadow:0px 0px 2px rgba(0,0,0,0.25);
+                    width:84px;
+                    height:84px;
+                    margin-left:18px;
+                    font-size:40px;
+                    color:#444;
+                    text-align:center;
+                    line-height:84px;
+                    cursor:pointer;
+                }
+                .icon-card-icon:hover{
+                    box-shadow:inset 0px 0px 2px rgba(0,0,0,0.25);
+
+                }
+                .icon-card-icon-label{
+                    height:36px;
+                    text-align:center;
+                    padding-top:5px;
+                }
+            }
+
+            @media screen and (max-width: 440px) {
+                width:120px;
+                height:120px;
+                .icon-card-icon-and-label{
+                    margin:0px;
+                }
+            }
+        }
+        `;
+        UI.IconCard = IconCard;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -681,6 +935,9 @@ var NextAdmin;
                     case ImageCardStyle.fullImageShadowedBorderRadius:
                         this.card.classList.add('next-admin-image-card-border-radius');
                         break;
+                    case ImageCardStyle.fullImageShadowedBorderRadiusB:
+                        this.card.classList.add('next-admin-image-card-border-radius-b');
+                        break;
                 }
             }
             setBackground(url) {
@@ -741,6 +998,11 @@ var NextAdmin;
         .next-admin-image-card-border-radius{
             border-radius:16px;
             box-shadow:0px 0px 20px rgba(0,0,0,0.25);
+        }
+
+        .next-admin-image-card-border-radius-b{
+            border-radius:16px;
+            box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
         }
 
         .next-admin-image-card-extra-small-1-1{
@@ -886,6 +1148,7 @@ var NextAdmin;
         (function (ImageCardStyle) {
             ImageCardStyle[ImageCardStyle["fullImageLightBordered"] = 0] = "fullImageLightBordered";
             ImageCardStyle[ImageCardStyle["fullImageShadowedBorderRadius"] = 1] = "fullImageShadowedBorderRadius";
+            ImageCardStyle[ImageCardStyle["fullImageShadowedBorderRadiusB"] = 2] = "fullImageShadowedBorderRadiusB";
         })(ImageCardStyle = UI.ImageCardStyle || (UI.ImageCardStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
@@ -919,7 +1182,7 @@ var NextAdmin;
             constructor(options) {
                 super({
                     languages: [
-                        { code: 'en', label: 'Englsih', iconUrl: LanguageSelectorDropDown.iconEn },
+                        { code: 'en', label: 'English', iconUrl: LanguageSelectorDropDown.iconEn },
                         { code: 'fr', label: 'Français', iconUrl: LanguageSelectorDropDown.iconFr }
                     ],
                     languageChangedAction: (language) => {
@@ -942,7 +1205,8 @@ var NextAdmin;
                 }
             }
             getLanguageItemContent(languageInfo, caret) {
-                return '<table style="min-width:100%"><tr><td style="width:35px"><img src="' + languageInfo.iconUrl + '" style="height:20px;margin-right:5px" /></td><td>' + languageInfo.label + '</td>' + (caret ? '<td style="width:20px;padding-left:5px">' + NextAdmin.Resources.iconCaretDown + '</td>' : '') + '</tr></table>';
+                return '<div style="display:flex;flex-direction:row"><img src="' + languageInfo.iconUrl + '" style="height:16px;margin-right:5px" /><div style="flex-grow:1">' + languageInfo.label + '</div>' + (caret ? '<div style="width:20px;padding-left:5px">' + NextAdmin.Resources.iconCaretDown + '</div>' : '') + '</div>';
+                //return '<table style="min-width:100%"><tr><td style="display:flex;width:35px"><img src="' + languageInfo.iconUrl + '" style="height:20px;margin-right:5px" /></td><td>' + languageInfo.label + '</td>' + (caret ? '<td style="width:20px;padding-left:5px">' + NextAdmin.Resources.iconCaretDown + '</td>' : '') + '</tr></table>';
             }
             getLanguageInfo(languageCode) {
                 return this.options.languages.firstOrDefault(a => a.code == languageCode);
@@ -1239,29 +1503,33 @@ var NextAdmin;
                 if (this.options.isFixed) {
                     this.element.style.position = 'fixed';
                 }
-                this.container = this.element.appendControl(new NextAdmin.UI.FlexLayout({ direction: NextAdmin.UI.FlexLayoutDirection.horizontal }), (container) => {
-                    container.element.classList.add('next-admin-top-bar-center-container');
-                    container.element.style.maxWidth = this.options.maxContainerWidth;
-                    this.logoLink = container.appendHTML('a', (logoLink) => {
-                        logoLink.classList.add('top-bar-logo-link');
-                        logoLink.centerContentVertically();
-                        if (this.options.textLogoHtmlContent) {
-                            logoLink.innerHTML = this.options.textLogoHtmlContent;
+                this.container = this.element.appendHTML('div', (container) => {
+                    container.classList.add('next-admin-top-bar-container');
+                    this.layout = container.appendControl(new NextAdmin.UI.FlexLayout({ direction: NextAdmin.UI.FlexLayoutDirection.horizontal }), (layout) => {
+                        layout.element.classList.add('next-admin-top-bar-center-container');
+                        if (this.options.maxContainerWidth) {
+                            layout.element.style.maxWidth = this.options.maxContainerWidth;
                         }
-                        if (this.options?.navigationController?.options?.defaultPage) {
-                            logoLink.href = this.options.navigationController.options.defaultPage;
-                        }
-                        if (this.options.imageLogoUrl) {
-                            this.logoImage = logoLink.appendHTML('img', (logoImage) => {
-                                logoImage.style.marginRight = '20px';
-                                logoImage.src = this.options.imageLogoUrl;
-                                logoImage.style.height = '100%';
-                            });
-                        }
+                        this.logoLink = layout.appendHTML('a', (logoLink) => {
+                            logoLink.classList.add('top-bar-logo-link');
+                            logoLink.centerContentVertically();
+                            if (this.options.textLogoHtmlContent) {
+                                logoLink.innerHTML = this.options.textLogoHtmlContent;
+                            }
+                            if (this.options?.navigationController?.options?.defaultPage) {
+                                logoLink.href = this.options.navigationController.options.defaultPage;
+                            }
+                            if (this.options.imageLogoUrl) {
+                                this.logoImage = logoLink.appendHTML('img', (logoImage) => {
+                                    logoImage.classList.add('top-bar-logo');
+                                    logoImage.src = this.options.imageLogoUrl;
+                                });
+                            }
+                        });
+                        this.leftToolbar = layout.appendControl(new UI.Toolbar());
+                        this.stretchArea = layout.appendHTMLStretch('div');
+                        this.rightToolbar = layout.appendControl(new UI.Toolbar());
                     });
-                    this.leftToolbar = container.appendControl(new UI.Toolbar());
-                    this.stretchArea = container.appendHTMLStretch('div');
-                    this.rightToolbar = container.appendControl(new UI.Toolbar());
                 });
                 if (this.options.navigationController) {
                     this.options.navigationController.onPageChanged.subscribe((sender, page) => {
@@ -1333,11 +1601,27 @@ var NextAdmin;
             height:50px;
             z-index:100;
 
+            .next-admin-top-bar-container{
+                position:relative;
+                padding-left:10px;
+                padding-right:10px;
+                height:100%;
+            }
+
             .top-bar-logo-link{
                 height:100%;
                 text-decoration:none;
                 font-size:30px;
                 font-weight:bold;
+            }
+
+            .top-bar-logo{
+                margin-right:20px;
+                max-height:100%;
+                @media (max-width: 512px) {
+                    margin-right:5px;
+                    max-width:120px;
+                }
             }
             
             .next-admin-top-bar-center-container{
@@ -1345,8 +1629,6 @@ var NextAdmin;
                 left:50%;
                 height:100%;
                 transform:perspective(1px) translateX(-50%);
-                padding-left:5px;
-                padding-right:5px;
             }
             .next-admin-top-bar-link{
 
@@ -1504,6 +1786,30 @@ var NextAdmin;
         }
         `;
         UI.PinsCard = PinsCard;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
+        class Separator extends UI.Control {
+            constructor(options) {
+                super('div', options);
+                NextAdmin.Style.append('NextAdmin.UI.Separator', Separator.style);
+                this.element.classList.add('next-admin-separator');
+            }
+        }
+        Separator.style = `
+
+        .next-admin-separator{
+            margin-top:40px;
+            margin-bottom:40px;
+            height:1px;
+            background-color:#ccc;
+            box-shadow:0px 0px 12px rgba(0,0,0,0.25);
+        }
+        `;
+        UI.Separator = Separator;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -1853,6 +2159,64 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
+        class ThirdPartyOauthPanel extends UI.Control {
+            constructor(options) {
+                super('div', {
+                    afterOAuthUrlCookieName: 'AFTER_OAUTH_URL',
+                    ...options
+                });
+                this.element.appendControl(new NextAdmin.UI.HorizontalFlexLayout({ css: { marginBottom: '20px', marginTop: '20px' } }), (flexLayout) => {
+                    flexLayout.appendHTMLStretch('div', (stretchContainer) => {
+                        stretchContainer.appendHTML('div', (border) => {
+                            border.style.borderBottom = '1px solid #ddd';
+                            border.centerVertically();
+                        });
+                    });
+                    flexLayout.appendHTML('div', (text) => {
+                        text.style.padding = '10px';
+                        text.innerHTML = NextAdmin.FrontEndResources.or.toUpperCase();
+                    });
+                    flexLayout.appendHTMLStretch('div', (stretchContainer) => {
+                        stretchContainer.appendHTML('div', (border) => {
+                            border.style.borderBottom = '1px solid #ddd';
+                            border.centerVertically();
+                        });
+                    });
+                });
+                if (this.options.googleOauthOptions) {
+                    this.element.appendControl(new NextAdmin.UI.Button({
+                        size: NextAdmin.UI.ButtonSize.large,
+                        text: NextAdmin.FrontEndResources.googleIcon + ' ' + NextAdmin.FrontEndResources.signInWithGoogle,
+                        action: () => {
+                            if (this.options.afterOAuthUrlCookieName) {
+                                NextAdmin.Cookies.set(this.options.afterOAuthUrlCookieName, window.location.href);
+                            }
+                            window.location.href = ThirdPartyOauthPanel.getOAuthUrl(this.options.googleOauthOptions);
+                        }
+                    }), (btn) => {
+                        btn.element.style.width = '100%';
+                    });
+                }
+            }
+            static getOAuthUrl(oAuthOptions, userGmailEmailAddress) {
+                let url = oAuthOptions?.oauthUrl ?? ('https://accounts.google.com/o/oauth2/v2/auth?client_id='
+                    + oAuthOptions.clientId
+                    + '&redirect_uri=' + oAuthOptions.redirectionUrl
+                    + '&response_type=code'
+                    + '&scope=' + encodeURI((oAuthOptions.scopes ?? ['https://www.googleapis.com/auth/userinfo.email']).join(' ')));
+                if (userGmailEmailAddress) {
+                    url += '&login_hint=' + userGmailEmailAddress;
+                }
+                return url;
+            }
+        }
+        UI.ThirdPartyOauthPanel = ThirdPartyOauthPanel;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
         class ChangeEmailModal extends UI.Modal {
             constructor(options) {
                 super({
@@ -1864,7 +2228,7 @@ var NextAdmin;
                     container.style.padding = '20px';
                     let newEmailInput = container.appendControl(new NextAdmin.UI.Input({
                         label: NextAdmin.Resources.newEmail,
-                        layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                        labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                         size: NextAdmin.UI.InputSize.large
                     }), (input) => {
                         input.element.style.marginBottom = '20px';
@@ -1887,7 +2251,7 @@ var NextAdmin;
                             let timer = new NextAdmin.Timer();
                             let confirmationCodeInput = container.appendControl(new NextAdmin.UI.Input({
                                 label: NextAdmin.Resources.confirmationCode,
-                                layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                                labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                                 size: NextAdmin.UI.InputSize.large
                             }), (confirmationCodeInput) => {
                                 confirmationCodeInput.onValueChanged.subscribe((sender, args) => {
@@ -1906,6 +2270,9 @@ var NextAdmin;
                                         btn.stopSpin();
                                         if (confirmCodeResponse?.isSuccess) {
                                             this.close();
+                                            if (this.options.onEmailUpdated) {
+                                                this.options.onEmailUpdated(newEmailInput.getValue());
+                                            }
                                         }
                                     }, 100);
                                 }
@@ -1949,16 +2316,31 @@ var NextAdmin;
                 });
                 this.body.appendHTML('div', container => {
                     container.style.padding = '20px';
-                    this.textArea = container.appendControl(new NextAdmin.UI.TextArea({ fillHeight: true }), (textArea) => {
-                        textArea.element.style.minHeight = '200px';
-                    });
+                    this.emailInput = container.appendControl(new NextAdmin.UI.Input({
+                        inputType: NextAdmin.UI.InputType.email,
+                        labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
+                        label: 'E-mail',
+                        value: this.options.email,
+                        required: true,
+                        css: {
+                            marginBottom: '20px'
+                        }
+                    }));
+                    this.textArea = container.appendControl(new NextAdmin.UI.TextArea({
+                        displayMode: NextAdmin.UI.TextAreaDisplayMode.stretchHeight,
+                        css: {
+                            minHeight: '200px',
+                            marginBottom: '20px'
+                        }
+                    }));
                     this.sendMessageButton = container.appendControl(new NextAdmin.UI.Button({
                         text: NextAdmin.Resources.emailIcon + ' ' + NextAdmin.FrontEndResources.send,
                         style: NextAdmin.UI.ButtonStyle.lightBlue,
                         size: NextAdmin.UI.ButtonSize.large,
+                        css: { cssFloat: 'right' },
                         action: async () => {
                             this.startSpin();
-                            let response = await this.options.commonServicesClient.sendSupportMessage(this.textArea.getValue());
+                            let response = await this.options.commonServicesClient.sendSupportMessage(this.textArea.getValue(), this.emailInput.getValue());
                             if (response?.isSuccess) {
                                 this.close();
                                 NextAdmin.UI.MessageBox.createOk(NextAdmin.FrontEndResources.messageSentTitle, NextAdmin.FrontEndResources.messageSentText);
@@ -1969,7 +2351,7 @@ var NextAdmin;
                             this.stopSpin();
                         }
                     }));
-                    this.sendMessageButton.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(this.textArea.getValue()), this.textArea);
+                    this.sendMessageButton.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(this.textArea.getValue()) && !NextAdmin.String.isNullOrEmpty(this.emailInput.getValue()), this.textArea, this.emailInput);
                 });
             }
         }
@@ -1993,14 +2375,14 @@ var NextAdmin;
                     container.style.padding = '40px';
                     this.userNameInput = container.appendControl(new NextAdmin.UI.Input({
                         label: NextAdmin.Resources.login,
-                        layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                        labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                         size: NextAdmin.UI.InputSize.large
                     }));
                     this.userNameInput.element.style.marginBottom = '20px';
                     this.passwordInput = container.appendControl(new NextAdmin.UI.Input({
                         label: NextAdmin.Resources.password,
                         inputType: NextAdmin.UI.InputType.password,
-                        layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                        labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                         size: NextAdmin.UI.InputSize.large
                     }), (passwordInput) => {
                         passwordInput.input.addEventListener('keyup', (args) => {
@@ -2058,9 +2440,9 @@ var NextAdmin;
                             });
                             tr.appendHTML('td', (td) => {
                                 td.style.paddingLeft = '10px';
-                                this.signInMessage = td.appendHTML('span');
-                                this.signInMessage.style.color = '#cf0e0e';
-                                this.signInMessage.style.fontWeight = '600';
+                                this.signInMessageContainer = td.appendHTML('span');
+                                this.signInMessageContainer.style.color = '#cf0e0e';
+                                this.signInMessageContainer.style.fontWeight = '600';
                             });
                         });
                     });
@@ -2077,6 +2459,9 @@ var NextAdmin;
                             }));
                         });
                     }
+                    if (this.options.googleOauthOptions) {
+                        container.appendControl(new UI.ThirdPartyOauthPanel({ googleOauthOptions: this.options.googleOauthOptions }));
+                    }
                 });
             }
             async tryLogUser() {
@@ -2084,12 +2469,12 @@ var NextAdmin;
                 let password = this.passwordInput.getValue();
                 if (NextAdmin.String.isNullOrEmpty(userName) || NextAdmin.String.isNullOrEmpty(password))
                     return;
-                this.signInMessage.innerHTML = '';
+                this.signInMessageContainer.innerHTML = '';
                 this.modal.startSpin();
                 let authTokenResponse = await this.options.userClient.authUser(userName, password, this.rememberMeCheckbox.getValue());
                 this.modal.stopSpin();
                 if (!authTokenResponse?.isSuccess) {
-                    this.signInMessage.innerHTML = NextAdmin.Resources.invalidCredentials;
+                    this.signInMessageContainer.innerHTML = NextAdmin.Resources.invalidCredentials;
                     return;
                 }
                 if (this.options.onSignIn) {
@@ -2118,19 +2503,19 @@ var NextAdmin;
                     this.step1Container = container.appendHTML('div', (step1Container) => {
                         this.emailInput = step1Container.appendControl(new NextAdmin.UI.Input({
                             label: NextAdmin.Resources.login,
-                            layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                            labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                             size: NextAdmin.UI.InputSize.large
                         }));
                         this.emailInput.element.style.marginBottom = '20px';
                         this.passwordInput = step1Container.appendControl(new NextAdmin.UI.Input({
                             label: NextAdmin.Resources.password,
                             inputType: NextAdmin.UI.InputType.password,
-                            layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                            labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                             size: NextAdmin.UI.InputSize.large
                         }));
                         this.passwordInput.element.style.marginBottom = '20px';
                         this.verifyEmailButton = step1Container.appendControl(new NextAdmin.UI.Button({
-                            text: NextAdmin.Resources.emailIcon + ' ' + NextAdmin.Resources.confirmEmail,
+                            text: NextAdmin.Resources.checkIcon + ' ' + NextAdmin.FrontEndResources.verifyInformations,
                             style: NextAdmin.UI.ButtonStyle.lightBlue,
                             size: NextAdmin.UI.ButtonSize.large,
                             action: async (btn) => {
@@ -2138,11 +2523,12 @@ var NextAdmin;
                                 if (signUpData == null) {
                                     return;
                                 }
+                                this.stepOneErrorContainer.innerHTML = "";
                                 this.modal.startSpin();
                                 let signUpUserResponse = await this.options.userClient.signUpUser(signUpData);
                                 this.modal.stopSpin();
                                 if (!signUpUserResponse?.isSuccess) {
-                                    this.displaySignUpError(signUpUserResponse);
+                                    this.stepOneErrorContainer.innerHTML = this.getSignUpErrorMessage(signUpUserResponse) ?? '';
                                     return;
                                 }
                                 step1Container.disable();
@@ -2154,7 +2540,7 @@ var NextAdmin;
                                 let timer = new NextAdmin.Timer();
                                 this.confirmationCodeInput = this.step2Container.appendControl(new NextAdmin.UI.Input({
                                     label: NextAdmin.Resources.confirmationCode,
-                                    layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                                    labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                                     size: NextAdmin.UI.InputSize.large
                                 }), (confirmationCodeInput) => {
                                     confirmationCodeInput.onValueChanged.subscribe((sender, args) => {
@@ -2184,6 +2570,9 @@ var NextAdmin;
                         setTimeout(() => {
                             this.verifyEmailButton.changeEnableStateOnControlsRequiredValueChanged(() => this.getRequiredFormControls().firstOrDefault(a => !a.getValue()) == null, ...this.getRequiredFormControls());
                         }, 1);
+                        this.stepOneErrorContainer = step1Container.appendHTML('div', (errorMessageContainer) => {
+                            errorMessageContainer.style.color = NextAdmin.UI.DefaultStyle.RedOne;
+                        });
                     });
                     this.step2Container = container.appendHTML('div');
                     if (this.options.signInAction) {
@@ -2199,20 +2588,23 @@ var NextAdmin;
                             }));
                         });
                     }
+                    if (this.options.googleOauthOptions) {
+                        container.appendControl(new UI.ThirdPartyOauthPanel({ googleOauthOptions: this.options.googleOauthOptions }));
+                    }
                 });
             }
-            displaySignUpError(apiResponse) {
+            getSignUpErrorMessage(apiResponse) {
                 switch (apiResponse?.code) {
                     case 'USER_ALREADY_EXIST':
-                        NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.userAlreadyExist);
+                        return NextAdmin.Resources.userAlreadyExist;
                     case 'UNABLE_TO_SEND_EMAIL':
-                        NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.unableToSendEmail);
+                        return NextAdmin.Resources.unableToSendEmail;
                     case 'INVALID_EMAIL':
-                        NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.invalidEmail);
+                        return NextAdmin.Resources.invalidEmail;
                     case 'INVALID_PASSWORD':
-                        NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.invalidPassword);
+                        return NextAdmin.Resources.invalidPassword;
                     default:
-                        NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.unknownError);
+                        return NextAdmin.Resources.unknownError;
                 }
             }
             getSignUpData() {

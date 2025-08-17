@@ -516,12 +516,11 @@ namespace NextAdmin.Business {
             return super.getDataPrimaryKeyValue(this.data);
         }
 
-        /** Get updated */
-        public getData(): any {
+        public getData(): T {
             return this.data;
         }
 
-        public getOriginalData(): any {
+        public getOriginalData(): T {
             return this._originalData;
         }
 

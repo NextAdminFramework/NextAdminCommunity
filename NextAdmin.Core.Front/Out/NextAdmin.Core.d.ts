@@ -694,9 +694,8 @@ declare namespace NextAdmin.Business {
         getDataDisplayValue(data?: T): string;
         getDataPrimaryKeyValue(data?: T): any;
         getPrimaryKeyValue(): any;
-        /** Get updated */
-        getData(): any;
-        getOriginalData(): any;
+        getData(): T;
+        getOriginalData(): T;
         protected controlChanged(control: UI.IFormControl, args: UI.ValueChangeEventArgs): void;
         fireChange(): void;
         getDataState(): DataState;
@@ -861,8 +860,12 @@ declare namespace NextAdmin.Business {
 declare namespace NextAdmin.Business {
     class QueryBuilder {
         query: Models.Query;
-        writeIntoOriginalQuery?: boolean;
-        constructor(query?: Models.Query, writeIntoOriginalQuery?: boolean);
+        writeQueryMode?: WriteQueryMode;
+        constructor(query?: Models.Query, writeQueryMode?: WriteQueryMode);
+        clone(): QueryBuilder;
+        orderBy(...fields: Array<string>): QueryBuilder;
+        skip(n: number): QueryBuilder;
+        take(n: number): QueryBuilder;
         select(...fields: Array<string>): QueryBuilder;
         distinct(value?: boolean): QueryBuilder;
         where(query: string, ...args: Array<any>): QueryBuilder;
@@ -876,21 +879,21 @@ declare namespace NextAdmin.Business {
         whereEndsWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
         whereIsNullOrEmpty(clumn: string): QueryBuilder;
         whereIsNotNullOrEmpty(clumn: string): QueryBuilder;
-        orderBy(...fields: Array<string>): QueryBuilder;
-        skip(n: number): QueryBuilder;
-        take(n: number): QueryBuilder;
-        clone(): QueryBuilder;
     }
     enum SearchManyMode {
         and = 0,
         or = 1
+    }
+    enum WriteQueryMode {
+        instanciateNewQueryPerCommand = 0,
+        keepOriginalQuery = 1
     }
 }
 declare namespace NextAdmin.Business {
     class DbSetHandler<TEntity extends {}> extends QueryBuilder {
         entityName: string;
         entityClient: Services.EntityClient;
-        constructor(entityName: string, entityClient: Services.EntityClient, query?: Models.Query, writeIntoOriginalQuery?: boolean);
+        constructor(entityName: string, entityClient: Services.EntityClient, query?: Models.Query, writeQueryMode?: WriteQueryMode);
         select(...fields: Array<string>): DbSetHandler<TEntity>;
         distinct(value?: boolean): DbSetHandler<TEntity>;
         where(query: string, ...args: Array<any>): DbSetHandler<TEntity>;
@@ -917,7 +920,7 @@ declare namespace NextAdmin.Business {
     }
     class EntityDbSetHandler<TEntity> extends DbSetHandler<TEntity> {
         entityInfo: EntityInfo<TEntity>;
-        constructor(entityInfo: EntityInfo_, entityClient: Services.EntityClient, query?: Models.Query, writeIntoOriginalQuery?: boolean);
+        constructor(entityInfo: EntityInfo_, entityClient: Services.EntityClient, query?: Models.Query, writeQueryMode?: WriteQueryMode);
         clone(): EntityDbSetHandler<TEntity>;
         getPropertyName(dataDefPropertyAction: (dataDef: TEntity) => any): any;
         toArray_<TProp>(property: (dataDef: TEntity) => TProp, parameters?: Record<string, any>): Promise<Array<TProp>>;
@@ -1131,6 +1134,7 @@ declare namespace NextAdmin.Models {
         id: string;
         userName: string;
         culture?: string;
+        password?: string;
     }
 }
 declare namespace NextAdmin.Models {
@@ -1177,6 +1181,35 @@ declare namespace NextAdmin {
     }
 }
 declare namespace NextAdmin {
+    class NextAdminIcons extends NextAdmin.ResourcesBase {
+        addIcon: string;
+        downloadIcon: string;
+        printIcon: string;
+        saveIcon: string;
+        deleteIcon: string;
+        removeIcon: string;
+        clearIcon: string;
+        checkIcon: string;
+        cogIcon: string;
+        openIcon: string;
+        refreshIcon: string;
+        searchIcon: string;
+        menuIcon: string;
+        iconCaretDown: string;
+        iconCaretLeft: string;
+        iconCaretRight: string;
+        keyIcon: string;
+        emailIcon: string;
+        lockIcon: string;
+        noDataIcon: string;
+        copyIcon: string;
+        dragIcon: string;
+        backIcon: string;
+        linkIcon: string;
+        warningIcon: string;
+    }
+}
+declare namespace NextAdmin {
     class ResourcesEn extends ResourcesBase {
         save: string;
         delete: string;
@@ -1199,7 +1232,6 @@ declare namespace NextAdmin {
         unknownError: string;
         success: string;
         search: string;
-        searching: string;
         lostDataNotSavedMessage: string;
         formDeleteMessageTitle: string;
         formDeleteMessage: string;
@@ -1239,6 +1271,7 @@ declare namespace NextAdmin {
         unableToDeleteDataMessage: string;
         defaultDeleteError: string;
         validate: string;
+        validateNew: string;
         export: string;
         dataExportConfig: string;
         format: string;
@@ -1321,6 +1354,10 @@ declare namespace NextAdmin {
         copy: string;
         errprMaximumPublishedProject: string;
         unamed: string;
+        emailSent: string;
+        recoverPasswordSuccess: string;
+        recoverPasswordInvalidEmail: string;
+        recoverPasswordDefaultError: string;
     }
     var Resources: ResourcesEn;
 }
@@ -1347,7 +1384,6 @@ declare namespace NextAdmin {
         unknownError: string;
         success: string;
         search: string;
-        searching: string;
         lostDataNotSavedMessage: string;
         formDeleteMessageTitle: string;
         formDeleteMessage: string;
@@ -1387,6 +1423,7 @@ declare namespace NextAdmin {
         unableToDeleteDataMessage: string;
         defaultDeleteError: string;
         validate: string;
+        validateNew: string;
         export: string;
         dataExportConfig: string;
         format: string;
@@ -1475,6 +1512,10 @@ declare namespace NextAdmin {
         unamed: string;
         recoverPassword: string;
         recoverMyPassword: string;
+        emailSent: string;
+        recoverPasswordSuccess: string;
+        recoverPasswordInvalidEmail: string;
+        recoverPasswordDefaultError: string;
     }
 }
 declare namespace NextAdmin.Services {
@@ -1952,6 +1993,8 @@ declare namespace NextAdmin.UI {
         executeAction(event?: MouseEvent): void;
         setText(text: string): Button;
         getText(): string;
+        private _badge;
+        setBadge(options?: ButtonBadgeOptions): void;
         startSpin(): {
             spinnerContainer: HTMLDivElement;
             spinner: HTMLImageElement;
@@ -1991,6 +2034,10 @@ declare namespace NextAdmin.UI {
         small = 1,
         medium = 2,
         large = 3
+    }
+    interface ButtonBadgeOptions {
+        text?: string;
+        backgroundColor?: string;
     }
 }
 declare namespace NextAdmin.UI {
@@ -2175,6 +2222,16 @@ declare namespace NextAdmin.UI {
         isOpen?: boolean;
         onUpdateQuery?: (queryBuilder: Business.QueryBuilder) => Business.QueryBuilder;
         autoUdateSearch?: boolean;
+    }
+}
+declare namespace NextAdmin.UI {
+    class Container extends Control {
+        options: ContainerOptions;
+        body?: HTMLDivElement;
+        constructor(options?: ContainerOptions);
+    }
+    interface ContainerOptions extends ControlOptions {
+        width?: string;
     }
 }
 declare namespace NextAdmin.UI {
@@ -2527,6 +2584,7 @@ declare namespace NextAdmin.UI {
         insertDataItem(data: any, previousRow: DataGridRow_, state?: Business.DataState, fireChange?: boolean): DataGridRow_;
         addDataset(dataSet: Array<any>, state?: Business.DataState, fireChange?: boolean): Array<DataGridRow_>;
         setDataset(dataSet: Array<any>, state?: Business.DataState, tryPreserveSelectionAndScroll?: boolean, fireChange?: boolean): void;
+        private _previousScrollTop;
         protected enableScrollLoading(): void;
         removeRows(rows: Array<DataGridRow_>, fireChange?: boolean): void;
         removeRow(row: DataGridRow_, fireChange?: boolean): void;
@@ -2855,7 +2913,7 @@ declare namespace NextAdmin.UI {
     }
     interface LabelFormControlOptions extends FormControlOptions {
         label?: string;
-        layout?: LabelFormControlLayout;
+        labelPosition?: FormControlLabelPosition;
         labelWidth?: string;
         leftAddons?: Array<string | HTMLElement | Control | FormControlAddon>;
         rightAddons?: Array<string | HTMLElement | Control | FormControlAddon>;
@@ -2863,9 +2921,9 @@ declare namespace NextAdmin.UI {
     enum FormControlAddon {
         clipboardCopy = 1
     }
-    enum LabelFormControlLayout {
-        inline = "inline",
-        multiLine = "multiLine"
+    enum FormControlLabelPosition {
+        left = "left",
+        top = "top"
     }
 }
 declare namespace NextAdmin.UI {
@@ -2897,6 +2955,7 @@ declare namespace NextAdmin.UI {
         style?: InputStyle | any;
         size?: InputSize;
         inlineGrid?: boolean;
+        outputNullIfEmpty?: boolean;
     }
     enum InputType {
         button = "button",
@@ -3048,6 +3107,7 @@ declare namespace NextAdmin.UI {
         addElement(dropDownItem: MenuItem | Control | HTMLElement): Control | HTMLElement;
         addItem(dropDownItem: MenuItem): Button;
         appendControl<TElement extends Control | HTMLElement>(elementOrControl: TElement, configAction?: (control: TElement) => void): TElement;
+        prependControl<TElement extends Control | HTMLElement>(elementOrControl: TElement, configAction?: (control: TElement) => void): TElement;
         appendHTML<K extends keyof HTMLElementTagNameMap>(html: K, setControlPropertiesAction?: (control: HTMLElementTagNameMap[K]) => void): HTMLElementTagNameMap[K];
         clearItems(): void;
         addItems(itms: MenuItem[]): DropDownButton;
@@ -3238,9 +3298,9 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
-    class GridFormPanel extends Control {
+    class GridFormPanel<T> extends Control {
         options: GridFormPanelOptions;
-        grid: DataGrid_;
+        grid: DataGrid<T>;
         formPanel: FormPanel;
         static style: string;
         constructor(options?: GridFormPanelOptions);
@@ -3249,7 +3309,9 @@ declare namespace NextAdmin.UI {
         gridOption?: DataGridOptions_;
         formPanelOption?: FormPanelOptions;
         onSelectedDataChanged?: (row: DataGridRow_, panel: FormPanel) => void;
-        onAppendDataItem?: (sender: GridFormPanel, data: any) => void;
+        onAppendDataItem?: (sender: GridFormPanel_, data: any) => void;
+    }
+    class GridFormPanel_ extends GridFormPanel<any> {
     }
 }
 declare namespace NextAdmin.UI {
@@ -3373,16 +3435,19 @@ declare namespace NextAdmin.UI {
     class MessageBox extends Control {
         modal: HTMLDivElement;
         modalContent: HTMLDivElement;
+        image?: HTMLImageElement;
         header: HTMLHeadingElement;
         body: HTMLParagraphElement;
         footer: HTMLDivElement;
         options: MessageBoxOptions;
         private _desktopButtonToolbar;
+        private _button;
         static onCreated: EventHandler<MessageBox, MessageBoxOptions>;
         static style: string;
         constructor(options: MessageBoxOptions);
         appendButton(button: Button): void;
         prependButton(button: Button): void;
+        getButtons(): Array<Button>;
         startSpin(): void;
         private static _previousBodyOverflow;
         close(): void;
@@ -3395,6 +3460,7 @@ declare namespace NextAdmin.UI {
     interface MessageBoxOptions extends ControlOptions {
         title: string;
         text?: string;
+        imageUrl?: string;
         buttons?: Array<Button>;
         parentContainer?: Element;
     }
@@ -3471,15 +3537,16 @@ declare namespace NextAdmin.UI {
         static onCreated: EventHandler<Page, PageOptions>;
         constructor(options?: PageOptions);
         navigateTo(args: NavigateToArgs): Promise<void>;
-        navigateFrom(args: NavigateFromArgs): void;
+        navigateFrom(args: NavigateFromArgs): Promise<void>;
         endNavigateFrom(): void;
+        dispose(): void;
         isActivePage(): boolean;
         bindEvent<TSender, TArgs>(eventHandler: EventHandler<TSender, TArgs>, eventAction: (sender: TSender, args: TArgs) => void): void;
     }
     interface PageOptions extends ViewOptions {
         name?: string;
         container?: HTMLElement;
-        clearOnLeave?: boolean;
+        disposeOnNavigateFrom?: boolean;
         pageInfo?: NextAdmin.PageInfo;
         navigationController?: NavigationController;
     }
@@ -3582,6 +3649,7 @@ declare namespace NextAdmin.UI {
         static style: string;
         quill: Quill;
         editorContainer: HTMLDivElement;
+        quillContainer: HTMLDivElement;
         options: RichTextEditorOptions;
         static onCreated: EventHandler<RichTextEditor, RichTextEditorOptions>;
         constructor(options?: RichTextEditorOptions);
@@ -3837,6 +3905,7 @@ declare namespace NextAdmin.UI {
         isNumeric?: boolean;
         valueType?: SelectValueType;
         allowNullValue?: boolean;
+        outputNullIfEmpty?: boolean;
     }
     interface SelectItem {
         value: string | number;
@@ -4100,12 +4169,17 @@ declare namespace NextAdmin.UI {
         getValue(): any;
     }
     interface TextAreaOptions extends LabelFormControlOptions {
-        fillHeight?: boolean;
+        displayMode?: TextAreaDisplayMode;
         style?: TextAreaStyle | any;
     }
     enum TextAreaStyle {
         default = 0,
         modern = 1
+    }
+    enum TextAreaDisplayMode {
+        default = 0,
+        stretchHeight = 1,
+        fitContent = 2
     }
 }
 declare namespace NextAdmin.UI {
@@ -4134,7 +4208,8 @@ declare namespace NextAdmin.UI {
         dark = 2,
         thinLightGrey = 3,
         thinDarkGrey = 4,
-        thinDark = 5
+        thinDark = 5,
+        thinUltraLightGrey = 6
     }
 }
 declare namespace NextAdmin.UI {

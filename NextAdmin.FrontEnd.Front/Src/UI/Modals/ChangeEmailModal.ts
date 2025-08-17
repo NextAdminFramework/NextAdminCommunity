@@ -17,7 +17,7 @@ namespace NextAdmin.UI {
 
                 let newEmailInput = container.appendControl(new NextAdmin.UI.Input({
                     label: NextAdmin.Resources.newEmail,
-                    layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                    labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                     size: NextAdmin.UI.InputSize.large
                 }), (input) => {
                     input.element.style.marginBottom = '20px';
@@ -44,7 +44,7 @@ namespace NextAdmin.UI {
 
                         let confirmationCodeInput = container.appendControl(new NextAdmin.UI.Input({
                             label: NextAdmin.Resources.confirmationCode,
-                            layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                            labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                             size: NextAdmin.UI.InputSize.large
                         }), (confirmationCodeInput) => {
                             confirmationCodeInput.onValueChanged.subscribe((sender, args) => {
@@ -64,7 +64,11 @@ namespace NextAdmin.UI {
                                     btn.stopSpin();
                                     if (confirmCodeResponse?.isSuccess) {
                                         this.close();
+                                        if (this.options.onEmailUpdated) {
+                                            this.options.onEmailUpdated(newEmailInput.getValue());
+                                        }
                                     }
+
                                 }, 100);
                             }
                         }));
@@ -99,6 +103,8 @@ namespace NextAdmin.UI {
     export interface ChangeEmailModalOptions extends NextAdmin.UI.ModalOptions {
 
         userClient?: NextAdmin.Services.FrontEndUserClient;
+
+        onEmailUpdated?: (newEmai?: string) => void;
 
     }
 

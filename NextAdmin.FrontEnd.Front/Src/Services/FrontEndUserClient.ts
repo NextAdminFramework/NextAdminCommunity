@@ -51,7 +51,7 @@ namespace NextAdmin.Services {
             return httpResponse.parseJson();
         }
 
-        public async signUpUser(args: NextAdmin.Models.SignUpUserArgs): Promise<NextAdmin.Models.ApiResponse> {
+        public async signUpUser(args: NextAdmin.Models.SignUpUserArgs): Promise<NextAdmin.Models.ApiResponse<string>> {
             let httpResponse = await this.postJson('signUpUser', args);
             if (httpResponse == null || !httpResponse.success) {
                 return null;
@@ -63,6 +63,16 @@ namespace NextAdmin.Services {
             let httpResponse = await this.postJson('confirmUserSignUpEmailCode', {
                 userId: userId,
                 code: code
+            });
+            if (httpResponse == null || !httpResponse.success) {
+                return null;
+            }
+            return httpResponse.parseJson();
+        }
+
+        public async isUserAccountExist(email: string): Promise<boolean> {
+            let httpResponse = await this.get('isUserAccountExist', {
+                email: email
             });
             if (httpResponse == null || !httpResponse.success) {
                 return null;

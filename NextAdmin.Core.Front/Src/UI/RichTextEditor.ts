@@ -65,6 +65,8 @@ namespace NextAdmin.UI {
 
         public editorContainer: HTMLDivElement;
 
+        public quillContainer: HTMLDivElement;
+
         public options: RichTextEditorOptions;
 
         public static onCreated = new EventHandler<RichTextEditor, RichTextEditorOptions>();
@@ -93,9 +95,9 @@ namespace NextAdmin.UI {
                 editorContainer.classList.add('next-admin-editor-container');
             });
 
-            let quillContainer = this.editorContainer.appendHTML('div');
+            this.quillContainer = this.editorContainer.appendHTML('div');
 
-            this.quill = new Quill(quillContainer, {
+            this.quill = new Quill(this.quillContainer, {
                 modules: {
                     toolbar: this.options.displayToolbar ? [
                         ['bold', 'italic', 'underline', 'strike'],        // toggled buttons

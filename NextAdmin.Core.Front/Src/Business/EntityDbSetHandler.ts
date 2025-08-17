@@ -9,8 +9,8 @@ namespace NextAdmin.Business {
 
         entityClient: Services.EntityClient;
 
-        public constructor(entityName: string, entityClient: Services.EntityClient, query?: Models.Query, writeIntoOriginalQuery?: boolean) {
-            super(query, writeIntoOriginalQuery);
+        public constructor(entityName: string, entityClient: Services.EntityClient, query?: Models.Query, writeQueryMode?: WriteQueryMode) {
+            super(query, writeQueryMode);
             this.entityName = entityName;
             this.entityClient = entityClient;
         }
@@ -56,9 +56,7 @@ namespace NextAdmin.Business {
         }
 
         clone(): DbSetHandler<TEntity> {
-            let clone = new DbSetHandler<TEntity>(this.entityName, this.entityClient);
-            NextAdmin.Copy.copyTo(this, clone);
-            return clone;
+            return new DbSetHandler<TEntity>(this.entityName, this.entityClient, NextAdmin.Copy.clone(this.query), this.writeQueryMode);
         }
 
         async toArray(parameters?: Record<string, any>): Promise<Array<TEntity>> {
@@ -143,15 +141,13 @@ namespace NextAdmin.Business {
 
         entityInfo: EntityInfo<TEntity>;
 
-        public constructor(entityInfo: EntityInfo_, entityClient: Services.EntityClient, query?: Models.Query, writeIntoOriginalQuery?: boolean) {
-            super(entityInfo.name, entityClient, query, writeIntoOriginalQuery);
+        public constructor(entityInfo: EntityInfo_, entityClient: Services.EntityClient, query?: Models.Query, writeQueryMode?: WriteQueryMode) {
+            super(entityInfo.name, entityClient, query, writeQueryMode);
             this.entityInfo = entityInfo;
         }
 
         clone(): EntityDbSetHandler<TEntity> {
-            let clone = new EntityDbSetHandler<TEntity>(this.entityInfo, this.entityClient);
-            NextAdmin.Copy.copyTo(this, clone);
-            return clone;
+            return new EntityDbSetHandler<TEntity>(this.entityInfo, this.entityClient, NextAdmin.Copy.clone(this.query), this.writeQueryMode);
         }
 
         getPropertyName(dataDefPropertyAction: (dataDef: TEntity) => any): any {

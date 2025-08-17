@@ -2,6 +2,8 @@ namespace NextAdmin.UI {
 
     export class SendSupportMessageModal extends NextAdmin.UI.Modal {
 
+        emailInput: NextAdmin.UI.Input;
+
         textArea: NextAdmin.UI.TextArea;
 
         sendMessageButton: NextAdmin.UI.Button;
@@ -18,18 +20,35 @@ namespace NextAdmin.UI {
 
             this.body.appendHTML('div', container => {
                 container.style.padding = '20px';
-                this.textArea = container.appendControl(new NextAdmin.UI.TextArea({ fillHeight: true }), (textArea) => {
-                    textArea.element.style.minHeight = '200px';
-                });
+
+                this.emailInput = container.appendControl(new NextAdmin.UI.Input({
+                    inputType: NextAdmin.UI.InputType.email,
+                    labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
+                    label: 'E-mail',
+                    value: this.options.email,
+                    required: true,
+                    css: {
+                        marginBottom: '20px'
+                    }
+                }));
+
+                this.textArea = container.appendControl(new NextAdmin.UI.TextArea({
+                    displayMode: NextAdmin.UI.TextAreaDisplayMode.stretchHeight,
+                    css: {
+                        minHeight: '200px',
+                        marginBottom: '20px'
+                    }
+                }));
 
                 this.sendMessageButton = container.appendControl(new NextAdmin.UI.Button({
                     text: NextAdmin.Resources.emailIcon + ' ' + NextAdmin.FrontEndResources.send,
                     style: NextAdmin.UI.ButtonStyle.lightBlue,
                     size: NextAdmin.UI.ButtonSize.large,
+                    css: { cssFloat: 'right' },
                     action: async () => {
                         this.startSpin();
 
-                        let response = await this.options.commonServicesClient.sendSupportMessage(this.textArea.getValue());
+                        let response = await this.options.commonServicesClient.sendSupportMessage(this.textArea.getValue(), this.emailInput.getValue());
                         if (response?.isSuccess) {
                             this.close();
                             NextAdmin.UI.MessageBox.createOk(NextAdmin.FrontEndResources.messageSentTitle, NextAdmin.FrontEndResources.messageSentText);
@@ -42,7 +61,7 @@ namespace NextAdmin.UI {
 
                     }
                 }));
-                this.sendMessageButton.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(this.textArea.getValue()), this.textArea);
+                this.sendMessageButton.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(this.textArea.getValue()) && !NextAdmin.String.isNullOrEmpty(this.emailInput.getValue()), this.textArea, this.emailInput);
             });
         }
     }
@@ -52,6 +71,8 @@ namespace NextAdmin.UI {
 
 
         commonServicesClient?: NextAdmin.Services.FrontEndServiceClient;
+
+        email?: string;
 
     }
 

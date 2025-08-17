@@ -266,7 +266,7 @@ namespace NextAdmin.UI {
             if (value && this.getItems().firstOrDefault(a => a.value == value) == null) {
                 this.addItem(value);
             }
-            this.select.value = value;
+            this.select.value = value ?? '';
             if (fireChange) {
                 this.onValueChanged.dispatch(this, { value: value, previousValue: this._previousValue, origin: ChangeOrigin.code });
             }
@@ -278,6 +278,9 @@ namespace NextAdmin.UI {
             switch (this.options.valueType) {
                 default:
                 case SelectValueType.string:
+                    if (this.options.outputNullIfEmpty && NextAdmin.String.isNullOrEmpty(this.select.value)) {
+                        return null;
+                    }
                     return this.select.value;
                 case SelectValueType.number:
                     return NextAdmin.String.isNullOrWhiteSpace(this.select.value) ? null : Number(this.select.value);
@@ -326,6 +329,8 @@ namespace NextAdmin.UI {
         valueType?: SelectValueType;
 
         allowNullValue?: boolean;
+
+        outputNullIfEmpty?: boolean;
 
     }
 

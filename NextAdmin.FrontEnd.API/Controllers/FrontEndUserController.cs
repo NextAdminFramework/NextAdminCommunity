@@ -29,17 +29,32 @@ namespace NextAdmin.FrontEnd.API.Controllers
             IDbContextTransaction? transaction = null;
             try
             {
+                var yesterday = DateTime.UtcNow.AddDays(-1);
+                foreach (var oldNotActivatedUser in DbContext.Set<TUser>().Where(a => !a.EmailVerificationDate.HasValue && a.CreationDate < yesterday).ToList())
+                {
+                    DbContext.DeleteEntity(oldNotActivatedUser);
+                }
+                if (!DbContext.ValidateAndSave().Success)
+                {
+                    return ApiResponse<object>.Error(ApiResponseCode.UnknownError);
+                }
+
                 var user = DbContext.Set<TUser>().FirstOrDefault(e => e.UserName == signUpUserArgs.Email);
-                if (user != null && (user.EmailVerificationDate.HasValue || !user.Disabled))
+                if (user != null && user.EmailVerificationDate.HasValue)
                 {
                     return ApiResponse<object>.Error("USER_ALREADY_EXIST");
                 }
                 transaction = DbContext.Database.BeginTransaction();
-                if (user == null)
+                if (user != null)
                 {
-                    user = CreateUser(signUpUserArgs);
-                    DbContext.AddEntity(user);
+                    DbContext.DeleteEntity(user);
+                    if (!DbContext.ValidateAndSave().Success)
+                    {
+                        return ApiResponse<object>.Error(ApiResponseCode.UnknownError);
+                    }
                 }
+                user = CreateUser(signUpUserArgs);
+                DbContext.AddEntity(user);
                 var result = DbContext.ValidateAndSave();
                 if (!result.Success)
                 {
@@ -223,7 +238,24 @@ namespace NextAdmin.FrontEnd.API.Controllers
             }
         }
 
-
+        [HttpPost]
+        [HttpGet]
+        public virtual bool IsUserAccountExist(string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                {
+                    return false;
+                }
+                email = email.ToLower();
+                return DbContext.Set<TUser>().Any(e => e.UserName == email);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
 
         protected virtual string GetConfirmationEmailTitle(TUser user)
         {
@@ -272,6 +304,9 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 return ApiResponse.Error(ex);
             }
         }
+
+
+
 
     }
 }

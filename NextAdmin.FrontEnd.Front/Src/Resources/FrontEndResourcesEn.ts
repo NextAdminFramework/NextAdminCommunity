@@ -1,7 +1,8 @@
+/// <reference path="FrontEndResourcesBase.ts"/>
 
 namespace NextAdmin {
 
-    export class FrontEndResourcesEn {
+    export class FrontEndResourcesEn extends FrontEndResourcesBase {
 
 
         contact = 'Contact';
@@ -14,7 +15,13 @@ namespace NextAdmin {
 
         display = 'Display';
 
+        verifyInformations = 'Verify the information';
 
+        or = 'Or';
+
+        signInWithGoogle = 'Sign-in with Google';
+
+        signUpWithGoogle = 'Sign-up with Google';
 
     }
 }

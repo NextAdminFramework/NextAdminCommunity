@@ -132,10 +132,11 @@ try {
     };
 
     Array.prototype.replace = function (oldElement: any, newElement: any) {
+        let _this = this as Array<any>;
         for (let i = 0; i < this.length; i++) {
-            if (this[i] == oldElement) {
-                this.insert(i, newElement);
-                this.remove(this[i]);
+            if (_this[i] == oldElement) {
+                _this.insert(i, newElement);
+                _this.removeAt(i+1);
             }
         }
     };

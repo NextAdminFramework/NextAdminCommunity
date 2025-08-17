@@ -25,7 +25,7 @@ namespace NextAdmin.UI {
             + '.next-admin-btn-extra-small{height:12.5px;font-size:10px;padding:0px;}'
             + ".next-admin-btn-small{height:24px;font-size:10px;padding-left:2px;padding-right:2px}"
             + ".next-admin-btn-medium{height:34px;font-size:14px;font-weight:500;padding-left:5px;padding-right:5px}"
-            + ".next-admin-btn-large{height:44px;font-size:18px;padding-left:7px;padding-right:7px}"
+            + ".next-admin-btn-large{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px}"
 
 
             + ".next-admin-btn-default{background:#FFF;color:#444;}.next-admin-btn-default:hover,.next-admin-btn-white.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
@@ -191,6 +191,40 @@ namespace NextAdmin.UI {
             return this.element.innerHTML;
         }
 
+        private _badge: HTMLDivElement;
+
+        public setBadge(options?: ButtonBadgeOptions) {
+            if (NextAdmin.String.isNullOrEmpty(options?.text)) {
+                if (this._badge) {
+                    this._badge.remove();
+                    this._badge = null;
+                }
+                return;
+            }
+            options = {
+                backgroundColor: DefaultStyle.BlueOne,
+                ...options
+            }
+
+            this.element.style.position = 'relative';
+            if (this._badge == null) {
+                this._badge = this.element.appendHTML('div', (badge) => {
+                    badge.style.position = 'absolute';
+                    badge.style.left = '-5px';
+                    badge.style.bottom = '5px';
+                    badge.style.width = '15px';
+                    badge.style.height = '15px';
+                    badge.style.lineHeight = '15px';
+                    badge.style.textAlign = 'center';
+                    badge.style.fontSize = '12px';
+                    badge.style.color = '#fff';
+                    badge.style.borderRadius = '100%';
+                    badge.style.boxShadow = '0px 0px 4px rgba(0,0,0,0.25)';
+                });
+            }
+            this._badge.style.backgroundColor = options.backgroundColor;
+            this._badge.innerHTML = options.text;
+        }
 
         public startSpin(): { spinnerContainer: HTMLDivElement, spinner: HTMLImageElement } {
             return this.element.startSpin('rgba(255,255,255,0.5)', 20);
@@ -252,7 +286,13 @@ namespace NextAdmin.UI {
         large,
     }
 
+    export interface ButtonBadgeOptions {
 
+        text?: string;
+
+        backgroundColor?: string;
+
+    }
 
 }
 

@@ -83,6 +83,24 @@ namespace NextAdmin.UI {
             return elementOrControl;
         }
 
+        prependControl<TElement extends Control | HTMLElement>(elementOrControl: TElement, configAction?: (control: TElement) => void): TElement {
+            let element = this.dropDown.addElement(elementOrControl);
+            let controlContainer: HTMLElement;
+            if (element instanceof Control) {
+                controlContainer = element.element.parentElement;
+            }
+            else {
+                controlContainer = (element as HTMLElement).parentElement;
+            }
+            this.dropDown.element.prepend(controlContainer);
+
+            if (configAction) {
+                configAction(elementOrControl);
+            }
+            return elementOrControl;
+        }
+
+
         appendHTML<K extends keyof HTMLElementTagNameMap>(html: K, setControlPropertiesAction?: (control: HTMLElementTagNameMap[K]) => void): HTMLElementTagNameMap[K] {
             return this.appendControl(document.createElement(html), setControlPropertiesAction);
         }

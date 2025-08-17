@@ -23,7 +23,7 @@ namespace NextAdmin.UI {
                 container.style.padding = '40px';
 
                 this.loginInput = container.appendControl(new NextAdmin.UI.Input({
-                    layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                    labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                     size: NextAdmin.UI.InputSize.large,
                     placeHolder: 'E-mail',
                 }), (emailInput) => {
@@ -48,15 +48,15 @@ namespace NextAdmin.UI {
             let response = await this.options.userClient.recoverPassword(this.loginInput.getValue());
             this.sendEmailButton.stopSpin();
             if (response?.code == Models.ApiResponseCode.Success) {
-                NextAdmin.UI.MessageBox.createOk("E-mail envoyé", "Un e-mail vous a été envoyé avec un nouveau mot de passe.");
+                NextAdmin.UI.MessageBox.createOk(Resources.emailSent, Resources.recoverPasswordSuccess);
                 this.close();
             }
             else if (response?.code == 'EMAIL_ERROR') {
-                NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, "Une erreur est survenue lors de l'envoi de l'email de récupération, cette erreur a été transmise à nos services techniques.");
+                NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, Resources.recoverPasswordDefaultError);
                 this.close();
             }
             else {
-                NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, "Les informations fournies ne semblent pas correctes.");
+                NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, Resources.recoverPasswordInvalidEmail);
             }
         }
     }

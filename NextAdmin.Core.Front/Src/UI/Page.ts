@@ -21,7 +21,7 @@ namespace NextAdmin.UI {
 
         constructor(options?: PageOptions) {
             super({
-                clearOnLeave: true,
+                disposeOnNavigateFrom: true,
                 container: document.body,
                 navigationController: NextAdmin.Navigation,
                 ...options
@@ -43,17 +43,21 @@ namespace NextAdmin.UI {
         }
 
 
-        public navigateFrom(args: NavigateFromArgs): void {
+        public async navigateFrom(args: NavigateFromArgs): Promise<void> {
             this.onNavigateFrom.dispatch(this, args);
         }
 
         public endNavigateFrom() {
             this.unloadDependencies(this._loadedDependencies);
             this.element.remove();
-            if (this.options.clearOnLeave) {
-                this.element.innerHTML = '';
+            if (this.options.disposeOnNavigateFrom) {
+                this.dispose();
             }
             this.onEndNavigateFrom.dispatch();
+        }
+
+        public dispose() {
+            this.element.innerHTML = '';
         }
 
         public isActivePage() {
@@ -82,7 +86,7 @@ namespace NextAdmin.UI {
 
         container?: HTMLElement;
 
-        clearOnLeave?: boolean;
+        disposeOnNavigateFrom?: boolean;
 
         pageInfo?: NextAdmin.PageInfo;
 

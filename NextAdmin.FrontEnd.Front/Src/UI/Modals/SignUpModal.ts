@@ -17,6 +17,8 @@ namespace NextAdmin.UI {
 
         verifyEmailButton: NextAdmin.UI.Button;
 
+        stepOneErrorContainer: HTMLDivElement;
+
         confirmCodeButton: NextAdmin.UI.Button;
 
         signInContainer: HTMLDivElement;
@@ -36,7 +38,7 @@ namespace NextAdmin.UI {
 
                     this.emailInput = step1Container.appendControl(new NextAdmin.UI.Input({
                         label: NextAdmin.Resources.login,
-                        layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                        labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                         size: NextAdmin.UI.InputSize.large
                     }));
                     this.emailInput.element.style.marginBottom = '20px';
@@ -44,13 +46,12 @@ namespace NextAdmin.UI {
                     this.passwordInput = step1Container.appendControl(new NextAdmin.UI.Input({
                         label: NextAdmin.Resources.password,
                         inputType: NextAdmin.UI.InputType.password,
-                        layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                        labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                         size: NextAdmin.UI.InputSize.large
                     }));
                     this.passwordInput.element.style.marginBottom = '20px';
-
                     this.verifyEmailButton = step1Container.appendControl(new NextAdmin.UI.Button({
-                        text: NextAdmin.Resources.emailIcon + ' ' + NextAdmin.Resources.confirmEmail,
+                        text: NextAdmin.Resources.checkIcon + ' ' + FrontEndResources.verifyInformations,
                         style: NextAdmin.UI.ButtonStyle.lightBlue,
                         size: NextAdmin.UI.ButtonSize.large,
                         action: async (btn) => {
@@ -58,11 +59,12 @@ namespace NextAdmin.UI {
                             if (signUpData == null) {
                                 return;
                             }
+                            this.stepOneErrorContainer.innerHTML = "";
                             this.modal.startSpin();
                             let signUpUserResponse = await this.options.userClient.signUpUser(signUpData);
                             this.modal.stopSpin();
                             if (!signUpUserResponse?.isSuccess) {
-                                this.displaySignUpError(signUpUserResponse);
+                                this.stepOneErrorContainer.innerHTML = this.getSignUpErrorMessage(signUpUserResponse) ?? '';
                                 return;
                             }
                             step1Container.disable();
@@ -77,7 +79,7 @@ namespace NextAdmin.UI {
 
                             this.confirmationCodeInput = this.step2Container.appendControl(new NextAdmin.UI.Input({
                                 label: NextAdmin.Resources.confirmationCode,
-                                layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                                labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                                 size: NextAdmin.UI.InputSize.large
                             }), (confirmationCodeInput) => {
                                 confirmationCodeInput.onValueChanged.subscribe((sender, args) => {
@@ -110,7 +112,12 @@ namespace NextAdmin.UI {
                         this.verifyEmailButton.changeEnableStateOnControlsRequiredValueChanged(() =>
                             this.getRequiredFormControls().firstOrDefault(a => !a.getValue()) == null,
                             ...this.getRequiredFormControls());
-                    },1);
+                    }, 1);
+
+                    this.stepOneErrorContainer = step1Container.appendHTML('div', (errorMessageContainer) => {
+                        errorMessageContainer.style.color = NextAdmin.UI.DefaultStyle.RedOne;
+                    });
+
                 });
 
                 this.step2Container = container.appendHTML('div');
@@ -128,21 +135,26 @@ namespace NextAdmin.UI {
                         }));
                     });
                 }
+
+                if (this.options.googleOauthOptions) {
+                    container.appendControl(new ThirdPartyOauthPanel({ googleOauthOptions: this.options.googleOauthOptions }));
+                }
+
             });
         }
 
-        displaySignUpError(apiResponse: NextAdmin.Models.ApiResponse) {
+        getSignUpErrorMessage(apiResponse: NextAdmin.Models.ApiResponse<string>) {
             switch (apiResponse?.code) {
                 case 'USER_ALREADY_EXIST':
-                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.userAlreadyExist);
+                    return NextAdmin.Resources.userAlreadyExist;
                 case 'UNABLE_TO_SEND_EMAIL':
-                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.unableToSendEmail);
+                    return NextAdmin.Resources.unableToSendEmail;
                 case 'INVALID_EMAIL':
-                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.invalidEmail);
+                    return NextAdmin.Resources.invalidEmail;
                 case 'INVALID_PASSWORD':
-                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.invalidPassword);
+                    return NextAdmin.Resources.invalidPassword;
                 default:
-                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.unknownError);
+                    return NextAdmin.Resources.unknownError;
             }
         }
 
@@ -167,6 +179,8 @@ namespace NextAdmin.UI {
         onSignUp?: (userName?: string, password?: string) => void;
 
         signInAction?: () => void;
+
+        googleOauthOptions?: GoogleOauthOptions;
 
     }
 }

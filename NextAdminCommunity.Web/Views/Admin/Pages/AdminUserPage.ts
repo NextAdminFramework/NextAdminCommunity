@@ -6,7 +6,7 @@ class AdminUserPage extends NextAdmin.UI.Page {
 
     constructor(pageOption?: NextAdmin.UI.PageOptions) {
         super({
-            clearOnLeave: false,
+            disposeOnNavigateFrom: false,
             css: { height: '100%' },
             ...pageOption
         });

@@ -69,6 +69,11 @@ namespace NextAdmin.UI {
             box-shadow:0px 0px 20px rgba(0,0,0,0.25);
         }
 
+        .next-admin-image-card-border-radius-b{
+            border-radius:16px;
+            box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+        }
+
         .next-admin-image-card-extra-small-1-1{
             width:200px;
             height:200px;
@@ -346,6 +351,9 @@ namespace NextAdmin.UI {
                 case ImageCardStyle.fullImageShadowedBorderRadius:
                     this.card.classList.add('next-admin-image-card-border-radius');
                     break;
+                case ImageCardStyle.fullImageShadowedBorderRadiusB:
+                    this.card.classList.add('next-admin-image-card-border-radius-b');
+                    break;
             }
         }
 
@@ -412,6 +420,7 @@ namespace NextAdmin.UI {
     export enum ImageCardStyle {
         fullImageLightBordered,
         fullImageShadowedBorderRadius,
+        fullImageShadowedBorderRadiusB
     }
 
 }

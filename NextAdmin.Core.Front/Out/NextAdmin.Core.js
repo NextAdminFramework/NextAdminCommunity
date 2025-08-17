@@ -172,10 +172,11 @@ try {
         }
     };
     Array.prototype.replace = function (oldElement, newElement) {
+        let _this = this;
         for (let i = 0; i < this.length; i++) {
-            if (this[i] == oldElement) {
-                this.insert(i, newElement);
-                this.remove(this[i]);
+            if (_this[i] == oldElement) {
+                _this.insert(i, newElement);
+                _this.removeAt(i + 1);
             }
         }
     };
@@ -1507,7 +1508,7 @@ var NextAdmin;
                     nextPage: nextPage,
                     nextPageParameters: parameters
                 };
-                previousPage.navigateFrom(args);
+                await previousPage.navigateFrom(args);
                 if (args.cancelNavigation) {
                     return null;
                 }
@@ -3041,7 +3042,6 @@ var NextAdmin;
             getPrimaryKeyValue() {
                 return super.getDataPrimaryKeyValue(this.data);
             }
-            /** Get updated */
             getData() {
                 return this.data;
             }
@@ -3936,45 +3936,63 @@ var NextAdmin;
     var Business;
     (function (Business) {
         class QueryBuilder {
-            constructor(query, writeIntoOriginalQuery) {
-                this.writeIntoOriginalQuery = writeIntoOriginalQuery;
-                if (query) {
-                    this.query = writeIntoOriginalQuery ? query : { ...query };
+            constructor(query, writeQueryMode) {
+                this.query = query ?? {};
+                this.writeQueryMode = writeQueryMode;
+            }
+            clone() {
+                return new QueryBuilder(NextAdmin.Copy.clone(this.query), this.writeQueryMode);
+            }
+            orderBy(...fields) {
+                let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+                if (_this.query.orderColumnNames?.length) {
+                    _this.query.orderColumnNames.addRange(fields);
                 }
                 else {
-                    this.query = {};
+                    _this.query.orderColumnNames = fields;
                 }
+                return _this;
+            }
+            skip(n) {
+                let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+                _this.query.skipRecordCount = n;
+                return _this;
+            }
+            take(n) {
+                let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+                _this.query.takeRecordCount = n;
+                return _this;
             }
             select(...fields) {
-                let clone = this.clone();
-                if (clone.query.columnToSelectNames?.length) {
-                    clone.query.columnToSelectNames.addRange(fields);
+                let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+                if (_this.query.columnToSelectNames?.length) {
+                    _this.query.columnToSelectNames.addRange(fields);
                 }
                 else {
-                    clone.query.columnToSelectNames = fields;
+                    _this.query.columnToSelectNames = fields;
                 }
-                return clone;
+                return _this;
             }
             distinct(value = true) {
-                let clone = this.clone();
-                clone.query.isSelectDistinctQuery = value;
-                return clone;
+                let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+                _this.query.isSelectDistinctQuery = value;
+                return _this;
             }
             where(query, ...args) {
-                let clone = this.clone();
-                if (NextAdmin.String.isNullOrWhiteSpace(clone.query.whereQuery)) {
-                    clone.query.whereQuery = query;
+                let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
+                if (NextAdmin.String.isNullOrWhiteSpace(_this.query.whereQuery)) {
+                    _this.query.whereQuery = query;
                 }
                 else {
-                    clone.query.whereQuery = '(' + clone.query.whereQuery + ')' + ' AND ' + query;
+                    _this.query.whereQuery = '(' + _this.query.whereQuery + ')' + ' AND ' + query;
                 }
-                if (clone.query.whereQueryArgs == null) {
-                    clone.query.whereQueryArgs = [];
+                if (_this.query.whereQueryArgs == null) {
+                    _this.query.whereQueryArgs = [];
                 }
                 for (let arg of args) {
-                    clone.query.whereQueryArgs.add(arg);
+                    _this.query.whereQueryArgs.add(arg);
                 }
-                return clone;
+                return _this;
             }
             whereIn(clumn, ...args) {
                 return this.where(clumn + ' IN(' + args.select(a => '?').join(',') + ')', ...args);
@@ -4050,29 +4068,6 @@ var NextAdmin;
             whereIsNotNullOrEmpty(clumn) {
                 return this.where(clumn + ' IS NOT NULL AND ' + clumn + ' != ?', '');
             }
-            orderBy(...fields) {
-                let clone = this.clone();
-                if (clone.query.orderColumnNames?.length) {
-                    clone.query.orderColumnNames.addRange(fields);
-                }
-                else {
-                    clone.query.orderColumnNames = fields;
-                }
-                return clone;
-            }
-            skip(n) {
-                let clone = this.clone();
-                clone.query.skipRecordCount = n;
-                return clone;
-            }
-            take(n) {
-                let clone = this.clone();
-                clone.query.takeRecordCount = n;
-                return clone;
-            }
-            clone() {
-                return new QueryBuilder(this.query, this.writeIntoOriginalQuery);
-            }
         }
         Business.QueryBuilder = QueryBuilder;
         let SearchManyMode;
@@ -4080,6 +4075,11 @@ var NextAdmin;
             SearchManyMode[SearchManyMode["and"] = 0] = "and";
             SearchManyMode[SearchManyMode["or"] = 1] = "or";
         })(SearchManyMode = Business.SearchManyMode || (Business.SearchManyMode = {}));
+        let WriteQueryMode;
+        (function (WriteQueryMode) {
+            WriteQueryMode[WriteQueryMode["instanciateNewQueryPerCommand"] = 0] = "instanciateNewQueryPerCommand";
+            WriteQueryMode[WriteQueryMode["keepOriginalQuery"] = 1] = "keepOriginalQuery";
+        })(WriteQueryMode = Business.WriteQueryMode || (Business.WriteQueryMode = {}));
     })(Business = NextAdmin.Business || (NextAdmin.Business = {}));
 })(NextAdmin || (NextAdmin = {}));
 /// <reference path="QueryBuilder.ts"/>
@@ -4088,8 +4088,8 @@ var NextAdmin;
     var Business;
     (function (Business) {
         class DbSetHandler extends Business.QueryBuilder {
-            constructor(entityName, entityClient, query, writeIntoOriginalQuery) {
-                super(query, writeIntoOriginalQuery);
+            constructor(entityName, entityClient, query, writeQueryMode) {
+                super(query, writeQueryMode);
                 this.entityName = entityName;
                 this.entityClient = entityClient;
             }
@@ -4124,9 +4124,7 @@ var NextAdmin;
                 return super.take(n);
             }
             clone() {
-                let clone = new DbSetHandler(this.entityName, this.entityClient);
-                NextAdmin.Copy.copyTo(this, clone);
-                return clone;
+                return new DbSetHandler(this.entityName, this.entityClient, NextAdmin.Copy.clone(this.query), this.writeQueryMode);
             }
             async toArray(parameters) {
                 let result = await this.entityClient.getEntities({
@@ -4193,14 +4191,12 @@ var NextAdmin;
         }
         Business.DbSetHandler = DbSetHandler;
         class EntityDbSetHandler extends DbSetHandler {
-            constructor(entityInfo, entityClient, query, writeIntoOriginalQuery) {
-                super(entityInfo.name, entityClient, query, writeIntoOriginalQuery);
+            constructor(entityInfo, entityClient, query, writeQueryMode) {
+                super(entityInfo.name, entityClient, query, writeQueryMode);
                 this.entityInfo = entityInfo;
             }
             clone() {
-                let clone = new EntityDbSetHandler(this.entityInfo, this.entityClient);
-                NextAdmin.Copy.copyTo(this, clone);
-                return clone;
+                return new EntityDbSetHandler(this.entityInfo, this.entityClient, NextAdmin.Copy.clone(this.query), this.writeQueryMode);
             }
             getPropertyName(dataDefPropertyAction) {
                 return this.entityInfo.getPropertyName(dataDefPropertyAction);
@@ -4508,6 +4504,41 @@ var NextAdmin;
 /// <reference path="ResourcesBase.ts"/>
 var NextAdmin;
 (function (NextAdmin) {
+    class NextAdminIcons extends NextAdmin.ResourcesBase {
+        constructor() {
+            super(...arguments);
+            this.addIcon = '<i class="fas fa-plus"></i>';
+            this.downloadIcon = '<i class="fas fa-download"></i>';
+            this.printIcon = '<i class="fas fa-print"></i>';
+            this.saveIcon = '<i class="fas fa-save"></i>';
+            this.deleteIcon = '<i class="fas fa-trash-alt"></i>';
+            this.removeIcon = '<i class="fas fa-times-circle"></i>';
+            this.clearIcon = '<i class="fas fa-eraser"></i>';
+            this.checkIcon = '<i class="fas fa-check"></i>';
+            this.cogIcon = '<i class="fas fa-cog"></i>';
+            this.openIcon = '<i class="far fa-edit"></i>';
+            this.refreshIcon = '<i class="fas fa-sync"></i>';
+            this.searchIcon = '<i class="fas fa-search"></i>';
+            this.menuIcon = '<i class="fas fa-bars"></i>';
+            this.iconCaretDown = '<i class="fas fa-angle-down"></i>';
+            this.iconCaretLeft = '<i class="fas fa-angle-left"></i>';
+            this.iconCaretRight = '<i class="fas fa-angle-right"></i>';
+            this.keyIcon = '<i class="fas fa-key"></i>';
+            this.emailIcon = '<i class="fas fa-envelope"></i>';
+            this.lockIcon = '<i class="fas fa-lock"></i>';
+            this.noDataIcon = '<i class="fas fa-database"></i>';
+            this.copyIcon = '<i class="fa-solid fa-copy"></i>';
+            this.dragIcon = '<i class="fas fa-grip-vertical"></i>';
+            this.backIcon = '<i class="fas fa-arrow-alt-left"></i>';
+            this.linkIcon = '<i class="fas fa-link"></i>';
+            this.warningIcon = '<i class="fas fa-exclamation-triangle"></i>';
+        }
+    }
+    NextAdmin.NextAdminIcons = NextAdminIcons;
+})(NextAdmin || (NextAdmin = {}));
+/// <reference path="ResourcesBase.ts"/>
+var NextAdmin;
+(function (NextAdmin) {
     class ResourcesEn extends NextAdmin.ResourcesBase {
         constructor() {
             super(...arguments);
@@ -4532,7 +4563,6 @@ var NextAdmin;
             this.unknownError = "An unknown error has occurred.";
             this.success = "Success";
             this.search = "Search";
-            this.searching = "Search";
             this.lostDataNotSavedMessage = 'If you validate, not saved data will be lost, what do you want to do ?';
             this.formDeleteMessageTitle = 'Delete data';
             this.formDeleteMessage = 'If you validate, data will be permanently deleted, do you want to tontinue ?';
@@ -4572,6 +4602,7 @@ var NextAdmin;
             this.unableToDeleteDataMessage = "Unable to delete this element, it's probably kinked to another element.";
             this.defaultDeleteError = "An error occured, it's probably due to the impossibiliy to delete element(s).";
             this.validate = "Validate";
+            this.validateNew = "Validate & new";
             this.export = "Export";
             this.dataExportConfig = "Config data export";
             this.format = "Format";
@@ -4654,6 +4685,10 @@ var NextAdmin;
             this.copy = 'Copy';
             this.errprMaximumPublishedProject = "You have reached the maximum number of publications allowed, please upgrade your offer to publish more projects.";
             this.unamed = 'Unnamed';
+            this.emailSent = 'Email sent';
+            this.recoverPasswordSuccess = "Un e-mail vous a �t� envoy� avec un nouveau mot de passe.";
+            this.recoverPasswordInvalidEmail = 'An email has been sent to you with a new password.';
+            this.recoverPasswordDefaultError = "An error occurred while sending the recovery email, this error has been forwarded to our technical services.";
         }
     }
     NextAdmin.ResourcesEn = ResourcesEn;
@@ -4685,8 +4720,7 @@ var NextAdmin;
             this.error = "Erreur";
             this.unknownError = "Une erreur inconnue s'est produite.";
             this.success = "Succès";
-            this.search = "Rechercher";
-            this.searching = "Recherche";
+            this.search = "Recherche";
             this.lostDataNotSavedMessage = 'Si vous continuez, les données non sauvegardées pourraient être perdues, que voulez-vous faire?';
             this.formDeleteMessageTitle = 'Suppression définitive';
             this.formDeleteMessage = 'Si vous validez, cet élément sera supprimé de manière permanente, voulez-vous continuer ?';
@@ -4726,6 +4760,7 @@ var NextAdmin;
             this.unableToDeleteDataMessage = "Impossible de supprimer cet élément, il est probablement lié à un autre élément.";
             this.defaultDeleteError = "Une erreur s'est produite, cela est probablement dû à l'impossibilité de supprimer un ou plusieurs éléments.";
             this.validate = "Valider";
+            this.validateNew = "Valider & nouveau";
             this.export = "Exporter";
             this.dataExportConfig = "Configuration de l'export";
             this.format = "Format";
@@ -4814,6 +4849,10 @@ var NextAdmin;
             this.unamed = 'Sans nom';
             this.recoverPassword = "Récupération de mot de passe";
             this.recoverMyPassword = "Récupérer mon mot de passe";
+            this.emailSent = 'E-mail envoyé';
+            this.recoverPasswordSuccess = "Un e-mail vous a été envoyé avec un nouveau mot de passe.";
+            this.recoverPasswordInvalidEmail = 'Aucun compte ne semble associé à cette adresse e-mail.';
+            this.recoverPasswordDefaultError = "Une erreur est survenue lors de l'envoi de l'email de récupération, cette erreur a été transmise à nos services techniques.";
         }
     }
     NextAdmin.ResourcesFr = ResourcesFr;
@@ -5430,7 +5469,6 @@ var NextAdmin;
             }
             display() {
                 this.element.style.display = '';
-                console.log('display');
             }
             dispose() {
                 this.element.remove();
@@ -5616,6 +5654,37 @@ var NextAdmin;
             getText() {
                 return this.element.innerHTML;
             }
+            setBadge(options) {
+                if (NextAdmin.String.isNullOrEmpty(options?.text)) {
+                    if (this._badge) {
+                        this._badge.remove();
+                        this._badge = null;
+                    }
+                    return;
+                }
+                options = {
+                    backgroundColor: UI.DefaultStyle.BlueOne,
+                    ...options
+                };
+                this.element.style.position = 'relative';
+                if (this._badge == null) {
+                    this._badge = this.element.appendHTML('div', (badge) => {
+                        badge.style.position = 'absolute';
+                        badge.style.left = '-5px';
+                        badge.style.bottom = '5px';
+                        badge.style.width = '15px';
+                        badge.style.height = '15px';
+                        badge.style.lineHeight = '15px';
+                        badge.style.textAlign = 'center';
+                        badge.style.fontSize = '12px';
+                        badge.style.color = '#fff';
+                        badge.style.borderRadius = '100%';
+                        badge.style.boxShadow = '0px 0px 4px rgba(0,0,0,0.25)';
+                    });
+                }
+                this._badge.style.backgroundColor = options.backgroundColor;
+                this._badge.innerHTML = options.text;
+            }
             startSpin() {
                 return this.element.startSpin('rgba(255,255,255,0.5)', 20);
             }
@@ -5628,7 +5697,7 @@ var NextAdmin;
             + '.next-admin-btn-extra-small{height:12.5px;font-size:10px;padding:0px;}'
             + ".next-admin-btn-small{height:24px;font-size:10px;padding-left:2px;padding-right:2px}"
             + ".next-admin-btn-medium{height:34px;font-size:14px;font-weight:500;padding-left:5px;padding-right:5px}"
-            + ".next-admin-btn-large{height:44px;font-size:18px;padding-left:7px;padding-right:7px}"
+            + ".next-admin-btn-large{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px}"
             + ".next-admin-btn-default{background:#FFF;color:#444;}.next-admin-btn-default:hover,.next-admin-btn-white.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-red{background:#FFF;color:" + UI.DefaultStyle.RedOne + ";}.next-admin-btn-red:hover,.next-admin-btn-red.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-green{background:#FFF;color:" + UI.DefaultStyle.GreenOne + ";}.next-admin-btn-green:hover,.next-admin-btn-green.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
@@ -5743,7 +5812,7 @@ var NextAdmin;
                 return elementOrControl;
             }
             insertControl(elementOrControl, index, setControlPropertiesAction) {
-                let td = this.row.insertCell(index);
+                let td = this.row.childNodes.length < index ? this.row.addCell() : this.row.insertCell(index);
                 td.classList.add('toolbar-cell');
                 if (elementOrControl instanceof UI.Control) {
                     td.appendControl(elementOrControl);
@@ -6683,14 +6752,14 @@ var NextAdmin;
                     container.style.padding = '20px';
                     let newPassword1 = container.appendControl(new NextAdmin.UI.Input({
                         label: NextAdmin.Resources.newPassword,
-                        layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                        labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                         inputType: NextAdmin.UI.InputType.password
                     }), (input) => {
                         input.element.style.marginBottom = '20px';
                     });
                     let newPassword2 = container.appendControl(new NextAdmin.UI.Input({
                         label: NextAdmin.Resources.newPasswordRepeat,
-                        layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                        labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                         inputType: NextAdmin.UI.InputType.password
                     }), (input) => {
                         input.element.style.marginBottom = '20px';
@@ -6917,6 +6986,25 @@ var NextAdmin;
             }
         }
         UI.CollapsibleFilter = CollapsibleFilter;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
+        class Container extends UI.Control {
+            constructor(options) {
+                super('div', {
+                    width: '1280px',
+                    ...options
+                });
+                this.body = this.element.appendHTML('div', (body) => {
+                    body.style.margin = '0 auto';
+                    body.style.maxWidth = this.options.width;
+                });
+            }
+        }
+        UI.Container = Container;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 /// <reference path="Control.ts"/>
@@ -7859,6 +7947,7 @@ var NextAdmin;
                 this.onColumnFilterSelectedValuesChanged = new NextAdmin.EventHandler();
                 this._disabled = false;
                 this._createdModals = new Array();
+                this._previousScrollTop = 0;
                 this._suspendChanging = false;
                 this.datasetController = this.options.datasetController;
                 if (this.options.canExport == null) {
@@ -7908,9 +7997,10 @@ var NextAdmin;
                     this.tableContainer.style.left = '0px';
                     this.tableContainer.style.top = '0px';
                     this.tableContainer.style.overflow = 'auto';
-                    if (NextAdmin.UserAgent.isDesktop()) {
+                    /*
+                    if (UserAgent.isDesktop()) {
                         this.tableContainer.appendPerfectScrollbar();
-                    }
+                    }*/
                 }
                 this.table = this.tableContainer.appendHTML('table');
                 this.table.classList.add('next-admin-table');
@@ -8741,6 +8831,7 @@ var NextAdmin;
             updateWhereQuery(view) {
                 let wjereQuery = '';
                 let whereArgs = [];
+                this._previousScrollTop = 0;
                 if (view != null && !NextAdmin.String.isNullOrWhiteSpace(view.filterQuery)) {
                     wjereQuery = view.filterQuery == null ? '' : view.filterQuery.toString();
                     whereArgs = view.filterQueryValues == null ? [] : view.filterQueryValues.clone();
@@ -9144,12 +9235,11 @@ var NextAdmin;
             }
             enableScrollLoading() {
                 let isLoading = false;
-                let previousScrollTop = 0;
                 this.tableContainer.addEventListener('scroll', async (ev) => {
                     if (isLoading || this.datasetController.dataset == null || this.datasetController.dataset.count() == 0)
                         return;
-                    if (this.tableContainer.scrollTop > previousScrollTop && this.tableContainer.scrollTop + this.tableContainer.offsetHeight > this.tableContainer.scrollHeight - 200) {
-                        previousScrollTop = this.tableContainer.scrollTop;
+                    if (this.tableContainer.scrollTop > this._previousScrollTop && this.tableContainer.scrollTop + this.tableContainer.offsetHeight > this.tableContainer.scrollHeight - 200) {
+                        this._previousScrollTop = this.tableContainer.scrollTop;
                         isLoading = true;
                         this.datasetController.skip(this.datasetController.dataset.count());
                         await this.datasetController.loadAdd();
@@ -10920,7 +11010,7 @@ var NextAdmin;
                 this.element.style.borderSpacing = '0px';
                 this.element.style.borderCollapse = 'collapse';
                 this.element.style.width = '100%';
-                if (this.options.layout == LabelFormControlLayout.multiLine) {
+                if (this.options.labelPosition == FormControlLabelPosition.top) {
                     this.element.appendHTML('tr', tr => {
                         this.labelContainer = tr.appendHTML('td');
                         this.labelContainer.colSpan = 10;
@@ -11126,11 +11216,11 @@ var NextAdmin;
         (function (FormControlAddon) {
             FormControlAddon[FormControlAddon["clipboardCopy"] = 1] = "clipboardCopy";
         })(FormControlAddon = UI.FormControlAddon || (UI.FormControlAddon = {}));
-        let LabelFormControlLayout;
-        (function (LabelFormControlLayout) {
-            LabelFormControlLayout["inline"] = "inline";
-            LabelFormControlLayout["multiLine"] = "multiLine";
-        })(LabelFormControlLayout = UI.LabelFormControlLayout || (UI.LabelFormControlLayout = {}));
+        let FormControlLabelPosition;
+        (function (FormControlLabelPosition) {
+            FormControlLabelPosition["left"] = "left";
+            FormControlLabelPosition["top"] = "top";
+        })(FormControlLabelPosition = UI.FormControlLabelPosition || (UI.FormControlLabelPosition = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 /// <reference path="LabelFormControl.ts"/>
@@ -11323,6 +11413,9 @@ var NextAdmin;
                 }
                 if (this.input.type == 'number' || this.input.type == 'range') {
                     return NextAdmin.String.isNullOrEmpty(this.input.value) ? null : Number(this.input.value);
+                }
+                if (this.options.outputNullIfEmpty && NextAdmin.String.isNullOrEmpty(this.input.value)) {
+                    return null;
                 }
                 return this.input.value;
             }
@@ -11532,12 +11625,13 @@ var NextAdmin;
                         return;
                     }
                     this.input.focus();
-                    this.input.setSelectionRange(0, 0);
+                    if (this.input.type != 'number') {
+                        this.input.setSelectionRange(0, 0);
+                    }
                     suspendBlur = true;
                     this.input.blur();
                     suspendBlur = false;
                 });
-                //this.input.setSelectionRange(0, 0);
                 this.openDropDownButton = this.addRightAddon(new UI.Button({
                     style: UI.ButtonStyle.bgWhite,
                     text: '▼',
@@ -11639,12 +11733,14 @@ var NextAdmin;
             selectItem(value) {
                 this.closeDropDown();
                 this.updateValue(value);
-                this.input.setSelectionRange(0, 0);
+                if (this.input.type != 'number') {
+                    this.input.setSelectionRange(0, 0);
+                }
             }
             cancelSelect() {
                 this.updateValue(this.getValue());
                 this.closeDropDown();
-                if (this.options.canSearchData) {
+                if (this.options.canSearchData && this.input.type != 'number') {
                     this.input.setSelectionRange(0, 0);
                 }
             }
@@ -11717,7 +11813,7 @@ var NextAdmin;
                 for (let item of this.dropDownTable.getBodyRows()) {
                     if (item == this._customValueItem)
                         continue;
-                    if (item['_search'].toLowerCase().indexOf(searchValue.toLowerCase().removeDiacritics()) != -1) {
+                    if ((item['_search'] ?? '').toLowerCase().indexOf((searchValue ?? '').toLowerCase().removeDiacritics()) != -1) {
                         item.style.display = '';
                         if ((this._customValueItem == null || this._customValueItem.style.display == 'none') && !hasRowSelected) {
                             this.dropDownTable.selectRow(item, false);
@@ -12379,6 +12475,21 @@ var NextAdmin;
                 }
                 return elementOrControl;
             }
+            prependControl(elementOrControl, configAction) {
+                let element = this.dropDown.addElement(elementOrControl);
+                let controlContainer;
+                if (element instanceof UI.Control) {
+                    controlContainer = element.element.parentElement;
+                }
+                else {
+                    controlContainer = element.parentElement;
+                }
+                this.dropDown.element.prepend(controlContainer);
+                if (configAction) {
+                    configAction(elementOrControl);
+                }
+                return elementOrControl;
+            }
             appendHTML(html, setControlPropertiesAction) {
                 return this.appendControl(document.createElement(html), setControlPropertiesAction);
             }
@@ -12495,11 +12606,14 @@ var NextAdmin;
                 this.element.style.overflow = 'auto';
                 this.element.style.width = this.options.dropDownWidth;
                 this.element.addEventListener('wheel', (ev) => {
+                    //removed because blocking scroll since perfect scrollbar was remoed
+                    /*
                     ev.stopPropagation();
                     ev.preventDefault();
+                    */
                 });
                 if (NextAdmin.UserAgent.isDesktop()) {
-                    this.element.appendPerfectScrollbar();
+                    //this.element.appendPerfectScrollbar();
                 }
                 if (this.options.items != null) {
                     for (let dropDownItem of this.options.items) {
@@ -13179,12 +13293,25 @@ var NextAdmin;
                             this.options.onSelectedDataChanged(row, this.formPanel);
                         }
                         if (this.formPanel.dataController != null) {
-                            this.formPanel.dataController.load(row.data[this.formPanel.dataController.options.dataName]);
+                            this.formPanel.display();
+                            this.formPanel.startSpin();
+                            this.formPanel.dataController.load(row.data[this.formPanel.dataController.options.dataPrimaryKeyName], {
+                                onGetResponse: () => {
+                                    this.formPanel.stopSpin();
+                                }
+                            });
                         }
                     });
                     this.grid.onRowAdded.subscribe((sender, row) => {
-                        if (this.grid.getSelectedDataRows().length == 0) {
-                            this.grid.selectRow(row);
+                        setTimeout(() => {
+                            if (this.grid.getSelectedDataRows().length == 0) {
+                                this.grid.selectRow(row);
+                            }
+                        }, 20);
+                    });
+                    this.grid.onDatasetChanged.subscribe((sender, items) => {
+                        if (!items?.length) {
+                            this.formPanel.hide();
                         }
                     });
                 });
@@ -13195,21 +13322,18 @@ var NextAdmin;
                         ...this.options.formPanelOption
                     }));
                     if (this.formPanel.dataController) {
-                        this.formPanel.dataController.onDataDeleted.subscribe(() => {
+                        this.formPanel.dataController.onDataDeleted.subscribe((sender, result) => {
                             if (this.grid.datasetController) {
-                                this.grid.datasetController.load();
-                            }
-                            else {
+                                this.grid.load({ tryPreserveSelectionAndScroll: true });
                             }
                         });
-                        this.formPanel.dataController.onDataSaved.subscribe(() => {
-                            if (this.grid.datasetController) {
-                                this.grid.datasetController.load();
-                            }
-                            else {
+                        this.formPanel.dataController.onDataSaved.subscribe((sender, result) => {
+                            if (result.success && this.grid.datasetController) {
+                                this.grid.load({ tryPreserveSelectionAndScroll: true });
                             }
                         });
                     }
+                    this.formPanel.hide();
                 });
                 if (this.grid.noDataMessageContainer) {
                     this.element.appendChild(this.grid.noDataMessageContainer);
@@ -13226,6 +13350,8 @@ var NextAdmin;
 
             .next-admin-grid-form-left-container{
                 width:50%;
+                min-width:50%;
+                max-width:50%;
                 min-height:100%;
                 padding-right:15px;
             }
@@ -13241,12 +13367,17 @@ var NextAdmin;
             .next-admin-grid-form{
                 .next-admin-grid-form-left-container{
                     width:800px;
+                    min-width:800px;
+                    max-width:800px;
                 }
             }
         }
 
         `;
         UI.GridFormPanel = GridFormPanel;
+        class GridFormPanel_ extends GridFormPanel {
+        }
+        UI.GridFormPanel_ = GridFormPanel_;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -13354,10 +13485,17 @@ var NextAdmin;
         .next-admin-link.blue{
             color:` + UI.DefaultStyle.BlueOne + `;
         }
+        .next-admin-link.blue:hover{
+            color:'#1a66ce';
+        }
 
         .next-admin-link.dark{
             color:#222;
         }
+        .next-admin-link.dark:hover{
+            color:#555;
+        }
+
 
         .next-admin-link.white {
             color:#fff;
@@ -13512,6 +13650,7 @@ var NextAdmin;
         class MessageBox extends UI.Control {
             constructor(options) {
                 super('div', options);
+                this._button = new Array();
                 NextAdmin.Style.append("MessageBox", MessageBox.style);
                 if (this.options.parentContainer == null) {
                     this.options.parentContainer = document.body;
@@ -13521,6 +13660,12 @@ var NextAdmin;
                     modal.classList.add('next-admin-msgbox-modal');
                     this.modalContent = modal.appendHTML('div', (modalContent) => {
                         modalContent.classList.add('next-admin-msgbox-modal-content');
+                        if (options.imageUrl) {
+                            this.image = modalContent.appendHTML('img', (image) => {
+                                image.classList.add('next-admin-msgbox-modal-image');
+                                image.src = options.imageUrl;
+                            });
+                        }
                         this.header = modalContent.appendHTML('div', (header) => {
                             header.classList.add('next-admin-msgbox-modal-content-header');
                             header.innerHTML = this.options.title;
@@ -13531,7 +13676,9 @@ var NextAdmin;
                             if (NextAdmin.UserAgent.isDesktop()) {
                                 body.appendPerfectScrollbar();
                             }
-                            body.innerHTML = this.options.text;
+                            if (this.options.text) {
+                                body.innerHTML = this.options.text;
+                            }
                         });
                         this.footer = modalContent.appendHTML('div', (footer) => {
                             footer.classList.add('next-admin-msgbox-modal-footer');
@@ -13552,25 +13699,28 @@ var NextAdmin;
             }
             appendButton(button) {
                 if (NextAdmin.UserAgent.isDesktop()) {
-                    this._desktopButtonToolbar.appendControl(button);
+                    this._button.add(this._desktopButtonToolbar.appendControl(button));
                 }
                 else {
                     this.footer.appendHTML('div', (btnContainer) => {
                         btnContainer.style.marginTop = '5px';
-                        btnContainer.appendControl(button);
+                        this._button.add(btnContainer.appendControl(button));
                     });
                 }
             }
             prependButton(button) {
                 if (NextAdmin.UserAgent.isDesktop()) {
-                    this._desktopButtonToolbar.prependControl(button);
+                    this._button.add(this._desktopButtonToolbar.prependControl(button));
                 }
                 else {
                     this.footer.appendHTML('div', (btnContainer) => {
                         btnContainer.style.marginTop = '5px';
-                        btnContainer.prependControl(button);
+                        this._button.add(btnContainer.prependControl(button));
                     });
                 }
+            }
+            getButtons() {
+                return this._button;
             }
             startSpin() {
                 this.modal.startSpin();
@@ -13725,6 +13875,13 @@ var NextAdmin;
             width:70%;
             position:relative;
 
+            .next-admin-msgbox-modal-image{
+                float:left;
+                height:100px;
+                margin-right:20px;
+                border-radius: 5px;
+            }
+
             .next-admin-msgbox-modal-content-header {
                 font-weight:bold;
                 font-size:20px;
@@ -13804,7 +13961,7 @@ var NextAdmin;
                     this.controlContainer.disable();
                     this.addLeftAddon(new NextAdmin.UI.Button({
                         text: NextAdmin.Resources.searchIcon, style: NextAdmin.UI.ButtonStyle.noBg, action: () => {
-                            let searchModal = new NextAdmin.UI.Modal({ size: NextAdmin.UI.ModalSize.smallFitContent, title: NextAdmin.Resources.searching, canChangeScreenMode: false });
+                            let searchModal = new NextAdmin.UI.Modal({ size: NextAdmin.UI.ModalSize.smallFitContent, title: NextAdmin.Resources.search, canChangeScreenMode: false });
                             searchModal.body.appendHTML('div', (container) => {
                                 container.style.height = '400px';
                                 container.style.padding = '10px';
@@ -14323,7 +14480,7 @@ var NextAdmin;
         class Page extends UI.View {
             constructor(options) {
                 super({
-                    clearOnLeave: true,
+                    disposeOnNavigateFrom: true,
                     container: document.body,
                     navigationController: NextAdmin.Navigation,
                     ...options
@@ -14345,16 +14502,19 @@ var NextAdmin;
                 window.scrollTo(0, 0);
                 this.onNavigateTo.dispatch(this, args);
             }
-            navigateFrom(args) {
+            async navigateFrom(args) {
                 this.onNavigateFrom.dispatch(this, args);
             }
             endNavigateFrom() {
                 this.unloadDependencies(this._loadedDependencies);
                 this.element.remove();
-                if (this.options.clearOnLeave) {
-                    this.element.innerHTML = '';
+                if (this.options.disposeOnNavigateFrom) {
+                    this.dispose();
                 }
                 this.onEndNavigateFrom.dispatch();
+            }
+            dispose() {
+                this.element.innerHTML = '';
             }
             isActivePage() {
                 return this.navigationController.getCurrentPage() == this;
@@ -14604,7 +14764,7 @@ var NextAdmin;
                 this.container = this.body.appendHTML('div', (container) => {
                     container.style.padding = '40px';
                     this.loginInput = container.appendControl(new NextAdmin.UI.Input({
-                        layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                        labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                         size: NextAdmin.UI.InputSize.large,
                         placeHolder: 'E-mail',
                     }), (emailInput) => {
@@ -14627,15 +14787,15 @@ var NextAdmin;
                 let response = await this.options.userClient.recoverPassword(this.loginInput.getValue());
                 this.sendEmailButton.stopSpin();
                 if (response?.code == NextAdmin.Models.ApiResponseCode.Success) {
-                    NextAdmin.UI.MessageBox.createOk("E-mail envoy�", "Un e-mail vous a �t� envoy� avec un nouveau mot de passe.");
+                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.emailSent, NextAdmin.Resources.recoverPasswordSuccess);
                     this.close();
                 }
                 else if (response?.code == 'EMAIL_ERROR') {
-                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, "Une erreur est survenue lors de l'envoi de l'email de r�cup�ration, cette erreur a �t� transmise � nos services techniques.");
+                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.recoverPasswordDefaultError);
                     this.close();
                 }
                 else {
-                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, "Les informations fournies ne semblent pas correctes.");
+                    NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.recoverPasswordInvalidEmail);
                 }
             }
         }
@@ -14712,8 +14872,8 @@ var NextAdmin;
                 this.editorContainer = this.controlContainer.appendHTML('div', editorContainer => {
                     editorContainer.classList.add('next-admin-editor-container');
                 });
-                let quillContainer = this.editorContainer.appendHTML('div');
-                this.quill = new Quill(quillContainer, {
+                this.quillContainer = this.editorContainer.appendHTML('div');
+                this.quill = new Quill(this.quillContainer, {
                     modules: {
                         toolbar: this.options.displayToolbar ? [
                             ['bold', 'italic', 'underline', 'strike'],
@@ -15166,7 +15326,7 @@ var NextAdmin;
                 if (value && this.getItems().firstOrDefault(a => a.value == value) == null) {
                     this.addItem(value);
                 }
-                this.select.value = value;
+                this.select.value = value ?? '';
                 if (fireChange) {
                     this.onValueChanged.dispatch(this, { value: value, previousValue: this._previousValue, origin: UI.ChangeOrigin.code });
                 }
@@ -15176,6 +15336,9 @@ var NextAdmin;
                 switch (this.options.valueType) {
                     default:
                     case SelectValueType.string:
+                        if (this.options.outputNullIfEmpty && NextAdmin.String.isNullOrEmpty(this.select.value)) {
+                            return null;
+                        }
                         return this.select.value;
                     case SelectValueType.number:
                         return NextAdmin.String.isNullOrWhiteSpace(this.select.value) ? null : Number(this.select.value);
@@ -15851,9 +16014,17 @@ var NextAdmin;
                 }
                 if (tabOption.index == null) {
                     this.tabsButtonsBar.appendControl(tab.button);
+                    tab.options.index = this.tabsButtonsBar.row.getChildrenElements().length;
                 }
                 else {
-                    this.tabsButtonsBar.insertControl(tab.button, tabOption.index);
+                    let exustingTab = this.tabs.getValues().where(a => a.name != tabOption.name).orderBy(a => a.options.index).firstOrDefault(a => a.options.index >= tabOption.index);
+                    if (exustingTab != null) {
+                        let existingTabButtonIndex = this.tabsButtonsBar.row.getChildrenElements().indexOf(exustingTab.button.element.parentElement);
+                        this.tabsButtonsBar.insertControl(tab.button, existingTabButtonIndex);
+                    }
+                    else {
+                        this.tabsButtonsBar.appendControl(tab.button);
+                    }
                 }
                 this.stretchContainer.appendChild(tab.element);
                 if (this.getActiveTab() == null || tabOption.active) {
@@ -16537,9 +16708,15 @@ var NextAdmin;
                     this.onValueChanged.dispatch(this, { value: this.textArea.value });
                 });
                 this.controlContainer.appendChild(this.textArea);
-                if (this.options.fillHeight) {
+                if (this.options.displayMode == TextAreaDisplayMode.stretchHeight) {
                     this.element.style.height = '100%';
                     this.textArea.style.height = '100%';
+                }
+                else if (this.options.displayMode == TextAreaDisplayMode.fitContent) {
+                    this.textArea.addEventListener('input', () => {
+                        this.textArea.style.height = "";
+                        this.textArea.style.height = this.textArea.scrollHeight + "px";
+                    });
                 }
                 this.setStyle(this.options.style);
                 TextArea.onCreated.dispatch(this, this.options);
@@ -16609,6 +16786,12 @@ var NextAdmin;
             TextAreaStyle[TextAreaStyle["default"] = 0] = "default";
             TextAreaStyle[TextAreaStyle["modern"] = 1] = "modern";
         })(TextAreaStyle = UI.TextAreaStyle || (UI.TextAreaStyle = {}));
+        let TextAreaDisplayMode;
+        (function (TextAreaDisplayMode) {
+            TextAreaDisplayMode[TextAreaDisplayMode["default"] = 0] = "default";
+            TextAreaDisplayMode[TextAreaDisplayMode["stretchHeight"] = 1] = "stretchHeight";
+            TextAreaDisplayMode[TextAreaDisplayMode["fitContent"] = 2] = "fitContent";
+        })(TextAreaDisplayMode = UI.TextAreaDisplayMode || (UI.TextAreaDisplayMode = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -16656,6 +16839,9 @@ var NextAdmin;
                     case TitleStyle.dark:
                         this.element.classList.add('next-admin-title-dark');
                         break;
+                    case TitleStyle.thinUltraLightGrey:
+                        this.element.classList.add('next-admin-title-thin-ultra-light-grey');
+                        break;
                 }
             }
             setSize(size) {
@@ -16678,6 +16864,10 @@ var NextAdmin;
         .next-admin-title-thin-light-grey {
             font-weight:100;
             color:#888;
+        }
+        .next-admin-title-thin-ultra-light-grey{
+            font-weight:100;
+            color:#ccc;
         }
         .next-admin-title-thin-dark-grey {
             font-weight:100;
@@ -16742,6 +16932,7 @@ var NextAdmin;
             TitleStyle[TitleStyle["thinLightGrey"] = 3] = "thinLightGrey";
             TitleStyle[TitleStyle["thinDarkGrey"] = 4] = "thinDarkGrey";
             TitleStyle[TitleStyle["thinDark"] = 5] = "thinDark";
+            TitleStyle[TitleStyle["thinUltraLightGrey"] = 6] = "thinUltraLightGrey";
         })(TitleStyle = UI.TitleStyle || (UI.TitleStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));

@@ -12,7 +12,7 @@ namespace NextAdmin.Core
             {
                 return "array";
             }
-            if (type.IsEnum)
+            if (type.IsEnum || type.IsNullableEnum())
             {
                 return "enum";
             }

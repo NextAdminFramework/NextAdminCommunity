@@ -46,8 +46,6 @@ namespace NextAdmin {
 
         search = "Search";
 
-        searching = "Search";
-
         lostDataNotSavedMessage = 'If you validate, not saved data will be lost, what do you want to do ?';
 
         formDeleteMessageTitle = 'Delete data';
@@ -125,6 +123,8 @@ namespace NextAdmin {
         defaultDeleteError = "An error occured, it's probably due to the impossibiliy to delete element(s).";
 
         validate = "Validate";
+
+        validateNew = "Validate & new";
 
         export = "Export";
 
@@ -289,6 +289,14 @@ namespace NextAdmin {
         errprMaximumPublishedProject = "You have reached the maximum number of publications allowed, please upgrade your offer to publish more projects.";
 
         unamed = 'Unnamed';
+
+        emailSent = 'Email sent';
+
+        recoverPasswordSuccess = "Un e-mail vous a été envoyé avec un nouveau mot de passe.";
+
+        recoverPasswordInvalidEmail = 'An email has been sent to you with a new password.';
+
+        recoverPasswordDefaultError = "An error occurred while sending the recovery email, this error has been forwarded to our technical services.";
 
     }
 

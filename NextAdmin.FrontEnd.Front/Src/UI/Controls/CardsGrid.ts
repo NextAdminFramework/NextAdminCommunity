@@ -22,10 +22,10 @@ namespace NextAdmin.UI {
 
         `;
 
-        constructor(args?: CardsGridOptions) {
+        constructor(options?: CardsGridOptions) {
             super('div', {
                 margin:'10px',
-                ...args
+                ...options
             } as CardsGridOptions);
             NextAdmin.Style.append('NextAdmin.UI.CardsGrid', CardsGrid.style);
             this.element.classList.add('next-admin-cards-grid');
@@ -46,7 +46,7 @@ namespace NextAdmin.UI {
 
 
         clear() {
-            this.element.innerHTML = '';
+            this.body.innerHTML = '';
         }
 
     }

@@ -44,9 +44,7 @@ namespace NextAdmin {
 
         success = "Succès";
 
-        search = "Rechercher";
-
-        searching = "Recherche";
+        search = "Recherche";
 
         lostDataNotSavedMessage = 'Si vous continuez, les données non sauvegardées pourraient être perdues, que voulez-vous faire?';
 
@@ -125,6 +123,8 @@ namespace NextAdmin {
         defaultDeleteError = "Une erreur s'est produite, cela est probablement dû à l'impossibilité de supprimer un ou plusieurs éléments.";
 
         validate = "Valider";
+
+        validateNew = "Valider & nouveau";
 
         export = "Exporter";
 
@@ -299,10 +299,17 @@ namespace NextAdmin {
 
         unamed = 'Sans nom';
 
-
         recoverPassword = "Récupération de mot de passe";
 
         recoverMyPassword = "Récupérer mon mot de passe";
+
+        emailSent = 'E-mail envoyé';
+
+        recoverPasswordSuccess = "Un e-mail vous a été envoyé avec un nouveau mot de passe.";
+
+        recoverPasswordInvalidEmail = 'Aucun compte ne semble associé à cette adresse e-mail.';
+
+        recoverPasswordDefaultError = "Une erreur est survenue lors de l'envoi de l'email de récupération, cette erreur a été transmise à nos services techniques.";
     }
 
 }

@@ -42,16 +42,21 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 {
                     return ApiResponse.Error("INVALID_EMAIL");
                 }
+
                 var supportMessage = DbContext.CreateEntity<TSupportMessage>(true, true);
                 supportMessage.UserId = User?.Id;
                 supportMessage.SupportEmail = SupportEmail;
                 supportMessage.UserEmail = email;
                 supportMessage.Message = message;
-                supportMessage.IsSuccessfullySent = NextAdminHelper.AppSmtpServerAccount.TrySendEmail(SupportEmailSubject, $"<b>From: {email}</b><br /><br />{message}", new string[] { email });
+                supportMessage.IsSuccessfullySent = NextAdminHelper.AppSmtpServerAccount.TrySendEmail(SupportEmailSubject, $"<b>From: {email}</b><br /><br />{message}", new string[] { NextAdminHelper.AdminEmailAddress });
 
                 if (!DbContext.ValidateAndSave().Success)
                 {
                     return ApiResponse.Error(ApiResponseCode.SQLError);
+                }
+                if (!supportMessage.IsSuccessfullySent)
+                {
+                    return ApiResponse.Error("UNABLE_TO_SEND_EMAIL");
                 }
 
                 return ApiResponse.Success();

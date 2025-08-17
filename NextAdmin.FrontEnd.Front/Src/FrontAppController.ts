@@ -72,7 +72,7 @@ namespace NextAdmin {
             }
         }
 
-        protected async logUser(user: TUser) {
+        public async logUser(user: TUser) {
             if (user == null) {
                 return;
             }
@@ -156,7 +156,7 @@ namespace NextAdmin {
             this.onCultureChanged.dispatch(this, culture);
             await this.refresh();
             if (updateUserCulture && this.user) {
-                this.userClient.setUserCulture(culture);
+                await this.userClient.setUserCulture(culture);
             }
         }
 

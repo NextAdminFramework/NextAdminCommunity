@@ -15,7 +15,7 @@ namespace NextAdmin.FrontEnd.Model
         [Required, Label]
         public DateTime? CreationDate { get; set; }
 
-        [Required, Label]
+        [Label]
         public string? UserId { get; set; }
 
         [JsonIgnore, ForeignKey(nameof(UserId))]
@@ -30,12 +30,7 @@ namespace NextAdmin.FrontEnd.Model
         [JsonIgnore, ForeignKey(nameof(PaymentCompletedEventId))]
         public StripeUserPaymentEvent<TUser>? PaymentCompletedEvent { get; set; }
 
-
-        [Label]
-        public string? PaymentSuccededEventId { get; set; }
-
-        [JsonIgnore, ForeignKey(nameof(PaymentSuccededEventId))]
-        public StripeUserPaymentEvent<TUser>? PaymentSuccededEvent { get; set; }
+        public bool IsPaid { get; set; }
 
 
         [Label]
@@ -46,6 +41,12 @@ namespace NextAdmin.FrontEnd.Model
 
         [Required]
         public string? PurchasedElementId { get; set; }//order id, plan id...
+
+        public string? PurchasedElementType { get; set; }
+
+        public string? PurchasedElementName { get; set; }
+
+        public double PurchasedElementAmountExcludingTax { get; set; }
 
         public PaymentType PaymentType { get; set; }
 

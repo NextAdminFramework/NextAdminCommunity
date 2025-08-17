@@ -307,6 +307,9 @@ namespace NextAdmin.UI {
             if (this.input.type == 'number' || this.input.type == 'range') {
                 return NextAdmin.String.isNullOrEmpty(this.input.value) ? null : Number(this.input.value);
             }
+            if (this.options.outputNullIfEmpty && NextAdmin.String.isNullOrEmpty(this.input.value)) {
+                return null;
+            }
             return this.input.value;
         }
 
@@ -335,6 +338,8 @@ namespace NextAdmin.UI {
         size?: InputSize;
 
         inlineGrid?: boolean;
+
+        outputNullIfEmpty?: boolean;
 
     }
 

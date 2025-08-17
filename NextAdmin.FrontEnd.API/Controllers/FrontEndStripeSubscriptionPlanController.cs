@@ -1,17 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
-using NextAdmin.Core.API;
+using NextAdmin.Core.API.Controllers;
 using NextAdmin.Core.API.ViewModels.Responses;
 using NextAdmin.Core.Model;
+using NextAdmin.FrontEnd.API.ViewModels.Responses;
 using NextAdmin.FrontEnd.Model;
 using Stripe;
 using Stripe.Checkout;
 
 namespace NextAdmin.FrontEnd.API.Controllers
 {
-    [ApiController, Route("/api/subscription/{action}/{id?}")]
-    public abstract class FrontEndStripeSubscriptionPlanController<TUser, TStripeUserInvoice, TStripeUserSubscription, TStripeUserPaymentSession, TStripeUserPaymentEvent> : FrontEndStripeController<TUser, TStripeUserInvoice>
+    [ApiController, Route("/api/stripe/subscription/{action}/{id?}")]
+    public abstract class FrontEndStripeSubscriptionPlanController<TUser, TStripeUserInvoice, TStripeUserSubscription, TStripeUserPaymentSession, TStripeUserPaymentEvent> : Controller<TUser>
         where TUser : class, IFrontEndUser
         where TStripeUserInvoice : StripeUserInvoice<TUser>
         where TStripeUserSubscription : StripeUserSubscription<TUser>
@@ -24,7 +25,6 @@ namespace NextAdmin.FrontEnd.API.Controllers
 
         }
 
-
         [HttpGet]
         public virtual ApiResponse<string> GetSubscriptionStripePaymentLink(string planId)
         {
@@ -35,8 +35,9 @@ namespace NextAdmin.FrontEnd.API.Controllers
                     return ApiResponse<string>.Error(ApiResponseCode.AuthError);
                 }
 
-                var plan = GetPlanInfo(planId);
+                var plan = GetSubscriptionInfo(planId);
                 var monthPrice = plan.GetMonthPrice(DbContext);
+                var planName = plan.GetItemName(DbContext);
                 if (!monthPrice.HasValue)
                 {
                     return ApiResponse<string>.Error("INVALID_PLAN");
@@ -54,7 +55,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                         {
                             PriceData = new SessionLineItemPriceDataOptions {
                                 ProductData = new SessionLineItemPriceDataProductDataOptions {
-                                    Name = NextAdminHelper.AppName + " : " + planId.ToString(),
+                                    Name = planName,
                                 },
                                 UnitAmountDecimal = monthPrice.Value * 100,
                                 Currency = "EUR",
@@ -72,6 +73,9 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 paymentSession.UserId = User.Id;
                 paymentSession.StripeSession = stripeSession;
                 paymentSession.PurchasedElementId = planId;
+                paymentSession.PurchasedElementType = plan.GetItemType(DbContext);
+                paymentSession.PurchasedElementAmountExcludingTax = (double)monthPrice;
+                paymentSession.PurchasedElementName = planName;
                 paymentSession.PaymentType = PaymentType.MonthlySubscriptionPayment;
                 DbContext.AddEntity(paymentSession);
                 var saveResult = DbContext.ValidateAndSave();
@@ -188,92 +192,35 @@ namespace NextAdmin.FrontEnd.API.Controllers
         }
 
 
-        protected override bool HandleStripeInvoicePaymentSuccededEvent(Event stripeEvent, Invoice stripeInvoice)
+
+        [HttpGet]
+        public ApiResponse<List<UserInvoiceDto>> GetUserInvoices()
         {
-            base.HandleStripeInvoicePaymentSuccededEvent(stripeEvent, stripeInvoice);
-
-            if (stripeInvoice.SubscriptionId == null)
+            try
             {
-                return false;
-            }
-
-            TStripeUserSubscription subscription = null;
-            for (int i = 0; i < 1000; i++)
-            {
-                subscription = DbContext.Set<TStripeUserSubscription>().FirstOrDefault(a => a.Id == stripeInvoice.SubscriptionId);
-                if (subscription != null)
+                if (User == null)
                 {
-                    break;
+                    return ApiResponse<List<UserInvoiceDto>>.Error(ApiResponseCode.AuthError);
                 }
-                Thread.Sleep(100);
+                return ApiResponse<List<UserInvoiceDto>>.Success(DbContext.Set<TStripeUserInvoice>().Where(a => a.UserId == User.Id)
+                    .OrderByDescending(a => a.CreationDate)
+                    .ToList()
+                    .Select(a => new UserInvoiceDto
+                    {
+                        Date = a.CreationDate,
+                        Code = a.StripeInvoice.Number,
+                        Amount = a.StripeInvoice.AmountPaid / 100,
+                        StripeInvoiceLink = a.StripeInvoice.InvoicePdf,
+                    }).ToList());
             }
-            if (subscription == null)
+            catch (Exception ex)
             {
-                throw new Exception($"Unable to find subscription {stripeInvoice.SubscriptionId}");
+                return ApiResponse<List<UserInvoiceDto>>.Error(ex);
             }
-
-            var paymentSessionCompletedEvent = CreateUserPaymentEvent(stripeEvent, subscription.UserId);
-            subscription.LastInvoicePayedEventId = paymentSessionCompletedEvent.Id;
-
-            var invoice = DbContext.CreateEntity<TStripeUserInvoice>();
-            invoice.Id = stripeInvoice.Id;
-            invoice.StripeInvoice = stripeInvoice;
-            invoice.UserId = subscription.UserId;
-            invoice.SubscriptionId = subscription.Id;
-
-            DbContext.Add(invoice);
-
-            return DbContext.ValidateAndSave().Success;
-        }
-
-        protected override bool HandleStripeCheckoutSessionCompletedEvent(Event stripeEvent, Session stripeSession)
-        {
-            base.HandleStripeCheckoutSessionCompletedEvent(stripeEvent, stripeSession);
-            if (stripeSession.SubscriptionId == null)
-            {
-                return false;
-            }
-
-            var paymentSession = DbContext.Set<TStripeUserPaymentSession>().FirstOrDefault(a => a.Id == stripeSession.Id);
-            if (paymentSession == null)
-            {
-                throw new Exception($"Unable to find payment session {stripeSession.Id}");
-            }
-
-            var userPaymentEvent = CreateUserPaymentEvent(stripeEvent, paymentSession.UserId);
-            paymentSession.PaymentCompletedEventId = userPaymentEvent.Id;
-
-            var subscription = DbContext.Set<TStripeUserSubscription>().FirstOrDefault(a => a.Id == stripeSession.SubscriptionId);
-            if (subscription == null)
-            {
-                subscription = DbContext.CreateEntity<TStripeUserSubscription>();
-                subscription.Id = stripeSession.SubscriptionId;
-                subscription.StripeSubscription = stripeSession.Subscription;
-                subscription.UserId = paymentSession.UserId;
-                subscription.SessionPaymentCompletedEventId = userPaymentEvent.Id;
-                subscription.PurchasedElementId = paymentSession.PurchasedElementId;
-                DbContext.Add(subscription);
-            }
-            subscription.SessionPaymentCompletedEventId = userPaymentEvent.Id;
-
-
-            return DbContext.ValidateAndSave().Success;
         }
 
 
-        protected virtual TStripeUserPaymentEvent CreateUserPaymentEvent(Event stripeEvent, string userId)
-        {
-            var userPaymentEvent = DbContext.CreateEntity<TStripeUserPaymentEvent>();
-            userPaymentEvent.Id = stripeEvent.Id;
-            userPaymentEvent.EventType = stripeEvent.Type;
-            userPaymentEvent.StripeEvent = stripeEvent;
-            userPaymentEvent.UserId = userId;
-            DbContext.Add(userPaymentEvent);
-            return userPaymentEvent;
-        }
-
-
-        protected abstract IPlanInfo GetPlanInfo(string planId);
+        protected abstract ISubscriptionInfo GetSubscriptionInfo(string planId);
 
         protected abstract string? GetSuccessPaymentUrl(string planId);
 

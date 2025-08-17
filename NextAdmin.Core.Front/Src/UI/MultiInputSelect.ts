@@ -68,7 +68,7 @@ namespace NextAdmin.UI {
                 this.addLeftAddon(new NextAdmin.UI.Button({
                     text: Resources.searchIcon, style: NextAdmin.UI.ButtonStyle.noBg, action: () => {
 
-                        let searchModal = new NextAdmin.UI.Modal({ size: NextAdmin.UI.ModalSize.smallFitContent, title: Resources.searching, canChangeScreenMode: false });
+                        let searchModal = new NextAdmin.UI.Modal({ size: NextAdmin.UI.ModalSize.smallFitContent, title: Resources.search, canChangeScreenMode: false });
                         searchModal.body.appendHTML('div', (container) => {
                             container.style.height = '400px';
                             container.style.padding = '10px';

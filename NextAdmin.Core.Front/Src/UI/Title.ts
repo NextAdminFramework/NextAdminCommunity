@@ -14,6 +14,10 @@ namespace NextAdmin.UI {
             font-weight:100;
             color:#888;
         }
+        .next-admin-title-thin-ultra-light-grey{
+            font-weight:100;
+            color:#ccc;
+        }
         .next-admin-title-thin-dark-grey {
             font-weight:100;
             color:#444;
@@ -107,6 +111,9 @@ namespace NextAdmin.UI {
                 case TitleStyle.dark:
                     this.element.classList.add('next-admin-title-dark');
                     break;
+                case TitleStyle.thinUltraLightGrey:
+                    this.element.classList.add('next-admin-title-thin-ultra-light-grey');
+                    break;
             }
         }
 
@@ -152,6 +159,7 @@ namespace NextAdmin.UI {
         thinLightGrey,
         thinDarkGrey,
         thinDark,
+        thinUltraLightGrey,
     }
 
 }

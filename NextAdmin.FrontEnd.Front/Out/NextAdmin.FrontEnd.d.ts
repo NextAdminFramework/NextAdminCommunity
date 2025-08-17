@@ -12,7 +12,7 @@ declare namespace NextAdmin {
         static style: string;
         constructor(options: FrontAppControllerOptions);
         startApp(navigateToUrl?: boolean): Promise<void>;
-        protected logUser(user: TUser): Promise<void>;
+        logUser(user: TUser): Promise<void>;
         logOutUser(): void;
         signIn(onSignIn?: (user: NextAdmin.Models.User) => void): void;
         signUp(onSignUp?: (user: NextAdmin.Models.User) => void): void;
@@ -41,12 +41,21 @@ declare namespace NextAdmin.Models {
     }
 }
 declare namespace NextAdmin {
-    class FrontEndResourcesEn {
+    class FrontEndResourcesBase {
+        googleIcon: string;
+    }
+}
+declare namespace NextAdmin {
+    class FrontEndResourcesEn extends FrontEndResourcesBase {
         contact: string;
         send: string;
         messageSentTitle: string;
         messageSentText: string;
         display: string;
+        verifyInformations: string;
+        or: string;
+        signInWithGoogle: string;
+        signUpWithGoogle: string;
     }
 }
 declare namespace NextAdmin {
@@ -56,12 +65,19 @@ declare namespace NextAdmin {
         messageSentTitle: string;
         messageSentText: string;
         display: string;
+        verifyInformations: string;
+        or: string;
+        signInWithGoogle: string;
+        signUpWithGoogle: string;
     }
     var FrontEndResources: FrontEndResourcesEn;
 }
 declare namespace NextAdmin.Services {
     class FrontEndServiceClient extends HttpClient {
-        constructor(rootServiceURL?: string);
+        authTokenName?: string;
+        constructor(rootServiceURL?: string, authTokenName?: string, authToken?: string);
+        setAuthToken(authToken: string): void;
+        getAuthToken(): any;
         sendSupportMessage(message: string, email?: string): Promise<NextAdmin.Models.ApiResponse>;
     }
 }
@@ -71,13 +87,26 @@ declare namespace NextAdmin.Services {
         changeEmailStep1(email: string, authToken?: string): Promise<NextAdmin.Models.ApiResponse>;
         changeEmailStep2(email: string, code: string, authToken?: string): Promise<NextAdmin.Models.ApiResponse>;
         deleteUser(authToken?: string): Promise<NextAdmin.Models.ApiResponse>;
-        signUpUser(args: NextAdmin.Models.SignUpUserArgs): Promise<NextAdmin.Models.ApiResponse>;
+        signUpUser(args: NextAdmin.Models.SignUpUserArgs): Promise<NextAdmin.Models.ApiResponse<string>>;
         confirmUserSignUpEmailCode(userId: any, code: string): Promise<NextAdmin.Models.ApiResponse>;
+        isUserAccountExist(email: string): Promise<boolean>;
     }
 }
 declare namespace NextAdmin.Services {
-    class SubscriptionPlanClient extends HttpClient {
-        constructor(rootServiceURL?: string);
+    class StripePaymentClient extends HttpClient {
+        authTokenName?: string;
+        static defaultControllerUrl: string;
+        constructor(rootServiceURL?: string, authTokenName?: string, authToken?: string);
+        setAuthToken(authToken: string): void;
+        getItemStripePaymentLink(itemId: string): Promise<NextAdmin.Models.ApiResponse<string>>;
+    }
+}
+declare namespace NextAdmin.Services {
+    class StripeSubscriptionPlanClient extends HttpClient {
+        authTokenName?: string;
+        static defaultControllerUrl: string;
+        constructor(rootServiceURL?: string, authTokenName?: string);
+        setAuthToken(authToken: string): void;
         getSubscriptionStripePaymentLink(planId: string): Promise<NextAdmin.Models.ApiResponse<string>>;
         cancelSubscriptionAutoRenew(subscriptionId: string): Promise<NextAdmin.Models.ApiResponse>;
         resumeSubscriptionAutoRenew(subscriptionId: string): Promise<NextAdmin.Models.ApiResponse>;
@@ -111,13 +140,33 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
+    class Card extends Control {
+        static style: string;
+        title: NextAdmin.UI.Title;
+        body: HTMLDivElement;
+        textContainer: HTMLDivElement;
+        footer: HTMLDivElement;
+        options: CardOptions;
+        constructor(options?: CardOptions);
+    }
+    interface CardOptions extends ControlOptions {
+        imageUrl?: string;
+        imageSize?: string;
+        imagePosition?: string;
+        title?: string;
+        text?: string;
+        content?: HTMLElement;
+        isResponsive?: boolean;
+    }
+}
+declare namespace NextAdmin.UI {
     class CardsGrid extends NextAdmin.UI.Control {
         options: CardsGridOptions;
         header: HTMLDivElement;
         body: HTMLDivElement;
         footer: HTMLDivElement;
         static style: string;
-        constructor(args?: CardsGridOptions);
+        constructor(options?: CardsGridOptions);
         appendCard<TCard extends Control>(card: TCard, controlOption?: (card: TCard) => void): void;
         clear(): void;
     }
@@ -131,6 +180,19 @@ declare namespace NextAdmin.UI {
         setDataset(dataset?: Array<TData>): void;
         getDataset(): TData[];
         addDataset(dataset?: Array<TData>): void;
+    }
+}
+declare namespace NextAdmin.UI {
+    class IconCard extends Control {
+        static style: string;
+        options: IconCardOptions;
+        constructor(options?: IconCardOptions);
+    }
+    interface IconCardOptions extends ControlOptions {
+        icon?: string;
+        imageUrl?: string;
+        text?: string;
+        action?: () => void;
     }
 }
 declare namespace NextAdmin.UI {
@@ -184,7 +246,8 @@ declare namespace NextAdmin.UI {
     }
     enum ImageCardStyle {
         fullImageLightBordered = 0,
-        fullImageShadowedBorderRadius = 1
+        fullImageShadowedBorderRadius = 1,
+        fullImageShadowedBorderRadiusB = 2
     }
 }
 declare namespace NextAdmin.UI {
@@ -275,7 +338,8 @@ declare namespace NextAdmin.UI {
 declare namespace NextAdmin.UI {
     class NavigationTopBar extends Control {
         options: NavigationTopBarOptions;
-        container?: FlexLayout;
+        container?: HTMLDivElement;
+        layout?: FlexLayout;
         logoImage?: HTMLImageElement;
         logoLink: HTMLAnchorElement;
         leftToolbar: Toolbar;
@@ -322,6 +386,12 @@ declare namespace NextAdmin.UI {
         iconColor?: string;
         textColor?: string;
         isResponsive?: boolean;
+    }
+}
+declare namespace NextAdmin.UI {
+    class Separator extends Control {
+        static style: string;
+        constructor(options?: ControlOptions);
     }
 }
 declare namespace NextAdmin.UI {
@@ -396,6 +466,23 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
+    class ThirdPartyOauthPanel extends Control {
+        options: ThirdPartyOauthPanelOptions;
+        constructor(options?: ThirdPartyOauthPanelOptions);
+        static getOAuthUrl(oAuthOptions: GoogleOauthOptions, userGmailEmailAddress?: string): string;
+    }
+    interface ThirdPartyOauthPanelOptions extends ControlOptions {
+        googleOauthOptions?: GoogleOauthOptions;
+        afterOAuthUrlCookieName?: string;
+    }
+    interface GoogleOauthOptions {
+        oauthUrl?: string;
+        clientId?: string;
+        redirectionUrl?: string;
+        scopes?: Array<string>;
+    }
+}
+declare namespace NextAdmin.UI {
     class ChangeEmailModal extends UI.Modal {
         options: ChangeEmailModalOptions;
         constructor(options?: ChangeEmailModalOptions);
@@ -403,10 +490,12 @@ declare namespace NextAdmin.UI {
     }
     interface ChangeEmailModalOptions extends NextAdmin.UI.ModalOptions {
         userClient?: NextAdmin.Services.FrontEndUserClient;
+        onEmailUpdated?: (newEmai?: string) => void;
     }
 }
 declare namespace NextAdmin.UI {
     export class SendSupportMessageModal extends NextAdmin.UI.Modal {
+        emailInput: NextAdmin.UI.Input;
         textArea: NextAdmin.UI.TextArea;
         sendMessageButton: NextAdmin.UI.Button;
         options: SendSupportMessageModalOptions;
@@ -414,6 +503,7 @@ declare namespace NextAdmin.UI {
     }
     interface SendSupportMessageModalOptions extends NextAdmin.UI.ModalOptions {
         commonServicesClient?: NextAdmin.Services.FrontEndServiceClient;
+        email?: string;
     }
     export {};
 }
@@ -425,7 +515,7 @@ declare namespace NextAdmin.UI {
         rememberMeCheckbox: NextAdmin.UI.Input;
         buttonSignIn: NextAdmin.UI.Button;
         container: HTMLDivElement;
-        signInMessage: HTMLSpanElement;
+        signInMessageContainer: HTMLSpanElement;
         constructor(options: SignInModalOptions);
         tryLogUser(): Promise<void>;
     }
@@ -434,6 +524,7 @@ declare namespace NextAdmin.UI {
         recoverPasswordModalFactory?: (options?: RecoverPasswordModalOptions) => RecoverPasswordModal;
         signUpAction?: () => void;
         onSignIn?: (authTokenResponse?: NextAdmin.Models.AuthTokenResponse) => void;
+        googleOauthOptions?: GoogleOauthOptions;
     }
 }
 declare namespace NextAdmin.UI {
@@ -446,10 +537,11 @@ declare namespace NextAdmin.UI {
         passwordInput: NextAdmin.UI.Input;
         confirmationCodeInput: NextAdmin.UI.Input;
         verifyEmailButton: NextAdmin.UI.Button;
+        stepOneErrorContainer: HTMLDivElement;
         confirmCodeButton: NextAdmin.UI.Button;
         signInContainer: HTMLDivElement;
         constructor(options: SignUpModalOptions);
-        displaySignUpError(apiResponse: NextAdmin.Models.ApiResponse): void;
+        getSignUpErrorMessage(apiResponse: NextAdmin.Models.ApiResponse<string>): string;
         getSignUpData(): NextAdmin.Models.SignUpUserArgs;
         getRequiredFormControls(): Array<NextAdmin.UI.FormControl>;
     }
@@ -457,6 +549,7 @@ declare namespace NextAdmin.UI {
         userClient?: NextAdmin.Services.FrontEndUserClient;
         onSignUp?: (userName?: string, password?: string) => void;
         signInAction?: () => void;
+        googleOauthOptions?: GoogleOauthOptions;
     }
 }
 declare namespace NextAdmin.UI {

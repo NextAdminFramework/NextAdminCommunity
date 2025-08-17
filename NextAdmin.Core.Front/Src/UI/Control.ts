@@ -114,7 +114,6 @@ namespace NextAdmin.UI {
 
         display() {
             this.element.style.display = '';
-            console.log('display');
         }
 
         dispose() {

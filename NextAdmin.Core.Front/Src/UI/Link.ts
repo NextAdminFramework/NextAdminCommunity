@@ -22,10 +22,17 @@ namespace NextAdmin.UI {
         .next-admin-link.blue{
             color:` + DefaultStyle.BlueOne + `;
         }
+        .next-admin-link.blue:hover{
+            color:'#1a66ce';
+        }
 
         .next-admin-link.dark{
             color:#222;
         }
+        .next-admin-link.dark:hover{
+            color:#555;
+        }
+
 
         .next-admin-link.white {
             color:#fff;

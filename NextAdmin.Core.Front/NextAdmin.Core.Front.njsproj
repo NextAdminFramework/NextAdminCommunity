@@ -63,6 +63,7 @@
     <TypeScriptCompile Include="Src\Business\DatasetController.ts" />
     <TypeScriptCompile Include="Src\Business\EntityInfos.ts" />
     <TypeScriptCompile Include="Src\Models\EntityArgs.ts" />
+    <TypeScriptCompile Include="Src\Resources\NextAdminIcons.ts" />
     <TypeScriptCompile Include="Src\Resources\ResourcesEn.ts" />
     <TypeScriptCompile Include="Src\Services\EntityClient.ts" />
     <TypeScriptCompile Include="Src\Business\EntityDataController.ts" />
@@ -102,6 +103,7 @@
     <TypeScriptCompile Include="Src\UI\Button.ts" />
     <TypeScriptCompile Include="Src\UI\ChangePasswordModal.ts" />
     <TypeScriptCompile Include="Src\UI\CollapsibleFilter.ts" />
+    <TypeScriptCompile Include="Src\UI\Container.ts" />
     <TypeScriptCompile Include="Src\UI\FlexLayout.ts" />
     <TypeScriptCompile Include="Src\UI\FormModal.ts" />
     <TypeScriptCompile Include="Src\UI\GridFormPanel.ts" />

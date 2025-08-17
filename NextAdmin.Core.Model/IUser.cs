@@ -113,6 +113,33 @@ namespace NextAdmin.Core.Model
             return set.FirstOrDefault(e => e.UserName == login);
         }
 
+
+        public static TUser FindUserFromToken<TUser>(NextAdminDbContext context, ITokenSerializer tokenSerilizer, string issuer, string tokenString)
+            where TUser : class, IUser
+        {
+            if (string.IsNullOrEmpty(tokenString))
+            {
+                return null;
+            }
+            var authToken = tokenSerilizer.ValidateAndParseTokenString(tokenString, typeof(TUser).ToString(), issuer, true);
+            if (authToken == null)
+            {
+                return null;
+            }
+            var claimUserId = authToken.Claims.FirstOrDefault(a => a.Type == "userId");
+            if (claimUserId == null)
+            {
+                return null;
+            }
+            var user = context.GetEntity(typeof(TUser), claimUserId.Value) as TUser;
+            if (user != null && user.Disabled)
+            {
+                return null;
+            }
+            return user;
+        }
+
+
         public static bool IsValidPassword(this string password)
         {
             if (password.Length < 6 || password.Length > 256)

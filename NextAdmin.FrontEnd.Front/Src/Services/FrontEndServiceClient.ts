@@ -2,8 +2,25 @@
 namespace NextAdmin.Services {
     export class FrontEndServiceClient extends HttpClient {
 
-        public constructor(rootServiceURL = '/api/frontEnd/service') {
+        public authTokenName?: string;
+
+        public constructor(rootServiceURL = '/api/frontEnd/service', authTokenName?: string, authToken?: string) {
             super(rootServiceURL);
+            this.authTokenName = authTokenName;
+            if (authToken) {
+                this.setAuthToken(authToken);
+            }
+        }
+
+        setAuthToken(authToken: string) {
+            this.headerParams[this.authTokenName] = authToken;
+        }
+
+        getAuthToken() {
+            if (this.authTokenName == null) {
+                return null;
+            }
+            return this.headerParams[this.authTokenName];
         }
 
         public async sendSupportMessage(message: string, email?: string): Promise<NextAdmin.Models.ApiResponse> {

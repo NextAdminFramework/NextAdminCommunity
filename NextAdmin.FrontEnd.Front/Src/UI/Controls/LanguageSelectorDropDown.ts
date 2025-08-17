@@ -17,7 +17,7 @@ namespace NextAdmin.UI {
         constructor(options?: LanguageSelectorDropDownButtonOptions) {
             super({
                 languages: [
-                    { code: 'en', label: 'Englsih', iconUrl: LanguageSelectorDropDown.iconEn },
+                    { code: 'en', label: 'English', iconUrl: LanguageSelectorDropDown.iconEn },
                     { code: 'fr', label: 'Français', iconUrl: LanguageSelectorDropDown.iconFr }
                 ],
                 languageChangedAction: (language?: string) => {
@@ -42,7 +42,8 @@ namespace NextAdmin.UI {
         }
 
         protected getLanguageItemContent(languageInfo?: LanguageInfo, caret?: boolean): string {
-            return '<table style="min-width:100%"><tr><td style="width:35px"><img src="' + languageInfo.iconUrl + '" style="height:20px;margin-right:5px" /></td><td>' + languageInfo.label + '</td>' + (caret ? '<td style="width:20px;padding-left:5px">' + NextAdmin.Resources.iconCaretDown + '</td>' : '') + '</tr></table>';
+            return '<div style="display:flex;flex-direction:row"><img src="' + languageInfo.iconUrl + '" style="height:16px;margin-right:5px" /><div style="flex-grow:1">' + languageInfo.label + '</div>' + (caret ? '<div style="width:20px;padding-left:5px">' + NextAdmin.Resources.iconCaretDown + '</div>' : '') + '</div>';
+            //return '<table style="min-width:100%"><tr><td style="display:flex;width:35px"><img src="' + languageInfo.iconUrl + '" style="height:20px;margin-right:5px" /></td><td>' + languageInfo.label + '</td>' + (caret ? '<td style="width:20px;padding-left:5px">' + NextAdmin.Resources.iconCaretDown + '</td>' : '') + '</tr></table>';
         }
 
         public getLanguageInfo(languageCode: string): LanguageInfo {

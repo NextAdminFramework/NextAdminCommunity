@@ -112,6 +112,15 @@
 
         public static new ApiResponse<TData> Error(Exception exception)
         {
+            if (exception is ApiException)
+            {
+                var apiException = (ApiException)exception;
+                return new ApiResponse<TData>
+                {
+                    Code = apiException.Code,
+                    Message = exception.Message,
+                };
+            }
             return new ApiResponse<TData>
             {
                 Code = ApiResponseCode.UnknownError.ToString(),

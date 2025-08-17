@@ -9,6 +9,8 @@ namespace NextAdmin.UI {
 
         public modalContent: HTMLDivElement;
 
+        public image?: HTMLImageElement;
+
         public header: HTMLHeadingElement;
 
         public body: HTMLParagraphElement;
@@ -18,6 +20,8 @@ namespace NextAdmin.UI {
         public options: MessageBoxOptions;
 
         private _desktopButtonToolbar: Toolbar;
+
+        private _button = new Array<Button>();
 
         public static onCreated = new EventHandler<MessageBox, MessageBoxOptions>();
 
@@ -46,6 +50,13 @@ namespace NextAdmin.UI {
             margin-left:15%;
             width:70%;
             position:relative;
+
+            .next-admin-msgbox-modal-image{
+                float:left;
+                height:100px;
+                margin-right:20px;
+                border-radius: 5px;
+            }
 
             .next-admin-msgbox-modal-content-header {
                 font-weight:bold;
@@ -79,6 +90,15 @@ namespace NextAdmin.UI {
                 this.modalContent = modal.appendHTML('div', (modalContent) => {
                     modalContent.classList.add('next-admin-msgbox-modal-content');
 
+                    if (options.imageUrl) {
+                        this.image = modalContent.appendHTML('img', (image) => {
+                            image.classList.add('next-admin-msgbox-modal-image');
+                            image.src = options.imageUrl;
+                        });
+
+                    }
+
+
                     this.header = modalContent.appendHTML('div', (header) => {
                         header.classList.add('next-admin-msgbox-modal-content-header');
                         header.innerHTML = this.options.title;
@@ -90,7 +110,9 @@ namespace NextAdmin.UI {
                         if (UserAgent.isDesktop()) {
                             body.appendPerfectScrollbar();
                         }
-                        body.innerHTML = this.options.text;
+                        if (this.options.text) {
+                            body.innerHTML = this.options.text;
+                        }
                     });
 
                     this.footer = modalContent.appendHTML('div', (footer) => {
@@ -115,26 +137,30 @@ namespace NextAdmin.UI {
 
         appendButton(button: Button) {
             if (NextAdmin.UserAgent.isDesktop()) {
-                this._desktopButtonToolbar.appendControl(button);
+                this._button.add(this._desktopButtonToolbar.appendControl(button));
             }
             else {
                 this.footer.appendHTML('div', (btnContainer) => {
                     btnContainer.style.marginTop = '5px';
-                    btnContainer.appendControl(button);
+                    this._button.add(btnContainer.appendControl(button));
                 });
             }
         }
 
         prependButton(button: Button) {
             if (NextAdmin.UserAgent.isDesktop()) {
-                this._desktopButtonToolbar.prependControl(button);
+                this._button.add(this._desktopButtonToolbar.prependControl(button));
             }
             else {
                 this.footer.appendHTML('div', (btnContainer) => {
                     btnContainer.style.marginTop = '5px';
-                    btnContainer.prependControl(button);
+                    this._button.add(btnContainer.prependControl(button));
                 });
             }
+        }
+
+        getButtons(): Array<Button> {
+            return this._button;
         }
 
         startSpin() {
@@ -288,6 +314,8 @@ namespace NextAdmin.UI {
         title: string;
 
         text?: string;
+
+        imageUrl?: string;
 
         buttons?: Array<Button>;
 

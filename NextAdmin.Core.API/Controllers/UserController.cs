@@ -30,7 +30,7 @@ namespace NextAdmin.Core.API.Controllers
             AuthTokenResponse response = new AuthTokenResponse();
             try
             {
-                var user = FindUser(userName, password);
+                var user = FindUser(userName, password) as TUser;
                 if (user == null || user.Disabled)
                 {
                     response.Code = ApiResponseCode.AuthError.ToString();
@@ -46,7 +46,7 @@ namespace NextAdmin.Core.API.Controllers
                     return response;
                 }
                 response.Token = token;
-                response.User = new UserDto(user);
+                response.User = GetUserDto(user);
                 response.DayValidity = TokenDayValidity;
                 response.UserType = user.GetType().Name;
                 response.Code = ApiResponseCode.Success.ToString();
@@ -76,7 +76,7 @@ namespace NextAdmin.Core.API.Controllers
                 }
                 else
                 {
-                    response.User = GetUserDto();
+                    response.User = GetUserDto(User);
                     response.Code = ApiResponseCode.Success.ToString();
                 }
             }
@@ -131,7 +131,7 @@ namespace NextAdmin.Core.API.Controllers
                 }
                 else
                 {
-                    response.User = GetUserDto();
+                    response.User = GetUserDto(User);
                     response.UserType = User.GetType().Name;
                     response.Code = ApiResponseCode.Success.ToString(); ;
                 }
@@ -148,9 +148,9 @@ namespace NextAdmin.Core.API.Controllers
             return response;
         }
 
-        protected virtual UserDto GetUserDto()
+        protected virtual UserDto GetUserDto(TUser user)
         {
-            return new UserDto(User);
+            return new UserDto(user);
         }
 
         [HttpGet]

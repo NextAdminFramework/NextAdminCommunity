@@ -198,7 +198,7 @@
                     nextPage: nextPage,
                     nextPageParameters: parameters
                 } as UI.NavigateFromArgs;
-                previousPage.navigateFrom(args);
+                await previousPage.navigateFrom(args);
                 if (args.cancelNavigation) {
                     return null;
                 }

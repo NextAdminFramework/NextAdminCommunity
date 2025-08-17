@@ -112,11 +112,20 @@ namespace NextAdmin.UI {
             if (!this.tabs.tryAdd(tabOption.name, tab)) {
                 return null;
             }
+            
             if (tabOption.index == null) {
                 this.tabsButtonsBar.appendControl(tab.button);
+                tab.options.index = this.tabsButtonsBar.row.getChildrenElements().length;
             }
             else {
-                this.tabsButtonsBar.insertControl(tab.button, tabOption.index);
+                let exustingTab = this.tabs.getValues().where(a => a.name != tabOption.name).orderBy(a => a.options.index).firstOrDefault(a => a.options.index >= tabOption.index);
+                if (exustingTab != null) {
+                    let existingTabButtonIndex = this.tabsButtonsBar.row.getChildrenElements().indexOf(exustingTab.button.element.parentElement);
+                    this.tabsButtonsBar.insertControl(tab.button, existingTabButtonIndex);
+                }
+                else {
+                    this.tabsButtonsBar.appendControl(tab.button);
+                }
             }
             this.stretchContainer.appendChild(tab.element);
             if (this.getActiveTab() == null || tabOption.active) {

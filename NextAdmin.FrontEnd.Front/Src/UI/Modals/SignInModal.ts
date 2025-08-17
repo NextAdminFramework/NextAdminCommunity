@@ -14,7 +14,7 @@ namespace NextAdmin.UI {
 
         container: HTMLDivElement;
 
-        signInMessage: HTMLSpanElement;
+        signInMessageContainer: HTMLSpanElement;
 
         constructor(options: SignInModalOptions) {
             super({
@@ -31,7 +31,7 @@ namespace NextAdmin.UI {
 
                 this.userNameInput = container.appendControl(new NextAdmin.UI.Input({
                     label: NextAdmin.Resources.login,
-                    layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                    labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                     size: NextAdmin.UI.InputSize.large
                 }));
                 this.userNameInput.element.style.marginBottom = '20px';
@@ -39,7 +39,7 @@ namespace NextAdmin.UI {
                 this.passwordInput = container.appendControl(new NextAdmin.UI.Input({
                     label: NextAdmin.Resources.password,
                     inputType: NextAdmin.UI.InputType.password,
-                    layout: NextAdmin.UI.LabelFormControlLayout.multiLine,
+                    labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                     size: NextAdmin.UI.InputSize.large
                 }), (passwordInput) => {
                     passwordInput.input.addEventListener('keyup', (args) => {
@@ -102,9 +102,9 @@ namespace NextAdmin.UI {
                         });
                         tr.appendHTML('td', (td) => {
                             td.style.paddingLeft = '10px';
-                            this.signInMessage = td.appendHTML('span');
-                            this.signInMessage.style.color = '#cf0e0e';
-                            this.signInMessage.style.fontWeight = '600';
+                            this.signInMessageContainer = td.appendHTML('span');
+                            this.signInMessageContainer.style.color = '#cf0e0e';
+                            this.signInMessageContainer.style.fontWeight = '600';
                         });
                     });
                 });
@@ -124,6 +124,11 @@ namespace NextAdmin.UI {
                         }));
                     });
                 }
+
+                if (this.options.googleOauthOptions) {
+                    container.appendControl(new ThirdPartyOauthPanel({ googleOauthOptions: this.options.googleOauthOptions }));
+                }
+
             });
         }
 
@@ -132,12 +137,12 @@ namespace NextAdmin.UI {
             let password = this.passwordInput.getValue();
             if (NextAdmin.String.isNullOrEmpty(userName) || NextAdmin.String.isNullOrEmpty(password))
                 return;
-            this.signInMessage.innerHTML = '';
+            this.signInMessageContainer.innerHTML = '';
             this.modal.startSpin();
             let authTokenResponse = await this.options.userClient.authUser(userName, password, this.rememberMeCheckbox.getValue());
             this.modal.stopSpin();
             if (!authTokenResponse?.isSuccess) {
-                this.signInMessage.innerHTML = NextAdmin.Resources.invalidCredentials;
+                this.signInMessageContainer.innerHTML = NextAdmin.Resources.invalidCredentials;
                 return;
             }
             if (this.options.onSignIn) {
@@ -157,5 +162,10 @@ namespace NextAdmin.UI {
 
         onSignIn?: (authTokenResponse?: NextAdmin.Models.AuthTokenResponse) => void;
 
+        googleOauthOptions?: GoogleOauthOptions;
+
     }
+
+
+
 }

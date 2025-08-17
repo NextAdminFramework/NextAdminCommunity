@@ -34,11 +34,14 @@ namespace NextAdmin.UI {
             this.element.style.overflow = 'auto';
             this.element.style.width = this.options.dropDownWidth;
             this.element.addEventListener('wheel', (ev) => {
+                //removed because blocking scroll since perfect scrollbar was remoed
+                /*
                 ev.stopPropagation();
                 ev.preventDefault();
+                */
             })
             if (UserAgent.isDesktop()) {
-                this.element.appendPerfectScrollbar();
+                //this.element.appendPerfectScrollbar();
             }
 
             if (this.options.items != null) {
