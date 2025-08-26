@@ -160,6 +160,7 @@ namespace NextAdmin.UI {
                 buttonItem.setColorStyle(NextAdmin.UI.ButtonStyle.noBg);
             }
             buttonItem.element.style.width = '100%';
+            buttonItem.element.style.overflow = 'hidden';
             buttonItem.element.style.textAlign = 'left';
             buttonItem.element.addEventListener('pointerover', (btnItem) => {
                 buttonItem.element.style.background = 'rgba(245,245,245,1)';

@@ -31,6 +31,7 @@ namespace NextAdmin.UI {
             + ".next-admin-btn-default{background:#FFF;color:#444;}.next-admin-btn-default:hover,.next-admin-btn-white.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-red{background:#FFF;color:" + DefaultStyle.RedOne + ";}.next-admin-btn-red:hover,.next-admin-btn-red.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-green{background:#FFF;color:" + DefaultStyle.GreenOne + ";}.next-admin-btn-green:hover,.next-admin-btn-green.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
+            + ".next-admin-btn-light-green{background:#FFF;color:" + DefaultStyle.GreenTwo + ";}.next-admin-btn-light-green:hover,.next-admin-btn-light-green.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-blue{background:#FFF;color:" + DefaultStyle.BlueOne + ";}.next-admin-btn-blue:hover,.next-admin-btn-blue.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-light-blue{background:#FFF;color:#0d6efd;}.next-admin-btn-blue:hover,.next-admin-btn-blue.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
 
@@ -127,6 +128,8 @@ namespace NextAdmin.UI {
                     return 'next-admin-btn-light-blue';
                 case ButtonStyle.green:
                     return 'next-admin-btn-green';
+                case ButtonStyle.lightgreen:
+                    return 'next-admin-btn-light-green';
                 case ButtonStyle.red:
                     return 'next-admin-btn-red';
 
@@ -263,6 +266,7 @@ namespace NextAdmin.UI {
         lightBlue,
         blue,
         green,
+        lightgreen,
         red,
         bgWhite,
         bgLightGrey,

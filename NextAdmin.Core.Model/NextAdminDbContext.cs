@@ -801,7 +801,7 @@ namespace NextAdmin.Core.Model
                 .Select(e => e.Entity).Cast<TEntity>().ToList();
         }
 
-        public virtual List<TEntity> SearchEntities<TEntity>(Func<IQueryable<TEntity>, IQueryable<TEntity>> filter = null)
+        public virtual List<TEntity> GetEntities<TEntity>(Func<IQueryable<TEntity>, IQueryable<TEntity>> filter = null)
             where TEntity : class
         {
             List<TEntity> serilizedEntities = (filter == null ? Set<TEntity>() : filter(Set<TEntity>())).ToList().Where(e => Entry(e).State != EntityState.Deleted).ToList();

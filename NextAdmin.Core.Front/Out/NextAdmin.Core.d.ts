@@ -173,6 +173,7 @@ declare namespace NextAdmin {
         private _subscriptions;
         subscribe(fn: () => void): void;
         unsubscribe(fn: () => void): void;
+        subscribeOnce(fn: () => void): () => void;
         unsubscribeAll(): void;
         dispatch(): void;
         isSubscribed(fn: () => void): boolean;
@@ -181,6 +182,7 @@ declare namespace NextAdmin {
         private _subscriptions;
         subscribe(fn: (sender: TSender, args: TArgs) => void): (sender: TSender, args: TArgs) => void;
         unsubscribe(fn: (sender: TSender, args: TArgs) => void): void;
+        subscribeOnce(fn: (sender: TSender, args: TArgs) => void): (sender: TSender, args: TArgs) => void;
         unsubscribeAll(): void;
         dispatch(sender: TSender, args?: TArgs): void;
         isSubscribed(fn: (sender: TSender, args: TArgs) => void): boolean;
@@ -189,6 +191,7 @@ declare namespace NextAdmin {
         private _subscriptions;
         subscribe(fn: (sender: TSender, args: TArgs) => Promise<void>): void;
         unsubscribe(fn: (sender: TSender, args: TArgs) => Promise<void>): void;
+        subscribeOnce(fn: (sender: TSender, args: TArgs) => Promise<void>): (sender: TSender, args: TArgs) => void;
         unsubscribeAll(): void;
         dispatch(sender: TSender, args?: TArgs): Promise<void>;
     }
@@ -308,13 +311,15 @@ declare namespace NextAdmin {
         getCurrentPageName(): string;
         getPreviousPage(): UI.Page;
         getPreviousPageName(): string;
-        navigateToUrl(url?: string, updateNavigatorHistory?: boolean): Promise<void>;
+        navigateToUrl(url?: string, updateNavigatorState?: UpdateNavigatorState): Promise<void>;
         getPageInfoFromUrl(url?: string): {
             pageName?: string;
             pageData?: any;
         };
-        refresh(): Promise<void>;
-        navigateTo(pageName: string, parameters?: any, updateBrowserUrl?: boolean, force?: boolean): Promise<NextAdmin.UI.Page>;
+        refresh(reload?: boolean): Promise<void>;
+        navigateBack(): Promise<NextAdmin.UI.Page>;
+        navigateBackOrDefault(defaultPageName?: string): Promise<NextAdmin.UI.Page>;
+        navigateTo(pageName: string, parameters?: any, updateNavigatorState?: UpdateNavigatorState, force?: boolean): Promise<NextAdmin.UI.Page>;
         protected displayMode?: DisplayMode;
         getDisplayMode(): DisplayMode;
         setDisplayMode(displayMode?: DisplayMode): Promise<void>;
@@ -349,6 +354,11 @@ declare namespace NextAdmin {
         enableSpaLinkNavigation?: boolean;
     }
     var Navigation: NavigationController;
+    enum UpdateNavigatorState {
+        none = 0,
+        pushState = 1,
+        replaceState = 2
+    }
 }
 interface Number {
     toStringDigit(digitCount: number): string;
@@ -785,6 +795,7 @@ declare namespace NextAdmin.Business {
     }
     interface LoadDatasetArgs extends DataControllerActionArgs {
         onGetResponse?: (result: LoadDatasetResult) => void;
+        dataState?: Business.DataState;
     }
     interface SaveDatasetArgs extends DataControllerActionArgs {
         onGetResponse?: (result: SaveDatasetResult) => void;
@@ -1188,6 +1199,7 @@ declare namespace NextAdmin {
         saveIcon: string;
         deleteIcon: string;
         removeIcon: string;
+        closeIcon: string;
         clearIcon: string;
         checkIcon: string;
         cogIcon: string;
@@ -1970,6 +1982,7 @@ declare namespace NextAdmin.UI {
         static BlueOne: string;
         static BlueTwo: string;
         static GreenOne: string;
+        static GreenTwo: string;
         static DarkModalBackdrop: string;
     }
 }
@@ -1986,7 +1999,7 @@ declare namespace NextAdmin.UI {
         private _currentStyle;
         setColorStyle(style: ButtonStyle): void;
         getColorStyle(): ButtonStyle;
-        static getColorStyleClass(style: ButtonStyle): "next-admin-btn-default" | "next-admin-btn-blue" | "next-admin-btn-light-blue" | "next-admin-btn-green" | "next-admin-btn-red" | "next-admin-btn-bg-white" | "next-admin-btn-bg-light-grey" | "next-admin-btn-bg-grey" | "next-admin-btn-bg-black" | "next-admin-btn-bg-blue" | "next-admin-btn-bg-green" | "next-admin-btn-bg-red" | "next-admin-btn-no-bg" | "next-admin-btn-no-bg-white" | "next-admin-btn-no-bg-dark-blue" | "next-admin-btn-no-bg-blue" | "next-admin-btn-no-bg-red";
+        static getColorStyleClass(style: ButtonStyle): "next-admin-btn-default" | "next-admin-btn-blue" | "next-admin-btn-light-blue" | "next-admin-btn-green" | "next-admin-btn-light-green" | "next-admin-btn-red" | "next-admin-btn-bg-white" | "next-admin-btn-bg-light-grey" | "next-admin-btn-bg-grey" | "next-admin-btn-bg-black" | "next-admin-btn-bg-blue" | "next-admin-btn-bg-green" | "next-admin-btn-bg-red" | "next-admin-btn-no-bg" | "next-admin-btn-no-bg-white" | "next-admin-btn-no-bg-dark-blue" | "next-admin-btn-no-bg-blue" | "next-admin-btn-no-bg-red";
         private _isPressed;
         press(disbaleClick?: boolean): void;
         release(): void;
@@ -2015,19 +2028,20 @@ declare namespace NextAdmin.UI {
         lightBlue = 1,
         blue = 2,
         green = 3,
-        red = 4,
-        bgWhite = 5,
-        bgLightGrey = 6,
-        bgGrey = 7,
-        bgBlack = 8,
-        bgBlue = 9,
-        bgGreen = 10,
-        bgRed = 11,
-        noBg = 12,
-        noBgWhite = 13,
-        noBgBlue = 14,
-        noBgDarkBlue = 15,
-        noBgRed = 16
+        lightgreen = 4,
+        red = 5,
+        bgWhite = 6,
+        bgLightGrey = 7,
+        bgGrey = 8,
+        bgBlack = 9,
+        bgBlue = 10,
+        bgGreen = 11,
+        bgRed = 12,
+        noBg = 13,
+        noBgWhite = 14,
+        noBgBlue = 15,
+        noBgDarkBlue = 16,
+        noBgRed = 17
     }
     enum ButtonSize {
         extraSmall = 0,
@@ -2269,6 +2283,7 @@ declare namespace NextAdmin.UI {
         dataController: NextAdmin.Business.DataController<T>;
         onValidate: EventHandler<DataFormModal<T>, T>;
         onEndOpen: EventHandler<DataFormModal<T>, T>;
+        onInitialize: AsyncEventHandler<DataFormModal<T>, InitializeArgs<T>>;
         originalData?: T;
         static Style: string;
         static onCreated: EventHandler<DataFormModal_, DataFormModalOptions>;
@@ -2301,7 +2316,7 @@ declare namespace NextAdmin.UI {
         canCancel?: boolean;
         onDataSaved?: (sender: DataFormModal_, args: NextAdmin.Business.SaveDataResult) => void;
         onDataDeleted?: (sender: DataFormModal_, data: any) => void;
-        onInitialize?: (sender: DataFormModal_, args: InitializeArgs) => void;
+        onInitialize?: (sender: DataFormModal_, args: InitializeArgs_) => void;
     }
     interface FormModalOpenArgs<T> {
         data?: T;
@@ -2315,8 +2330,12 @@ declare namespace NextAdmin.UI {
     interface CloseFormModalArgs extends CloseModalArgs {
         chackDataState?: boolean;
     }
-    interface InitializeArgs {
+    interface InitializeArgs_ {
         data: any;
+        dataState: Business.DataState;
+    }
+    interface InitializeArgs<T> {
+        data: T;
         dataState: Business.DataState;
     }
 }
@@ -2717,7 +2736,7 @@ declare namespace NextAdmin.UI {
         additionalSearchProperties?: string[];
         orderPropertyName?: string;
         synchronizeDataWithFormModal?: boolean;
-        formModalFactory?: (dataName: string, options?: DataFormModalOptions) => DataFormModal_;
+        formModalFactory?: (dataName: string, options?: DataFormModalOptions, data?: T) => DataFormModal_;
         /** if set to true, use row data instead of load data from server */
         openFormModalWithRowData?: boolean;
         datasetController?: NextAdmin.Business.DatasetController_;
@@ -2774,6 +2793,8 @@ declare namespace NextAdmin.UI {
         width?: string;
         maxWidth?: string;
         minWidth?: string;
+        cellCss?: CssDeclaration;
+        headerCss?: CssDeclaration;
         toolTip?: string;
         defaultOrdering?: ColumnOrdering;
         queryble?: boolean;
@@ -2816,24 +2837,24 @@ declare namespace NextAdmin.UI {
         ordering: ColumnOrdering;
     }
     export enum DataDeleteMode {
-        disable = 0,
+        disabled = 0,
         local = 1,
         server = 2
     }
     export enum DataOrderingMode {
-        disable = 0,
+        disabled = 0,
         local = 1,
         server = 2
     }
     export enum DataSearchMode {
-        disable = 0,
+        disabled = 0,
         local = 1,
         server = 2
     }
     export enum DataLoadingMode {
-        disable = 0,
-        selectColumns = 1,
-        selectAll = 2
+        disabled = 0,
+        query = 1,
+        rawData = 2
     }
     export enum DataGridReorderingRowMode {
         buttons = 0,
@@ -3375,6 +3396,32 @@ declare namespace NextAdmin.UI {
     enum ChangeOrigin {
         user = 0,
         code = 1
+    }
+}
+declare namespace NextAdmin.UI {
+    class Image extends Control {
+        options: ImageOptions;
+        image: HTMLImageElement;
+        static style: string;
+        constructor(options?: ImageOptions);
+        setStyle(style?: ImageStyle): void;
+        setDisplayMode(displayMode: ImageDisplayMode): void;
+    }
+    interface ImageOptions extends ControlOptions {
+        width?: string;
+        height?: string;
+        src?: string;
+        style?: ImageStyle;
+        displayMode?: ImageDisplayMode;
+    }
+    enum ImageStyle {
+        none = 0,
+        lightBordered = 1
+    }
+    enum ImageDisplayMode {
+        contain = 0,
+        cover = 1,
+        stretch = 2
     }
 }
 declare namespace NextAdmin.UI {
@@ -4106,7 +4153,7 @@ declare namespace NextAdmin.UI {
         card = 3
     }
     enum RowSelectionMode {
-        disable = 0,
+        disabled = 0,
         singleSelect = 1,
         multiSelect = 2,
         multiSelect_CtrlShift = 3

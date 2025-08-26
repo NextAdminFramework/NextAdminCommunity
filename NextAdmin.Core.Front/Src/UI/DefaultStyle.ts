@@ -16,6 +16,8 @@ namespace NextAdmin.UI {
 
         public static GreenOne = '#586e53';
 
+        public static GreenTwo = '#629965';
+
         public static DarkModalBackdrop = 'rgba(0,0,0,0.5)';
 
         //public static SelectedRowBackground = 'rgba(210,228,218,0.5)';

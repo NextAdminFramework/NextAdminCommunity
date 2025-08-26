@@ -107,6 +107,7 @@
     <TypeScriptCompile Include="Src\UI\FlexLayout.ts" />
     <TypeScriptCompile Include="Src\UI\FormModal.ts" />
     <TypeScriptCompile Include="Src\UI\GridFormPanel.ts" />
+    <TypeScriptCompile Include="Src\UI\Image.ts" />
     <TypeScriptCompile Include="Src\UI\Link.ts" />
     <TypeScriptCompile Include="Src\UI\MenuModal.ts" />
     <TypeScriptCompile Include="Src\UI\NoUiModal.ts" />

@@ -735,6 +735,14 @@ var NextAdmin;
                 this._subscriptions.splice(i, 1);
             }
         }
+        subscribeOnce(fn) {
+            let proxyFunc = () => {
+                this.unsubscribe(proxyFunc);
+                fn();
+            };
+            this.subscribe(proxyFunc);
+            return proxyFunc;
+        }
         unsubscribeAll() {
             this._subscriptions = new Array();
             ;
@@ -765,6 +773,14 @@ var NextAdmin;
                 this._subscriptions.splice(i, 1);
             }
         }
+        subscribeOnce(fn) {
+            let proxyFunc = (s2, args2) => {
+                this.unsubscribe(proxyFunc);
+                fn(s2, args2);
+            };
+            this.subscribe(proxyFunc);
+            return proxyFunc;
+        }
         unsubscribeAll() {
             this._subscriptions = new Array();
         }
@@ -792,6 +808,14 @@ var NextAdmin;
             if (i > -1) {
                 this._subscriptions.splice(i, 1);
             }
+        }
+        subscribeOnce(fn) {
+            let proxyFunc = async (s2, args2) => {
+                this.unsubscribe(proxyFunc);
+                await fn(s2, args2);
+            };
+            this.subscribe(proxyFunc);
+            return proxyFunc;
         }
         unsubscribeAll() {
             this._subscriptions = new Array();
@@ -1449,16 +1473,16 @@ var NextAdmin;
         getPreviousPageName() {
             return this._previousPage?.options.name;
         }
-        async navigateToUrl(url = document.location.href, updateNavigatorHistory = false) {
+        async navigateToUrl(url = document.location.href, updateNavigatorState = UpdateNavigatorState.none) {
             let pageInfo = this.getPageInfoFromUrl(url);
             let page = await this.getPage(pageInfo.pageName);
             if (page == null) { //unable to find view, so navigate to default view
                 console.log('NavigationController.navigateToUrl:unable to find page:' + pageInfo.pageName + ', so navigate to default page:' + this.options.defaultPage);
-                this.navigateTo(this.options.defaultPage, null, updateNavigatorHistory);
+                this.navigateTo(this.options.defaultPage, null, updateNavigatorState);
             }
             else {
                 console.log('NavigationController.navigateToUrl:navigate to:{' + pageInfo.pageName + '}');
-                this.navigateTo(pageInfo.pageName, pageInfo.pageData, updateNavigatorHistory);
+                this.navigateTo(pageInfo.pageName, pageInfo.pageData, updateNavigatorState);
             }
         }
         getPageInfoFromUrl(url = document.location.href) {
@@ -1484,13 +1508,35 @@ var NextAdmin;
                 pageData: data
             };
         }
-        async refresh() {
+        async refresh(reload) {
+            if (reload) {
+                location.reload();
+            }
             if (this._currentPage?.options?.name == null) {
                 return;
             }
-            await this.navigateTo(this._currentPage.options.name, this._currentPage.getData(), false, true);
+            await this.navigateTo(this._currentPage.options.name, this._currentPage.getData(), UpdateNavigatorState.none, true);
         }
-        async navigateTo(pageName, parameters = null, updateBrowserUrl = true, force = false) {
+        async navigateBack() {
+            return new Promise((result) => {
+                this.onNavigate.subscribeOnce(() => {
+                    result(this.getCurrentPage());
+                });
+                history.back();
+            });
+        }
+        async navigateBackOrDefault(defaultPageName) {
+            if (this.getPreviousPage()) {
+                return this.navigateBack();
+            }
+            else {
+                if (defaultPageName == null) {
+                    defaultPageName = this.options.defaultPage;
+                }
+                this.navigateTo(defaultPageName, null, UpdateNavigatorState.replaceState);
+            }
+        }
+        async navigateTo(pageName, parameters = null, updateNavigatorState = UpdateNavigatorState.pushState, force = false) {
             if (!force && this._currentPage != null && this._currentPage.options != null && pageName == this._currentPage.options.name && JSON.stringify(parameters) == JSON.stringify(this._currentPage.parameters)) {
                 return;
             }
@@ -1535,7 +1581,7 @@ var NextAdmin;
                 previousPage.endNavigateFrom();
             }
             await nextPage.navigateTo(nextPageNavigationArgs);
-            if (updateBrowserUrl && window.history && window.history.pushState) {
+            if (updateNavigatorState && window.history && window.history.pushState) {
                 let url = this._currentPage.options.name;
                 if (!NextAdmin.String.isNullOrEmpty(document.location.pathname)) {
                     let currentLocationArrayPath = document.location.pathname.split('/');
@@ -1552,7 +1598,12 @@ var NextAdmin;
                         url += '?' + params;
                     }
                 }
-                window.history.pushState('', this._currentPage.options.name, url);
+                if (updateNavigatorState == UpdateNavigatorState.pushState) {
+                    window.history.pushState('', this._currentPage.options.name, url);
+                }
+                else if (updateNavigatorState == UpdateNavigatorState.replaceState) {
+                    window.history.replaceState('', this._currentPage.options.name, url);
+                }
             }
             this.onPageChanged.dispatch(this, nextPage);
             return nextPage;
@@ -1579,6 +1630,12 @@ var NextAdmin;
         DisplayMode[DisplayMode["desktop"] = 1] = "desktop";
         DisplayMode[DisplayMode["mobile"] = 2] = "mobile";
     })(DisplayMode = NextAdmin.DisplayMode || (NextAdmin.DisplayMode = {}));
+    let UpdateNavigatorState;
+    (function (UpdateNavigatorState) {
+        UpdateNavigatorState[UpdateNavigatorState["none"] = 0] = "none";
+        UpdateNavigatorState[UpdateNavigatorState["pushState"] = 1] = "pushState";
+        UpdateNavigatorState[UpdateNavigatorState["replaceState"] = 2] = "replaceState";
+    })(UpdateNavigatorState = NextAdmin.UpdateNavigatorState || (NextAdmin.UpdateNavigatorState = {}));
 })(NextAdmin || (NextAdmin = {}));
 try {
     Number.prototype.toStringDigit = function (digitCount) {
@@ -3264,6 +3321,7 @@ var NextAdmin;
             async load(args) {
                 args = {
                     displayErrors: true,
+                    dataState: Business.DataState.serialized,
                     ...args
                 };
                 return new Promise((resolve) => {
@@ -3276,6 +3334,11 @@ var NextAdmin;
                         if (result.success) {
                             let previousDataset = this.dataset;
                             this.dataset = result.dataset;
+                            for (let data of this.dataset) {
+                                if (data['_state'] === undefined) {
+                                    data['_state'] = args.dataState;
+                                }
+                            }
                             this.onDataLoaded.dispatch(this, result);
                             this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
                         }
@@ -3292,6 +3355,7 @@ var NextAdmin;
             async loadAdd(args) {
                 args = {
                     displayErrors: true,
+                    dataState: Business.DataState.serialized,
                     ...args
                 };
                 return new Promise((resolve) => {
@@ -3304,6 +3368,9 @@ var NextAdmin;
                         if (result.success) {
                             let previousDataset = this.dataset.clone();
                             for (let data of result.dataset) {
+                                if (data['_state'] === undefined) {
+                                    data['_state'] = args.dataState;
+                                }
                                 this.dataset.add(data);
                             }
                             this.onDataAdded.dispatch(this, result);
@@ -3382,6 +3449,7 @@ var NextAdmin;
             append(args) {
                 args = {
                     displayErrors: true,
+                    dataState: Business.DataState.append,
                     ...args
                 };
                 return new Promise((promise) => {
@@ -3393,6 +3461,9 @@ var NextAdmin;
                         }
                         if (result.success) {
                             let previousDataset = this.dataset.clone();
+                            if (result.data['_state'] === undefined) {
+                                result.data['_state'] = args.dataState;
+                            }
                             this.dataset.add(result.data);
                             this.onDataAppened.dispatch(this, result);
                             this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
@@ -4512,7 +4583,8 @@ var NextAdmin;
             this.printIcon = '<i class="fas fa-print"></i>';
             this.saveIcon = '<i class="fas fa-save"></i>';
             this.deleteIcon = '<i class="fas fa-trash-alt"></i>';
-            this.removeIcon = '<i class="fas fa-times-circle"></i>';
+            this.removeIcon = '<i class="fas fa-times"></i>';
+            this.closeIcon = '<i class="fas fa-times"></i>';
             this.clearIcon = '<i class="fas fa-eraser"></i>';
             this.checkIcon = '<i class="fas fa-check"></i>';
             this.cogIcon = '<i class="fas fa-cog"></i>';
@@ -5525,6 +5597,7 @@ var NextAdmin;
         DefaultStyle.BlueOne = '#105ABE';
         DefaultStyle.BlueTwo = '#12101d';
         DefaultStyle.GreenOne = '#586e53';
+        DefaultStyle.GreenTwo = '#629965';
         DefaultStyle.DarkModalBackdrop = 'rgba(0,0,0,0.5)';
         UI.DefaultStyle = DefaultStyle;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
@@ -5604,6 +5677,8 @@ var NextAdmin;
                         return 'next-admin-btn-light-blue';
                     case ButtonStyle.green:
                         return 'next-admin-btn-green';
+                    case ButtonStyle.lightgreen:
+                        return 'next-admin-btn-light-green';
                     case ButtonStyle.red:
                         return 'next-admin-btn-red';
                     case ButtonStyle.bgWhite:
@@ -5701,6 +5776,7 @@ var NextAdmin;
             + ".next-admin-btn-default{background:#FFF;color:#444;}.next-admin-btn-default:hover,.next-admin-btn-white.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-red{background:#FFF;color:" + UI.DefaultStyle.RedOne + ";}.next-admin-btn-red:hover,.next-admin-btn-red.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-green{background:#FFF;color:" + UI.DefaultStyle.GreenOne + ";}.next-admin-btn-green:hover,.next-admin-btn-green.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
+            + ".next-admin-btn-light-green{background:#FFF;color:" + UI.DefaultStyle.GreenTwo + ";}.next-admin-btn-light-green:hover,.next-admin-btn-light-green.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-blue{background:#FFF;color:" + UI.DefaultStyle.BlueOne + ";}.next-admin-btn-blue:hover,.next-admin-btn-blue.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-light-blue{background:#FFF;color:#0d6efd;}.next-admin-btn-blue:hover,.next-admin-btn-blue.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-bg-blue{background:#0d6efd;color:#f0f0f0;}.next-admin-btn-bg-blue:hover,.next-admin-btn-bg-blue.next-admin-btn-pressed{background:#0b5ed7;box-shadow:inset 0px 0px 2px #444}"
@@ -5722,19 +5798,20 @@ var NextAdmin;
             ButtonStyle[ButtonStyle["lightBlue"] = 1] = "lightBlue";
             ButtonStyle[ButtonStyle["blue"] = 2] = "blue";
             ButtonStyle[ButtonStyle["green"] = 3] = "green";
-            ButtonStyle[ButtonStyle["red"] = 4] = "red";
-            ButtonStyle[ButtonStyle["bgWhite"] = 5] = "bgWhite";
-            ButtonStyle[ButtonStyle["bgLightGrey"] = 6] = "bgLightGrey";
-            ButtonStyle[ButtonStyle["bgGrey"] = 7] = "bgGrey";
-            ButtonStyle[ButtonStyle["bgBlack"] = 8] = "bgBlack";
-            ButtonStyle[ButtonStyle["bgBlue"] = 9] = "bgBlue";
-            ButtonStyle[ButtonStyle["bgGreen"] = 10] = "bgGreen";
-            ButtonStyle[ButtonStyle["bgRed"] = 11] = "bgRed";
-            ButtonStyle[ButtonStyle["noBg"] = 12] = "noBg";
-            ButtonStyle[ButtonStyle["noBgWhite"] = 13] = "noBgWhite";
-            ButtonStyle[ButtonStyle["noBgBlue"] = 14] = "noBgBlue";
-            ButtonStyle[ButtonStyle["noBgDarkBlue"] = 15] = "noBgDarkBlue";
-            ButtonStyle[ButtonStyle["noBgRed"] = 16] = "noBgRed";
+            ButtonStyle[ButtonStyle["lightgreen"] = 4] = "lightgreen";
+            ButtonStyle[ButtonStyle["red"] = 5] = "red";
+            ButtonStyle[ButtonStyle["bgWhite"] = 6] = "bgWhite";
+            ButtonStyle[ButtonStyle["bgLightGrey"] = 7] = "bgLightGrey";
+            ButtonStyle[ButtonStyle["bgGrey"] = 8] = "bgGrey";
+            ButtonStyle[ButtonStyle["bgBlack"] = 9] = "bgBlack";
+            ButtonStyle[ButtonStyle["bgBlue"] = 10] = "bgBlue";
+            ButtonStyle[ButtonStyle["bgGreen"] = 11] = "bgGreen";
+            ButtonStyle[ButtonStyle["bgRed"] = 12] = "bgRed";
+            ButtonStyle[ButtonStyle["noBg"] = 13] = "noBg";
+            ButtonStyle[ButtonStyle["noBgWhite"] = 14] = "noBgWhite";
+            ButtonStyle[ButtonStyle["noBgBlue"] = 15] = "noBgBlue";
+            ButtonStyle[ButtonStyle["noBgDarkBlue"] = 16] = "noBgDarkBlue";
+            ButtonStyle[ButtonStyle["noBgRed"] = 17] = "noBgRed";
         })(ButtonStyle = UI.ButtonStyle || (UI.ButtonStyle = {}));
         let ButtonSize;
         (function (ButtonSize) {
@@ -7107,6 +7184,7 @@ var NextAdmin;
                 });
                 this.onValidate = new NextAdmin.EventHandler();
                 this.onEndOpen = new NextAdmin.EventHandler();
+                this.onInitialize = new NextAdmin.AsyncEventHandler();
                 NextAdmin.Style.append('NextAdmin.UI.FormModal', DataFormModal_.Style);
                 this.dataController = this.options.dataController;
                 if (this.dataController == null) {
@@ -7268,6 +7346,10 @@ var NextAdmin;
                 }
             }
             async initialize(data, dataState) {
+                await this.onInitialize.dispatch(this, {
+                    data: data,
+                    dataState: dataState
+                });
                 if (this.options.onInitialize) {
                     this.options.onInitialize(this, {
                         data: data,
@@ -7879,7 +7961,7 @@ var NextAdmin;
                     selectDataPrimaryKey: true,
                     viewsDataPropertyName: 'controlName',
                     viewsGridIdPropertyName: 'controlData',
-                    loadingMode: DataLoadingMode.selectColumns,
+                    loadingMode: DataLoadingMode.query,
                     displayNoDataMessage: true,
                     minHeight: '200px',
                     canSelectView: options?.views?.length > 1,
@@ -7958,11 +8040,11 @@ var NextAdmin;
                 }
                 NextAdmin.Style.append("NextAdmin.UI.Table", UI.Table.style);
                 NextAdmin.Style.append("NextAdmin.UI.Grid", DataGrid_.style);
-                if (this.options.hasActionColumn == undefined && ((options.deleteMode != null && options.deleteMode != DataDeleteMode.disable) || options.formModalFactory != null || this.getRowOrderPropertyName() != null)) {
+                if (this.options.hasActionColumn == undefined && ((options.deleteMode != null && options.deleteMode != DataDeleteMode.disabled) || options.formModalFactory != null || this.getRowOrderPropertyName() != null)) {
                     this.options.hasActionColumn = true;
                 }
                 if (this.options.searchMode == null && this.options.canSave == true) {
-                    this.options.searchMode = DataSearchMode.disable;
+                    this.options.searchMode = DataSearchMode.disabled;
                 }
                 if (this.options.canAdd === undefined) {
                     this.options.canAdd = options.formModalFactory != null || options.canEdit;
@@ -8059,7 +8141,7 @@ var NextAdmin;
                         }
                     }));
                 }
-                if ((this.options.canRefresh !== undefined && this.datasetController == null) || this.options.canRefresh === false || this.options.loadingMode == DataLoadingMode.disable) {
+                if ((this.options.canRefresh !== undefined && this.datasetController == null) || this.options.canRefresh === false || this.options.loadingMode == DataLoadingMode.disabled) {
                     this.buttonRefresh.element.style.display = 'none';
                 }
                 let elementDisplayName = this?.datasetController?.getDataDisplayName();
@@ -8234,7 +8316,7 @@ var NextAdmin;
                 }
                 if (this.datasetController != null) {
                     this.datasetController.onStartRequest.subscribe(() => {
-                        if (this.options.loadingMode == DataLoadingMode.selectColumns) {
+                        if (this.options.loadingMode == DataLoadingMode.query) {
                             let containId = false;
                             let columnsToSelect = this.columns.where(e => e != this.actionColumn && e.isQueryble()).select(e => e.options).addRange(this.options.columns.where(e2 => e2.hidden == true)).select((gco) => {
                                 if (gco.selectQuery == null) {
@@ -8339,9 +8421,10 @@ var NextAdmin;
                     let navigateFromFunc = (sender, args) => {
                         if (checkDataState) {
                             args.cancelNavigation = true;
-                            this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(() => {
+                            this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(async () => {
                                 checkDataState = false;
-                                this.options.page.navigationController.navigateTo(args.nextPage.options.name, args.nextPageParameters);
+                                await this.options.page.navigationController.navigateTo(args.nextPage.options.name, args.nextPageParameters);
+                                checkDataState = true;
                             });
                         }
                     };
@@ -8502,7 +8585,7 @@ var NextAdmin;
                 return result.dataset;
             }
             isMultiDeleteEnabled() {
-                return this.isMultiSelectEnabled() && this.options.deleteMode != NextAdmin.UI.DataDeleteMode.disable;
+                return this.isMultiSelectEnabled() && this.options.deleteMode != NextAdmin.UI.DataDeleteMode.disabled;
             }
             isMultiSelectEnabled() {
                 return this.options.rowSelectionMode == NextAdmin.UI.RowSelectionMode.multiSelect || this.options.rowSelectionMode == NextAdmin.UI.RowSelectionMode.multiSelect_CtrlShift;
@@ -8673,6 +8756,7 @@ var NextAdmin;
                                 width: columnOption.width,
                                 maxWidth: columnOption.maxWidth,
                                 minWidth: columnOption.minWidth,
+                                cellCss: { ...columnOption.cellCss },
                                 defaultOrdering: columnOption.defaultOrdering
                             };
                             viewColumns.add(viewColumnOption);
@@ -9023,7 +9107,7 @@ var NextAdmin;
                     dataName: this.datasetController.options.dataName,
                     dataPrimaryKey: data == null ? null : data[this.datasetController.options.dataPrimaryKeyName],
                     isDetailFormModal: this.options.openFormModalWithRowData
-                });
+                }, data);
                 if (formModal == null) {
                     return null;
                 }
@@ -9044,7 +9128,7 @@ var NextAdmin;
                                 return;
                             }
                         }
-                        if (this.datasetController != null && this.options.loadingMode != DataLoadingMode.disable) {
+                        if (this.datasetController != null && this.options.loadingMode != DataLoadingMode.disabled) {
                             this.datasetController.load();
                         }
                     });
@@ -9062,7 +9146,7 @@ var NextAdmin;
                     if (this.options.synchronizeDataWithFormModal) {
                         formModal.dataController.onDataSaved.subscribe((sender, args) => {
                             if (args.success) {
-                                if (this._dataController != null || this._masterFormController != null || this.options.loadingMode == DataLoadingMode.disable) {
+                                if (this._dataController != null || this._masterFormController != null || this.options.loadingMode == DataLoadingMode.disabled) {
                                     let pk = formModal.dataController.getDataPrimaryKeyValue();
                                     if (pk != null) {
                                         let row = this.getRowByDataId(pk);
@@ -9072,7 +9156,7 @@ var NextAdmin;
                                         }
                                     }
                                 }
-                                if (this.datasetController != null && this.options.loadingMode != DataLoadingMode.disable) {
+                                if (this.datasetController != null && this.options.loadingMode != DataLoadingMode.disabled) {
                                     this.datasetController.load();
                                 }
                             }
@@ -9319,7 +9403,7 @@ var NextAdmin;
                     return toolBar;
                 }
                 options = {
-                    hasDeleteButton: this.options.deleteMode != null && this.options.deleteMode != DataDeleteMode.disable,
+                    hasDeleteButton: this.options.deleteMode != null && this.options.deleteMode != DataDeleteMode.disabled,
                     hasOpenModalButton: this.options.openAction != null,
                     hasOrderingButtons: !NextAdmin.String.isNullOrEmpty(this.getRowOrderPropertyName()) && (this.options.reorderingRowMode == DataGridReorderingRowMode.all || this.options.reorderingRowMode == DataGridReorderingRowMode.buttons),
                     hasDragAndDropHandle: !NextAdmin.String.isNullOrEmpty(this.getRowOrderPropertyName()) && (this.options.reorderingRowMode == DataGridReorderingRowMode.all || this.options.reorderingRowMode == DataGridReorderingRowMode.dragAndDropHandle),
@@ -9516,7 +9600,7 @@ var NextAdmin;
                 let isOnlyDataRowSelected = selectedDataRows.length == selectedRows.length && selectedDataRows.length > 0;
                 let dropDownMenuItems = new Array();
                 let dropDownMenu;
-                if (selectedRows?.length && this.options.deleteMode != DataDeleteMode.disable) {
+                if (selectedRows?.length && this.options.deleteMode != DataDeleteMode.disabled) {
                     dropDownMenuItems.add({
                         text: this.options.deleteMode == DataDeleteMode.server ? NextAdmin.Resources.deleteIcon + ' ' + NextAdmin.Resources.delete : NextAdmin.Resources.removeIcon + ' ' + NextAdmin.Resources.remove,
                         action: () => {
@@ -9967,6 +10051,10 @@ var NextAdmin;
                 if (this.headerColumnCell != null && grid.options.rowsBordered) {
                     this.headerColumnCell.classList.add('next-admin-table-row-border');
                 }
+                //headerCss
+                if (options.headerCss) {
+                    NextAdmin.Copy.copyTo(options.headerCss, this.headerColumnCell.style);
+                }
                 if (options.width) {
                     this.headerColumnCell.style.width = options.width;
                 }
@@ -10269,7 +10357,7 @@ var NextAdmin;
                         hasActionColumn: false,
                         searchMode: NextAdmin.UI.DataSearchMode.server,
                         canAdd: false,
-                        deleteMode: NextAdmin.UI.DataDeleteMode.disable,
+                        deleteMode: NextAdmin.UI.DataDeleteMode.disabled,
                         hasContextMenu: false,
                         selectDataPrimaryKey: false,
                         columns: [{ propertyName: this.options.propertyName, selectQuery: this.options.selectQuery, searchable: true, defaultOrdering: ColumnOrdering.ascending }],
@@ -10424,7 +10512,7 @@ var NextAdmin;
                 this.element.classList.add('next-admin-table-row');
                 this.grid = grid;
                 this.element.setAttribute('RowId', this.rowId = NextAdmin.Guid.newGuid().toString());
-                if (this.grid.options.rowSelectionMode != null && this.grid.options.rowSelectionMode != UI.RowSelectionMode.disable) {
+                if (this.grid.options.rowSelectionMode != null && this.grid.options.rowSelectionMode != UI.RowSelectionMode.disabled) {
                     this.element.style.cursor = 'pointer';
                 }
                 let lastClickTimeStamp = -1;
@@ -10446,7 +10534,7 @@ var NextAdmin;
                     else {
                         lastClickTimeStamp = actualTimeStamp;
                     }
-                    if (this.grid.options.rowSelectionMode != undefined && this.grid.options.rowSelectionMode != UI.RowSelectionMode.disable) {
+                    if (this.grid.options.rowSelectionMode != undefined && this.grid.options.rowSelectionMode != UI.RowSelectionMode.disabled) {
                         if (this.grid.options.rowSelectionMode == UI.RowSelectionMode.multiSelect) {
                             if (this.isSelected()) {
                                 this.unselect();
@@ -10612,6 +10700,9 @@ var NextAdmin;
                 }
                 if (grid.options.columnsBordered) {
                     this.element.classList.add('next-admin-table-col-border');
+                }
+                if (column?.options?.cellCss) {
+                    NextAdmin.Copy.copyTo(column.options.cellCss, this.element.style);
                 }
                 this.grid = grid;
                 this.row = row;
@@ -10961,27 +11052,27 @@ var NextAdmin;
         })(ColumnOrdering = UI.ColumnOrdering || (UI.ColumnOrdering = {}));
         let DataDeleteMode;
         (function (DataDeleteMode) {
-            DataDeleteMode[DataDeleteMode["disable"] = 0] = "disable";
+            DataDeleteMode[DataDeleteMode["disabled"] = 0] = "disabled";
             DataDeleteMode[DataDeleteMode["local"] = 1] = "local";
             DataDeleteMode[DataDeleteMode["server"] = 2] = "server"; //Prompt user and send to server delete query
         })(DataDeleteMode = UI.DataDeleteMode || (UI.DataDeleteMode = {}));
         let DataOrderingMode;
         (function (DataOrderingMode) {
-            DataOrderingMode[DataOrderingMode["disable"] = 0] = "disable";
+            DataOrderingMode[DataOrderingMode["disabled"] = 0] = "disabled";
             DataOrderingMode[DataOrderingMode["local"] = 1] = "local";
             DataOrderingMode[DataOrderingMode["server"] = 2] = "server"; //Prompt user and send to server delete query
         })(DataOrderingMode = UI.DataOrderingMode || (UI.DataOrderingMode = {}));
         let DataSearchMode;
         (function (DataSearchMode) {
-            DataSearchMode[DataSearchMode["disable"] = 0] = "disable";
+            DataSearchMode[DataSearchMode["disabled"] = 0] = "disabled";
             DataSearchMode[DataSearchMode["local"] = 1] = "local";
             DataSearchMode[DataSearchMode["server"] = 2] = "server";
         })(DataSearchMode = UI.DataSearchMode || (UI.DataSearchMode = {}));
         let DataLoadingMode;
         (function (DataLoadingMode) {
-            DataLoadingMode[DataLoadingMode["disable"] = 0] = "disable";
-            DataLoadingMode[DataLoadingMode["selectColumns"] = 1] = "selectColumns";
-            DataLoadingMode[DataLoadingMode["selectAll"] = 2] = "selectAll";
+            DataLoadingMode[DataLoadingMode["disabled"] = 0] = "disabled";
+            DataLoadingMode[DataLoadingMode["query"] = 1] = "query";
+            DataLoadingMode[DataLoadingMode["rawData"] = 2] = "rawData";
         })(DataLoadingMode = UI.DataLoadingMode || (UI.DataLoadingMode = {}));
         let DataGridReorderingRowMode;
         (function (DataGridReorderingRowMode) {
@@ -12716,6 +12807,7 @@ var NextAdmin;
                     buttonItem.setColorStyle(NextAdmin.UI.ButtonStyle.noBg);
                 }
                 buttonItem.element.style.width = '100%';
+                buttonItem.element.style.overflow = 'hidden';
                 buttonItem.element.style.textAlign = 'left';
                 buttonItem.element.addEventListener('pointerover', (btnItem) => {
                     buttonItem.element.style.background = 'rgba(245,245,245,1)';
@@ -13395,6 +13487,96 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
+        class Image extends UI.Control {
+            constructor(options) {
+                super('div', {
+                    style: ImageStyle.none,
+                    displayMode: ImageDisplayMode.contain,
+                    ...options
+                });
+                NextAdmin.Style.append("NextAdmin.UI.Image", UI.Input.style);
+                this.element.classList.add('next-admin-image');
+                if (this.options.width) {
+                    this.element.style.width = this.options.width;
+                }
+                if (this.options.height) {
+                    this.element.style.width = this.options.height;
+                }
+                this.image = this.element.appendHTML('img', (image) => {
+                    image.classList.add('next-admin-image');
+                    image.style.width = '100%';
+                    image.style.height = '100%';
+                    image.style.backgroundColor = '#f9f9f9';
+                    image.src = this.options.src;
+                });
+                this.setStyle(this.options.style);
+                this.setDisplayMode(this.options.displayMode);
+            }
+            setStyle(style) {
+                switch (style) {
+                    default:
+                    case ImageStyle.none:
+                        break;
+                    case ImageStyle.lightBordered:
+                        this.image.classList.add('next-admin-image-light-border');
+                        break;
+                }
+            }
+            setDisplayMode(displayMode) {
+                switch (displayMode) {
+                    default:
+                    case ImageDisplayMode.contain:
+                        this.image.style.objectFit = 'contain';
+                        break;
+                    case ImageDisplayMode.cover:
+                        this.image.style.objectFit = 'cover';
+                        break;
+                    case ImageDisplayMode.stretch:
+                        this.image.style.objectFit = 'fill';
+                        break;
+                }
+            }
+        }
+        Image.style = `
+
+        .next-admin-image-container {
+
+            width:100%;
+            height:100%;
+
+            .next-admin-image{
+                width:100%;
+                height:100%;
+                object-fit:contain;
+            }
+
+            .next-admin-image.next-admin-image-light-border{
+                background-color:#f9f9f9;
+                border-radius:6px;
+                box-shadow:0px 0px 2px rgba(0,0,0,0.25);
+            }
+
+        }
+
+        `;
+        UI.Image = Image;
+        let ImageStyle;
+        (function (ImageStyle) {
+            ImageStyle[ImageStyle["none"] = 0] = "none";
+            ImageStyle[ImageStyle["lightBordered"] = 1] = "lightBordered";
+        })(ImageStyle = UI.ImageStyle || (UI.ImageStyle = {}));
+        let ImageDisplayMode;
+        (function (ImageDisplayMode) {
+            ImageDisplayMode[ImageDisplayMode["contain"] = 0] = "contain";
+            ImageDisplayMode[ImageDisplayMode["cover"] = 1] = "cover";
+            ImageDisplayMode[ImageDisplayMode["stretch"] = 2] = "stretch";
+        })(ImageDisplayMode = UI.ImageDisplayMode || (UI.ImageDisplayMode = {}));
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
         class Link extends UI.Control {
             constructor(options) {
                 super(options.htmlTag ?? 'a', { ...options });
@@ -13540,6 +13722,9 @@ var NextAdmin;
                     ...options
                 });
                 this.leftHeader.style.fontSize = '20px';
+                if (NextAdmin.String.isNullOrEmpty(this.options.title)) {
+                    this.header.style.height = '3px';
+                }
                 this.mainContainer = this.body.appendHTML('div', (container) => {
                     container.style.padding = '10px';
                     if (this.options.text) {
@@ -13553,7 +13738,7 @@ var NextAdmin;
                 }
                 if (this.options.hasBackButton) {
                     this.addItem({
-                        text: NextAdmin.Resources.backIcon + ' ' + NextAdmin.Resources.back,
+                        text: NextAdmin.Resources.closeIcon + ' ' + NextAdmin.Resources.close,
                         action: () => {
                             this.close();
                         }
@@ -13610,6 +13795,7 @@ var NextAdmin;
                             text: dropDownItem.text,
                             style: UI.ButtonStyle.bgWhite,
                             size: UI.ButtonSize.large,
+                            css: { overflow: 'hidden' },
                             action: (btn) => {
                                 this.close();
                                 dropDownItem.action(this, btn);
@@ -13971,7 +14157,7 @@ var NextAdmin;
                                     displayNoDataMessage: false,
                                     minHeight: '300px',
                                     canAdd: false,
-                                    deleteMode: NextAdmin.UI.DataDeleteMode.disable,
+                                    deleteMode: NextAdmin.UI.DataDeleteMode.disabled,
                                     hasActionColumn: false,
                                     rowSelectionMode: NextAdmin.UI.RowSelectionMode.multiSelect_CtrlShift,
                                     columns: [
@@ -16270,11 +16456,11 @@ var NextAdmin;
                         cell.classList.add('next-admin-table-cell');
                     }
                 }
-                if (this.options.rowSelectionMode != null && this.options.rowSelectionMode != RowSelectionMode.disable) {
+                if (this.options.rowSelectionMode != null && this.options.rowSelectionMode != RowSelectionMode.disabled) {
                     tr.style.cursor = 'pointer';
                 }
                 tr.addEventListener('click', (e) => {
-                    if (this.options.rowSelectionMode != RowSelectionMode.disable) {
+                    if (this.options.rowSelectionMode != RowSelectionMode.disabled) {
                         this.selectRow(tr);
                     }
                 });
@@ -16504,7 +16690,7 @@ var NextAdmin;
         })(TableStyle = UI.TableStyle || (UI.TableStyle = {}));
         let RowSelectionMode;
         (function (RowSelectionMode) {
-            RowSelectionMode[RowSelectionMode["disable"] = 0] = "disable";
+            RowSelectionMode[RowSelectionMode["disabled"] = 0] = "disabled";
             RowSelectionMode[RowSelectionMode["singleSelect"] = 1] = "singleSelect";
             RowSelectionMode[RowSelectionMode["multiSelect"] = 2] = "multiSelect";
             RowSelectionMode[RowSelectionMode["multiSelect_CtrlShift"] = 3] = "multiSelect_CtrlShift";

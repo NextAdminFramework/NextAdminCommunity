@@ -109,7 +109,7 @@ namespace NextAdmin.Core.API.Controllers
                 var saveResult = DbContext.ValidateAndSave();
                 if (!saveResult.Success)
                 {
-                    return ApiResponse.Error(ApiResponseCode.SQLError);
+                    return ApiResponse.Error(ApiResponseCode.DbError);
                 }
                 return ApiResponse.Success();
             }
@@ -202,7 +202,7 @@ namespace NextAdmin.Core.API.Controllers
                 var result = DbContext.ValidateAndSave();
                 if (!result.Success)
                 {
-                    response.Code = ApiResponseCode.SQLError.ToString();
+                    response.Code = ApiResponseCode.DbError.ToString();
                     return response;
                 }
 

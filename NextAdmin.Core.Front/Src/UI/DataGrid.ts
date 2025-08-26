@@ -214,7 +214,7 @@ namespace NextAdmin.UI {
                 selectDataPrimaryKey: true,
                 viewsDataPropertyName: 'controlName',
                 viewsGridIdPropertyName: 'controlData',
-                loadingMode: DataLoadingMode.selectColumns,
+                loadingMode: DataLoadingMode.query,
                 displayNoDataMessage: true,
                 minHeight: '200px',
                 canSelectView: options?.views?.length > 1,
@@ -264,11 +264,11 @@ namespace NextAdmin.UI {
             Style.append("NextAdmin.UI.Table", Table.style);
             Style.append("NextAdmin.UI.Grid", DataGrid_.style);
 
-            if (this.options.hasActionColumn == undefined && ((options.deleteMode != null && options.deleteMode != DataDeleteMode.disable) || options.formModalFactory != null || this.getRowOrderPropertyName() != null)) {
+            if (this.options.hasActionColumn == undefined && ((options.deleteMode != null && options.deleteMode != DataDeleteMode.disabled) || options.formModalFactory != null || this.getRowOrderPropertyName() != null)) {
                 this.options.hasActionColumn = true;
             }
             if (this.options.searchMode == null && this.options.canSave == true) {
-                this.options.searchMode = DataSearchMode.disable;
+                this.options.searchMode = DataSearchMode.disabled;
             }
             if (this.options.canAdd === undefined) {
                 this.options.canAdd = options.formModalFactory != null || options.canEdit;
@@ -382,7 +382,7 @@ namespace NextAdmin.UI {
                     }
                 }));
             }
-            if ((this.options.canRefresh !== undefined && this.datasetController == null) || this.options.canRefresh === false || this.options.loadingMode == DataLoadingMode.disable) {
+            if ((this.options.canRefresh !== undefined && this.datasetController == null) || this.options.canRefresh === false || this.options.loadingMode == DataLoadingMode.disabled) {
                 this.buttonRefresh.element.style.display = 'none';
             }
 
@@ -576,7 +576,7 @@ namespace NextAdmin.UI {
             if (this.datasetController != null) {
                 this.datasetController.onStartRequest.subscribe(() => {
 
-                    if (this.options.loadingMode == DataLoadingMode.selectColumns) {
+                    if (this.options.loadingMode == DataLoadingMode.query) {
                         let containId = false;
                         let columnsToSelect = this.columns.where(e => e != this.actionColumn && e.isQueryble()).select(e => e.options).addRange(this.options.columns.where(e2 => e2.hidden == true)).select((gco: DataGridColumnOptions_) => {
                             if (gco.selectQuery == null) {
@@ -686,9 +686,10 @@ namespace NextAdmin.UI {
                 let navigateFromFunc = (sender, args: NavigateFromArgs) => {
                     if (checkDataState) {
                         args.cancelNavigation = true;
-                        this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(() => {
+                        this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(async() => {
                             checkDataState = false;
-                            this.options.page.navigationController.navigateTo(args.nextPage.options.name, args.nextPageParameters);
+                            await this.options.page.navigationController.navigateTo(args.nextPage.options.name, args.nextPageParameters);
+                            checkDataState = true;
                         });
                     }
                 };
@@ -857,7 +858,7 @@ namespace NextAdmin.UI {
         }
 
         public isMultiDeleteEnabled(): boolean {
-            return this.isMultiSelectEnabled() && this.options.deleteMode != NextAdmin.UI.DataDeleteMode.disable;
+            return this.isMultiSelectEnabled() && this.options.deleteMode != NextAdmin.UI.DataDeleteMode.disabled;
         }
 
         public isMultiSelectEnabled(): boolean {
@@ -1048,6 +1049,7 @@ namespace NextAdmin.UI {
                             width: columnOption.width,
                             maxWidth: columnOption.maxWidth,
                             minWidth: columnOption.minWidth,
+                            cellCss: { ...columnOption.cellCss },
                             defaultOrdering: columnOption.defaultOrdering
                         } as DataGridViewColumnOptions;
                         viewColumns.add(viewColumnOption);
@@ -1440,7 +1442,7 @@ namespace NextAdmin.UI {
                     dataName: this.datasetController.options.dataName,
                     dataPrimaryKey: data == null ? null : data[this.datasetController.options.dataPrimaryKeyName],
                     isDetailFormModal: this.options.openFormModalWithRowData
-                });
+                }, data);
             if (formModal == null) {
                 return null;
             }
@@ -1464,7 +1466,7 @@ namespace NextAdmin.UI {
                             return;
                         }
                     }
-                    if (this.datasetController != null && this.options.loadingMode != DataLoadingMode.disable) {
+                    if (this.datasetController != null && this.options.loadingMode != DataLoadingMode.disabled) {
                         this.datasetController.load();
                     }
                 });
@@ -1484,7 +1486,7 @@ namespace NextAdmin.UI {
                 if (this.options.synchronizeDataWithFormModal) {
                     formModal.dataController.onDataSaved.subscribe((sender, args) => {
                         if (args.success) {
-                            if (this._dataController != null || this._masterFormController != null || this.options.loadingMode == DataLoadingMode.disable) {
+                            if (this._dataController != null || this._masterFormController != null || this.options.loadingMode == DataLoadingMode.disabled) {
                                 let pk = formModal.dataController.getDataPrimaryKeyValue();
                                 if (pk != null) {
                                     let row = this.getRowByDataId(pk);
@@ -1494,7 +1496,7 @@ namespace NextAdmin.UI {
                                     }
                                 }
                             }
-                            if (this.datasetController != null && this.options.loadingMode != DataLoadingMode.disable) {
+                            if (this.datasetController != null && this.options.loadingMode != DataLoadingMode.disabled) {
                                 this.datasetController.load();
                             }
                         }
@@ -1781,7 +1783,7 @@ namespace NextAdmin.UI {
                 return toolBar;
             }
             options = {
-                hasDeleteButton: this.options.deleteMode != null && this.options.deleteMode != DataDeleteMode.disable,
+                hasDeleteButton: this.options.deleteMode != null && this.options.deleteMode != DataDeleteMode.disabled,
                 hasOpenModalButton: this.options.openAction != null,
                 hasOrderingButtons: !String.isNullOrEmpty(this.getRowOrderPropertyName()) && (this.options.reorderingRowMode == DataGridReorderingRowMode.all || this.options.reorderingRowMode == DataGridReorderingRowMode.buttons),
                 hasDragAndDropHandle: !String.isNullOrEmpty(this.getRowOrderPropertyName()) && (this.options.reorderingRowMode == DataGridReorderingRowMode.all || this.options.reorderingRowMode == DataGridReorderingRowMode.dragAndDropHandle),
@@ -2003,7 +2005,7 @@ namespace NextAdmin.UI {
             let dropDownMenu: DropDownMenu;
 
 
-            if (selectedRows?.length && this.options.deleteMode != DataDeleteMode.disable) {
+            if (selectedRows?.length && this.options.deleteMode != DataDeleteMode.disabled) {
                 dropDownMenuItems.add({
                     text: this.options.deleteMode == DataDeleteMode.server ? Resources.deleteIcon + ' ' + Resources.delete : Resources.removeIcon + ' ' + Resources.remove,
                     action: () => {
@@ -2472,6 +2474,10 @@ namespace NextAdmin.UI {
             if (this.headerColumnCell != null && grid.options.rowsBordered) {
                 this.headerColumnCell.classList.add('next-admin-table-row-border');
             }
+            //headerCss
+            if (options.headerCss) {
+                NextAdmin.Copy.copyTo(options.headerCss, this.headerColumnCell.style);
+            }
             if (options.width) {
                 this.headerColumnCell.style.width = options.width;
             }
@@ -2821,7 +2827,7 @@ namespace NextAdmin.UI {
                     hasActionColumn: false,
                     searchMode: NextAdmin.UI.DataSearchMode.server,
                     canAdd: false,
-                    deleteMode: NextAdmin.UI.DataDeleteMode.disable,
+                    deleteMode: NextAdmin.UI.DataDeleteMode.disabled,
                     hasContextMenu: false,
                     selectDataPrimaryKey: false,
                     columns: [{ propertyName: this.options.propertyName, selectQuery: this.options.selectQuery, searchable: true, defaultOrdering: ColumnOrdering.ascending }],
@@ -3010,7 +3016,7 @@ namespace NextAdmin.UI {
             this.grid = grid;
             this.element.setAttribute('RowId', this.rowId = Guid.newGuid().toString());
 
-            if (this.grid.options.rowSelectionMode != null && this.grid.options.rowSelectionMode != RowSelectionMode.disable) {
+            if (this.grid.options.rowSelectionMode != null && this.grid.options.rowSelectionMode != RowSelectionMode.disabled) {
                 this.element.style.cursor = 'pointer';
             }
             let lastClickTimeStamp = -1;
@@ -3034,7 +3040,7 @@ namespace NextAdmin.UI {
                     lastClickTimeStamp = actualTimeStamp;
                 }
 
-                if (this.grid.options.rowSelectionMode != undefined && this.grid.options.rowSelectionMode != RowSelectionMode.disable) {
+                if (this.grid.options.rowSelectionMode != undefined && this.grid.options.rowSelectionMode != RowSelectionMode.disabled) {
                     if (this.grid.options.rowSelectionMode == RowSelectionMode.multiSelect) {
                         if (this.isSelected()) {
                             this.unselect();
@@ -3238,6 +3244,9 @@ namespace NextAdmin.UI {
             }
             if (grid.options.columnsBordered) {
                 this.element.classList.add('next-admin-table-col-border');
+            }
+            if (column?.options?.cellCss) {
+                NextAdmin.Copy.copyTo(column.options.cellCss, this.element.style);
             }
             this.grid = grid;
             this.row = row;
@@ -3673,7 +3682,7 @@ namespace NextAdmin.UI {
 
         synchronizeDataWithFormModal?: boolean;
 
-        formModalFactory?: (dataName: string, options?: DataFormModalOptions) => DataFormModal_;
+        formModalFactory?: (dataName: string, options?: DataFormModalOptions, data?: T) => DataFormModal_;
 
         /** if set to true, use row data instead of load data from server */
         openFormModalWithRowData?: boolean;
@@ -3782,6 +3791,10 @@ namespace NextAdmin.UI {
 
         minWidth?: string;
 
+        cellCss?: CssDeclaration;
+
+        headerCss?: CssDeclaration;
+
         toolTip?: string;
 
         defaultOrdering?: ColumnOrdering;
@@ -3864,28 +3877,28 @@ namespace NextAdmin.UI {
     }
 
     export enum DataDeleteMode {
-        disable,
+        disabled,
         local,//row is removed, but will be deleted at next save
         server//Prompt user and send to server delete query
     }
 
     export enum DataOrderingMode {
-        disable,
+        disabled,
         local,
         server//Prompt user and send to server delete query
     }
 
 
     export enum DataSearchMode {
-        disable,
+        disabled,
         local,
         server
     }
 
     export enum DataLoadingMode {
-        disable,
-        selectColumns,
-        selectAll,
+        disabled,
+        query,
+        rawData,
     }
 
     export enum DataGridReorderingRowMode {

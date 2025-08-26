@@ -45,7 +45,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 var saveResult = DbContext.ValidateAndSave();
                 if (!saveResult.Success)
                 {
-                    return ApiResponse<string>.Error(ApiResponseCode.SQLError);
+                    return ApiResponse<string>.Error(ApiResponseCode.DbError);
                 }
                 return ApiResponse<string>.Success(paymentSession.StripeSession.Url);
             }

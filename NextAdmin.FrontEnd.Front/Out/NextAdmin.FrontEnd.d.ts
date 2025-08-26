@@ -160,6 +160,22 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
+    class CardPanel extends Control {
+        static style: string;
+        options: CardPanelOptions;
+        constructor(options?: CardPanelOptions);
+        setStyle(style?: CardPanelStyle): void;
+    }
+    interface CardPanelOptions extends ControlOptions {
+        isResponsive?: boolean;
+        style?: CardPanelStyle;
+    }
+    enum CardPanelStyle {
+        none = 0,
+        lightBackgroundLargeFont = 1
+    }
+}
+declare namespace NextAdmin.UI {
     class CardsGrid extends NextAdmin.UI.Control {
         options: CardsGridOptions;
         header: HTMLDivElement;

@@ -234,11 +234,11 @@ namespace NextAdmin.UI {
                     cell.classList.add('next-admin-table-cell');
                 }
             }
-            if (this.options.rowSelectionMode != null && this.options.rowSelectionMode != RowSelectionMode.disable) {
+            if (this.options.rowSelectionMode != null && this.options.rowSelectionMode != RowSelectionMode.disabled) {
                 tr.style.cursor = 'pointer';
             }
             tr.addEventListener('click', (e) => {
-                if (this.options.rowSelectionMode != RowSelectionMode.disable) {
+                if (this.options.rowSelectionMode != RowSelectionMode.disabled) {
                     this.selectRow(tr);
                 }
             });
@@ -372,7 +372,7 @@ namespace NextAdmin.UI {
 
 
     export enum RowSelectionMode {
-        disable,
+        disabled,
         singleSelect,
         multiSelect,
         multiSelect_CtrlShift

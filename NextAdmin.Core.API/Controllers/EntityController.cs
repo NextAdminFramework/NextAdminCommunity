@@ -809,7 +809,7 @@ namespace NextAdmin.Core.API.Controllers
             else if (saveResult.DatabaseException != null)
             {
                 response.Message = saveResult.DatabaseException.Message;
-                response.Code = ApiResponseCode.SQLError.ToString();
+                response.Code = ApiResponseCode.DbError.ToString();
                 response.Exception = saveResult.DatabaseException;
             }
             else

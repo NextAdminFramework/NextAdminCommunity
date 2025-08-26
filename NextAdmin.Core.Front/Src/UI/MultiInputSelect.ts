@@ -79,7 +79,7 @@ namespace NextAdmin.UI {
                                 displayNoDataMessage: false,
                                 minHeight: '300px',
                                 canAdd: false,
-                                deleteMode: NextAdmin.UI.DataDeleteMode.disable,
+                                deleteMode: NextAdmin.UI.DataDeleteMode.disabled,
                                 hasActionColumn: false,
                                 rowSelectionMode: NextAdmin.UI.RowSelectionMode.multiSelect_CtrlShift,
                                 columns: [

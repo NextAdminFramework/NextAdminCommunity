@@ -22,13 +22,13 @@ namespace NextAdmin.UI {
             background:#f9f9f9;
             font-size:16px;
             color:#444;
-            line-height:24px;
+            line-height:28px;
         }
         
         .next-admin-card-panel.light-bg-large-font.responsive{
             @media (max-width: 768px) {
                 font-size:14px;
-                line-height:18px;
+                line-height:20px;
             }
         }
 

@@ -19,6 +19,9 @@ namespace NextAdmin.UI {
                 ...options
             });
             this.leftHeader.style.fontSize = '20px';
+            if (NextAdmin.String.isNullOrEmpty(this.options.title)) {
+                this.header.style.height = '3px';
+            }
 
             this.mainContainer = this.body.appendHTML('div', (container) => {
                 container.style.padding = '10px';
@@ -35,7 +38,7 @@ namespace NextAdmin.UI {
 
             if (this.options.hasBackButton) {
                 this.addItem({
-                    text: Resources.backIcon + ' ' + Resources.back,
+                    text: Resources.closeIcon + ' ' + Resources.close,
                     action: () => {
                         this.close();
                     }
@@ -102,6 +105,7 @@ namespace NextAdmin.UI {
                         text: dropDownItem.text,
                         style: ButtonStyle.bgWhite,
                         size: ButtonSize.large,
+                        css: { overflow: 'hidden' },
                         action: (btn) => {
                             this.close();
                             dropDownItem.action(this, btn);

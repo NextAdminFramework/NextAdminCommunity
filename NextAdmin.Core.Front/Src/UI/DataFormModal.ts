@@ -25,6 +25,8 @@ namespace NextAdmin.UI {
 
         onEndOpen = new EventHandler<DataFormModal<T>, T>();
 
+        onInitialize = new AsyncEventHandler<DataFormModal<T>, InitializeArgs<T>>();
+
         originalData?: T;
 
         public static Style = `
@@ -264,6 +266,10 @@ namespace NextAdmin.UI {
         }
 
         protected async initialize(data: T, dataState?: Business.DataState) {
+            await this.onInitialize.dispatch(this, {
+                data: data,
+                dataState: dataState
+            });
             if (this.options.onInitialize) {
                 this.options.onInitialize(this, {
                     data: data,
@@ -338,7 +344,7 @@ namespace NextAdmin.UI {
 
         onDataDeleted?: (sender: DataFormModal_, data: any) => void;
 
-        onInitialize?: (sender: DataFormModal_, args: InitializeArgs) => void;
+        onInitialize?: (sender: DataFormModal_, args: InitializeArgs_) => void;
 
     }
 
@@ -369,9 +375,17 @@ namespace NextAdmin.UI {
     }
 
 
-    export interface InitializeArgs {
+    export interface InitializeArgs_ {
 
         data: any;
+
+        dataState: Business.DataState;
+
+    }
+
+    export interface InitializeArgs<T> {
+
+        data: T;
 
         dataState: Business.DataState;
 

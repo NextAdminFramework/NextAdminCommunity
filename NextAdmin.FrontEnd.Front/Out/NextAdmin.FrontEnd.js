@@ -639,6 +639,74 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
+        class CardPanel extends UI.Control {
+            constructor(options) {
+                super('div', {
+                    isResponsive: true,
+                    style: CardPanelStyle.lightBackgroundLargeFont,
+                    ...options
+                });
+                NextAdmin.Style.append('NextAdmin.UI.CardPanel', CardPanel.style);
+                this.element.classList.add('next-admin-card-panel');
+                if (this.options.isResponsive) {
+                    this.element.classList.add('responsive');
+                }
+                this.setStyle(this.options.style);
+            }
+            setStyle(style) {
+                switch (style) {
+                    case CardPanelStyle.lightBackgroundLargeFont:
+                        this.element.classList.add('light-bg-large-font');
+                        break;
+                    default:
+                    case CardPanelStyle.none:
+                        break;
+                }
+            }
+        }
+        CardPanel.style = `
+
+        .next-admin-card-panel{
+            min-height:50px;
+            margin-top:20px;
+            margin-bottom:20px;
+            box-shadow: 0px 0px 2px rgba(0,0,0,0.25);
+            border-radius:10px;
+            padding:20px;
+        }
+        .next-admin-card-panel.responsive{
+            @media (max-width: 768px) {
+                padding:10px;
+            }
+        }
+        
+        .next-admin-card-panel.light-bg-large-font{
+            background:#f9f9f9;
+            font-size:16px;
+            color:#444;
+            line-height:28px;
+        }
+        
+        .next-admin-card-panel.light-bg-large-font.responsive{
+            @media (max-width: 768px) {
+                font-size:14px;
+                line-height:20px;
+            }
+        }
+
+        `;
+        UI.CardPanel = CardPanel;
+        let CardPanelStyle;
+        (function (CardPanelStyle) {
+            CardPanelStyle[CardPanelStyle["none"] = 0] = "none";
+            CardPanelStyle[CardPanelStyle["lightBackgroundLargeFont"] = 1] = "lightBackgroundLargeFont";
+        })(CardPanelStyle = UI.CardPanelStyle || (UI.CardPanelStyle = {}));
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
         class CardsGrid extends NextAdmin.UI.Control {
             constructor(options) {
                 super('div', {

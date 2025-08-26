@@ -135,16 +135,16 @@
         }
 
 
-        public async navigateToUrl(url = document.location.href, updateNavigatorHistory = false) {
+        public async navigateToUrl(url = document.location.href, updateNavigatorState = UpdateNavigatorState.none) {
             let pageInfo = this.getPageInfoFromUrl(url);
             let page = await this.getPage(pageInfo.pageName);
             if (page == null) {//unable to find view, so navigate to default view
                 console.log('NavigationController.navigateToUrl:unable to find page:' + pageInfo.pageName + ', so navigate to default page:' + this.options.defaultPage);
-                this.navigateTo(this.options.defaultPage, null, updateNavigatorHistory);
+                this.navigateTo(this.options.defaultPage, null, updateNavigatorState);
             }
             else {
                 console.log('NavigationController.navigateToUrl:navigate to:{' + pageInfo.pageName + '}');
-                this.navigateTo(pageInfo.pageName, pageInfo.pageData, updateNavigatorHistory);
+                this.navigateTo(pageInfo.pageName, pageInfo.pageData, updateNavigatorState);
             }
         }
 
@@ -172,15 +172,40 @@
             }
         }
 
-        async refresh() {
+        async refresh(reload?: boolean) {
+            if (reload) {
+                location.reload();
+            }
             if (this._currentPage?.options?.name == null) {
                 return;
             }
-            await this.navigateTo(this._currentPage.options.name, this._currentPage.getData(), false, true);
+            await this.navigateTo(this._currentPage.options.name, this._currentPage.getData(), UpdateNavigatorState.none, true);
+        }
+
+        async navigateBack(): Promise<NextAdmin.UI.Page> {
+            return new Promise<NextAdmin.UI.Page>((result) => {
+                this.onNavigate.subscribeOnce(() => {
+                    result(this.getCurrentPage());
+                });
+                history.back();
+            });
+        }
+
+        async navigateBackOrDefault(defaultPageName?: string): Promise<NextAdmin.UI.Page> {
+            if (this.getPreviousPage()) {
+                return this.navigateBack();
+            }
+            else {
+                if (defaultPageName == null) {
+                    defaultPageName = this.options.defaultPage;
+                }
+                this.navigateTo(defaultPageName, null, UpdateNavigatorState.replaceState);
+            }
         }
 
 
-        async navigateTo(pageName: string, parameters = null, updateBrowserUrl = true, force = false): Promise<NextAdmin.UI.Page> {
+
+        async navigateTo(pageName: string, parameters = null, updateNavigatorState = UpdateNavigatorState.pushState, force = false): Promise<NextAdmin.UI.Page> {
             if (!force && this._currentPage != null && this._currentPage.options != null && pageName == this._currentPage.options.name && JSON.stringify(parameters) == JSON.stringify(this._currentPage.parameters)) {
                 return;
             }
@@ -228,7 +253,7 @@
             }
             await nextPage.navigateTo(nextPageNavigationArgs);
 
-            if (updateBrowserUrl && window.history && window.history.pushState) {
+            if (updateNavigatorState && window.history && window.history.pushState) {
                 let url = this._currentPage.options.name;
                 if (!String.isNullOrEmpty(document.location.pathname)) {
                     let currentLocationArrayPath = document.location.pathname.split('/');
@@ -245,7 +270,11 @@
                         url += '?' + params;
                     }
                 }
-                window.history.pushState('', this._currentPage.options.name, url);
+                if (updateNavigatorState == UpdateNavigatorState.pushState) {
+                    window.history.pushState('', this._currentPage.options.name, url);
+                } else if (updateNavigatorState == UpdateNavigatorState.replaceState) {
+                    window.history.replaceState('', this._currentPage.options.name, url);
+                }
             }
             this.onPageChanged.dispatch(this, nextPage);
             return nextPage;
@@ -324,5 +353,11 @@
     }
 
     export var Navigation: NavigationController;
+
+    export enum UpdateNavigatorState {
+        none = 0,
+        pushState = 1,
+        replaceState = 2
+    }
 
 }

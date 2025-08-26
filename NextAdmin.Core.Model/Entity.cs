@@ -116,9 +116,9 @@ namespace NextAdmin.Core.Model
             OnEndDeleting?.Invoke(this, args);
         }
 
-        public virtual void OnAfterSave(NextAdminDbContext dbContext, EntityState stateBeforSave)
+        public virtual void OnAfterSave(NextAdminDbContext dbContext, EntityState stateBeforeSave)
         {
-            if (stateBeforSave != EntityState.Deleted)
+            if (stateBeforeSave != EntityState.Deleted)
             {
                 this.UpdateJoinedMembers(dbContext);
                 UpdateComputedMembers(dbContext);

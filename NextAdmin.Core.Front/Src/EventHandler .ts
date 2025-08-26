@@ -27,6 +27,15 @@
             }
         }
 
+        subscribeOnce(fn: () => void): () => void {
+            let proxyFunc = () => {
+                this.unsubscribe(proxyFunc);
+                fn();
+            };
+            this.subscribe(proxyFunc);
+            return proxyFunc;
+        }
+
         unsubscribeAll(): void {
             this._subscriptions = new Array<() => void>();;
         }
@@ -63,6 +72,15 @@
             }
         }
 
+        subscribeOnce(fn: (sender: TSender, args: TArgs) => void): (sender: TSender, args: TArgs) => void {
+            let proxyFunc = (s2, args2) => {
+                this.unsubscribe(proxyFunc);
+                fn(s2, args2);
+            };
+            this.subscribe(proxyFunc);
+            return proxyFunc;
+        }
+
         unsubscribeAll(): void {
             this._subscriptions = new Array<(sender: TSender, args: TArgs) => void>();
         }
@@ -93,6 +111,15 @@
             if (i > -1) {
                 this._subscriptions.splice(i, 1);
             }
+        }
+
+        subscribeOnce(fn: (sender: TSender, args: TArgs) => Promise<void>): (sender: TSender, args: TArgs) => void {
+            let proxyFunc = async (s2, args2) => {
+                this.unsubscribe(proxyFunc);
+                await fn(s2, args2);
+            };
+            this.subscribe(proxyFunc);
+            return proxyFunc;
         }
 
         unsubscribeAll(): void {

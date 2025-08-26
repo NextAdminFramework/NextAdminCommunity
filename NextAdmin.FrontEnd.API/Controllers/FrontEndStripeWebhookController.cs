@@ -18,7 +18,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
         where TStripeUserPaymentEvent : StripeUserPaymentEvent<TUser>
     {
 
-        public FrontEndStripeWebhookController(NextAdminDbContext dbContext = null, IConfiguration configuration = null)
+        public FrontEndStripeWebhookController(NextAdminDbContext? dbContext = null, IConfiguration? configuration = null)
             : base(dbContext, configuration)
         {
 

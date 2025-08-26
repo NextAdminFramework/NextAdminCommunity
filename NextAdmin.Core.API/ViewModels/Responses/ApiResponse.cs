@@ -153,4 +153,40 @@
 
     }
 
+
+    public class ApiResponseBuilder<TData>
+    {
+
+        public ApiResponse<TData> Success(TData? data, string? message = null)
+        {
+            return ApiResponse<TData>.Success(data, message);
+        }
+
+        public ApiResponse<TData> Error(ApiResponseCode errorCode, TData? data, string? message = null)
+        {
+            return ApiResponse<TData>.Error(errorCode, data, message);
+        }
+
+        public ApiResponse<TData> Error(ApiResponseCode errorCode, string? message = null, Exception? exception = null)
+        {
+            return ApiResponse<TData>.Error(errorCode, message, exception);
+        }
+
+        public ApiResponse<TData> Error(ApiResponseCode errorCode, Exception exception)
+        {
+            return ApiResponse<TData>.Error(errorCode, exception);
+        }
+
+        public ApiResponse<TData> Error(Exception exception)
+        {
+            return ApiResponse<TData>.Error(exception);
+        }
+
+        public ApiResponse<TData> Error(string errorCode, string? message = null, Exception? exception = null)
+        {
+            return ApiResponse<TData>.Error(errorCode, message, exception);
+        }
+
+    }
+
 }

@@ -15,7 +15,9 @@ namespace NextAdmin {
 
         deleteIcon = '<i class="fas fa-trash-alt"></i>';
 
-        removeIcon = '<i class="fas fa-times-circle"></i>';
+        removeIcon = '<i class="fas fa-times"></i>';
+
+        closeIcon = '<i class="fas fa-times"></i>';
 
         clearIcon = '<i class="fas fa-eraser"></i>';
 

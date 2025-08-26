@@ -25,7 +25,7 @@ namespace NextAdmin.Core.API.Controllers
 
 
 
-        public Controller(NextAdminDbContext dbContext = null, IConfiguration configuration = null)
+        public Controller(NextAdminDbContext? dbContext = null, IConfiguration? configuration = null)
         {
             if (dbContext != null)
             {

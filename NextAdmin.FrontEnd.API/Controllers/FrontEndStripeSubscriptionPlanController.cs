@@ -81,7 +81,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 var saveResult = DbContext.ValidateAndSave();
                 if (!saveResult.Success)
                 {
-                    return ApiResponse<string>.Error(ApiResponseCode.SQLError);
+                    return ApiResponse<string>.Error(ApiResponseCode.DbError);
                 }
                 return ApiResponse<string>.Success(stripeSession.Url);
             }
@@ -120,7 +120,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 var dbsetSaveResult = DbContext.ValidateAndSave();
                 if (!dbsetSaveResult.Success)
                 {
-                    return ApiResponse.Error(ApiResponseCode.SQLError);
+                    return ApiResponse.Error(ApiResponseCode.DbError);
                 }
 
                 stripeSubscriptionService.Update(stripeSubscription.Id, new SubscriptionUpdateOptions { CancelAtPeriodEnd = true });
@@ -170,7 +170,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 var dbsetSaveResult = DbContext.ValidateAndSave();
                 if (!dbsetSaveResult.Success)
                 {
-                    return ApiResponse.Error(ApiResponseCode.SQLError);
+                    return ApiResponse.Error(ApiResponseCode.DbError);
                 }
 
                 stripeSubscriptionService.Update(stripeSubscription.Id, new SubscriptionUpdateOptions { CancelAtPeriodEnd = false });

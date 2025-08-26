@@ -52,7 +52,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
 
                 if (!DbContext.ValidateAndSave().Success)
                 {
-                    return ApiResponse.Error(ApiResponseCode.SQLError);
+                    return ApiResponse.Error(ApiResponseCode.DbError);
                 }
                 if (!supportMessage.IsSuccessfullySent)
                 {

@@ -1,8 +1,5 @@
 ﻿using MailKit.Security;
 using MimeKit;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Mail;
 
@@ -129,7 +126,7 @@ namespace NextAdmin.Core
         }
 
 
-        public static void SendEmail(this SmtpServerAccount mailAccount, string subject, string content, IEnumerable<string> toAddresses, IEnumerable<string> ccAddresses = null, IEnumerable<IDocument> documents = null, bool html = true)
+        public static void SendEmail(this SmtpServerAccount mailAccount, string subject, string content, IEnumerable<string> toAddresses, IEnumerable<string> ccAddresses = null, IEnumerable<IDocument> documents = null, bool isHtml = true)
         {
             System.Net.Mail.MailMessage mailMessage = new System.Net.Mail.MailMessage();
             mailMessage.From = new System.Net.Mail.MailAddress(mailAccount.FullEmailAddress, mailAccount.EmailDisplayName);
@@ -160,14 +157,37 @@ namespace NextAdmin.Core
                     mailMessage.Attachments.Add(attachment);
                 }
             }
+            if (isHtml && !content.Contains("<html>"))
+            {
+                content = "<html>" + content + "</html>";//increase email score
+            }
             mailMessage.Subject = subject;
             mailMessage.Body = content;
-            mailMessage.IsBodyHtml = html;
+            mailMessage.IsBodyHtml = isHtml;
             SendEmail(mailAccount, mailMessage);
             foreach (var stream in filesStreams)
             {
                 stream.Dispose();
             }
+        }
+
+
+        public static void SendEmail(this SmtpServerAccount mailAccount, EmailMessage emailMessage)
+        {
+            SendEmail(mailAccount, emailMessage.Subject, emailMessage.Content, emailMessage.ToAddresses, emailMessage.CcAddresses, emailMessage.Documents);
+        }
+
+        public static bool TrySendEmail(this SmtpServerAccount mailAccount, EmailMessage emailMessage)
+        {
+            try
+            {
+                SendEmail(mailAccount, emailMessage);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
         }
 
 
@@ -252,4 +272,28 @@ namespace NextAdmin.Core
         }
 
     }
+
+    public class EmailMessage
+    {
+
+        public string Subject { get; set; }
+
+        public string Content { get; set; }
+
+        public IEnumerable<string> ToAddresses { get; set; }
+
+        public IEnumerable<string> CcAddresses { get; set; }
+
+        public IEnumerable<IDocument> Documents { get; set; }
+
+        public bool IsHtml { get; set; }
+
+        public EmailMessage()
+        {
+            IsHtml = true;
+        }
+
+    }
+
+
 }

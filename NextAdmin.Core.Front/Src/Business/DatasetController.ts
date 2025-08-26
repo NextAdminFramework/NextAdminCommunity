@@ -103,6 +103,7 @@ namespace NextAdmin.Business {
         public async load(args?: LoadDatasetArgs): Promise<LoadDatasetResult> {
             args = {
                 displayErrors: true,
+                dataState: Business.DataState.serialized,
                 ...args
             };
             return new Promise<LoadDatasetResult>((resolve) => {
@@ -115,6 +116,11 @@ namespace NextAdmin.Business {
                     if (result.success) {
                         let previousDataset = this.dataset;
                         this.dataset = result.dataset;
+                        for (let data of this.dataset) {
+                            if (data['_state'] === undefined) {
+                                data['_state'] = args.dataState;
+                            }
+                        }
                         this.onDataLoaded.dispatch(this, result);
                         this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
                     }
@@ -132,6 +138,7 @@ namespace NextAdmin.Business {
         public async loadAdd(args?: LoadDatasetArgs): Promise<LoadDatasetResult> {
             args = {
                 displayErrors: true,
+                dataState: Business.DataState.serialized,
                 ...args
             };
             return new Promise<LoadDatasetResult>((resolve) => {
@@ -144,6 +151,9 @@ namespace NextAdmin.Business {
                     if (result.success) {
                         let previousDataset = this.dataset.clone();
                         for (let data of result.dataset) {
+                            if (data['_state'] === undefined) {
+                                data['_state'] = args.dataState;
+                            }
                             this.dataset.add(data);
                         }
                         this.onDataAdded.dispatch(this, result);
@@ -230,6 +240,7 @@ namespace NextAdmin.Business {
         public append(args?: LoadDatasetArgs): Promise<LoadDataResult> {
             args = {
                 displayErrors: true,
+                dataState: DataState.append,
                 ...args
             };
             return new Promise<LoadDataResult>((promise) => {
@@ -241,6 +252,9 @@ namespace NextAdmin.Business {
                     }
                     if (result.success) {
                         let previousDataset = this.dataset.clone();
+                        if (result.data['_state'] === undefined) {
+                            result.data['_state'] = args.dataState;
+                        }
                         this.dataset.add(result.data);
                         this.onDataAppened.dispatch(this, result);
                         this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
@@ -371,6 +385,8 @@ namespace NextAdmin.Business {
     export interface LoadDatasetArgs extends DataControllerActionArgs {
 
         onGetResponse?: (result: LoadDatasetResult) => void;
+
+        dataState?: Business.DataState;
 
     }
 
