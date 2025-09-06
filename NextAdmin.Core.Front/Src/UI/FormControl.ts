@@ -153,9 +153,6 @@ namespace NextAdmin.UI {
             this._propertyInfo = propertyInfo;
 
             if (propertyInfo != null) {
-                if ((this.options.setLabelFromPropertyInfo == null && this._dataController != null && NextAdmin.String.isNullOrEmpty(this.getLabel())) || this.options.setLabelFromPropertyInfo === true) {
-                    this.setLabel(propertyInfo.displayName);
-                }
                 if (this._propertyInfo.isRequired && (this.options.required === undefined || this.options.required == true)) {
                     this.displayAsRequired();
                 }
@@ -179,8 +176,6 @@ namespace NextAdmin.UI {
         disabled?: boolean;
 
         propertyInfo?: NextAdmin.Business.DataPropertyInfo;
-
-        setLabelFromPropertyInfo?: boolean;
 
     }
 

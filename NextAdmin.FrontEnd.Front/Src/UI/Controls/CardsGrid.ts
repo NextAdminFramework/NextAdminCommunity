@@ -39,9 +39,14 @@ namespace NextAdmin.UI {
         }
 
 
-        appendCard<TCard extends Control>(card: TCard, controlOption?: (card: TCard) => void) {
+        appendCard<TCard extends Control>(card: TCard, controlOption?: (card: TCard) => void): TCard {
             this.body.appendControl(card, controlOption);
             card.element.style.margin = this.options.margin;
+            return card;
+        }
+
+        appendControl<TControl extends NextAdmin.UI.IControl>(control: TControl, configAction?: (control: TControl) => void): TControl {
+            return this.body.appendControl(control, configAction);
         }
 
 

@@ -183,7 +183,8 @@ declare namespace NextAdmin.UI {
         footer: HTMLDivElement;
         static style: string;
         constructor(options?: CardsGridOptions);
-        appendCard<TCard extends Control>(card: TCard, controlOption?: (card: TCard) => void): void;
+        appendCard<TCard extends Control>(card: TCard, controlOption?: (card: TCard) => void): TCard;
+        appendControl<TControl extends NextAdmin.UI.IControl>(control: TControl, configAction?: (control: TControl) => void): TControl;
         clear(): void;
     }
     interface CardsGridOptions extends NextAdmin.UI.ControlOptions {

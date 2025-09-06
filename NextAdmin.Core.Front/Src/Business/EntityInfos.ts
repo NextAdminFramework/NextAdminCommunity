@@ -35,6 +35,8 @@ namespace NextAdmin.Business {
 
         name: string;
 
+        tableName?: string;
+
         displayName?: string;
 
         displayPropertiesNames: string[];
@@ -45,6 +47,7 @@ namespace NextAdmin.Business {
 
         constructor(data: Models.EntityInfo) {
             this.name = data.entityName;
+            this.tableName = data.entityTableName;
             this.displayName = data.entityDisplayName;
             this.entityParentNames = data.entityParentNames;
             this.displayPropertiesNames = data.displayMembersNames;

@@ -26,6 +26,8 @@ namespace NextAdmin.Models {
 
         entityName: string;
 
+        entityTableName?: string;
+
         entityDisplayName?: string;
 
         entityParentNames: string[];

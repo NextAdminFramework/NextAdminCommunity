@@ -310,6 +310,8 @@ namespace NextAdmin {
         recoverPasswordInvalidEmail = 'Aucun compte ne semble associé à cette adresse e-mail.';
 
         recoverPasswordDefaultError = "Une erreur est survenue lors de l'envoi de l'email de récupération, cette erreur a été transmise à nos services techniques.";
+
+        newData = "Nouvelle donnée";
     }
 
 }

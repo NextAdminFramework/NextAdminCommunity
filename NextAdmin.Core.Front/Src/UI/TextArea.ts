@@ -69,6 +69,9 @@ namespace NextAdmin.UI {
                     this.textArea.style.height = this.textArea.scrollHeight + "px"
                 });
             }
+            else if (this.options.height) {
+                this.textArea.style.height = this.options.height;
+            }
             this.setStyle(this.options.style);
             TextArea.onCreated.dispatch(this, this.options);
         }
@@ -93,12 +96,11 @@ namespace NextAdmin.UI {
         }
 
 
-        setValue(value: any) {
-            if (value == null) {
-                this.textArea.value = '';
-            }
-            else {
-                this.textArea.value = value;
+        setValue(value: any, fireChange?: boolean) {
+            let previousValue = this.textArea.value;
+            this.textArea.value = value ?? '';
+            if (fireChange) {
+                this.onValueChanged.dispatch(this, { value: value, previousValue: previousValue, origin: ChangeOrigin.code });
             }
         }
 
@@ -113,6 +115,8 @@ namespace NextAdmin.UI {
         displayMode?: TextAreaDisplayMode;
 
         style?: TextAreaStyle | any;
+
+        height?: string;
 
     }
 

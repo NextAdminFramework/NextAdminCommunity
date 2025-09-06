@@ -162,6 +162,7 @@ declare namespace NextAdmin {
         }[];
         remove(key: string): void;
         clear(): void;
+        clone(): Dictionary<T>;
     }
 }
 declare namespace NextAdmin {
@@ -359,6 +360,7 @@ declare namespace NextAdmin {
         pushState = 1,
         replaceState = 2
     }
+    const CacheKey: string;
 }
 interface Number {
     toStringDigit(digitCount: number): string;
@@ -456,6 +458,7 @@ interface HTMLElement {
 }
 declare namespace NextAdmin {
     class String {
+        static isNullOrEmptyString(str: any): boolean;
         static isNullOrEmpty(str: string): boolean;
         static isNullOrWhiteSpace(str: string): boolean;
         static isString(value: any): boolean;
@@ -490,7 +493,7 @@ declare namespace NextAdmin {
         constructor(callBack?: () => void);
         private _onExecute;
         executeAtNextTick(callBack: () => void, replaceOtherCallBack?: boolean): void;
-        throttle(callBack: () => void, delay: number): void;
+        throttle(callBack: () => void, delay: number, restartTimer?: boolean): void;
         start(delay: number): void;
         stop(): void;
         isRuning(): boolean;
@@ -979,6 +982,7 @@ declare namespace NextAdmin.Business {
     }
     class EntityInfo<T> implements DataInfo {
         name: string;
+        tableName?: string;
         displayName?: string;
         displayPropertiesNames: string[];
         entityParentNames: string[];
@@ -1068,6 +1072,7 @@ declare namespace NextAdmin.Models {
     }
     interface EntityInfo {
         entityName: string;
+        entityTableName?: string;
         entityDisplayName?: string;
         entityParentNames: string[];
         displayMembersNames: string[];
@@ -1370,6 +1375,7 @@ declare namespace NextAdmin {
         recoverPasswordSuccess: string;
         recoverPasswordInvalidEmail: string;
         recoverPasswordDefaultError: string;
+        newData: string;
     }
     var Resources: ResourcesEn;
 }
@@ -1528,6 +1534,7 @@ declare namespace NextAdmin {
         recoverPasswordSuccess: string;
         recoverPasswordInvalidEmail: string;
         recoverPasswordDefaultError: string;
+        newData: string;
     }
 }
 declare namespace NextAdmin.Services {
@@ -1650,6 +1657,7 @@ declare namespace NextAdmin.UI {
         toolTip?: string;
     }
     interface CssDeclaration {
+        width?: string;
         alignContent?: string;
         alignItems?: string;
         alignSelf?: string;
@@ -1999,7 +2007,7 @@ declare namespace NextAdmin.UI {
         private _currentStyle;
         setColorStyle(style: ButtonStyle): void;
         getColorStyle(): ButtonStyle;
-        static getColorStyleClass(style: ButtonStyle): "next-admin-btn-default" | "next-admin-btn-blue" | "next-admin-btn-light-blue" | "next-admin-btn-green" | "next-admin-btn-light-green" | "next-admin-btn-red" | "next-admin-btn-bg-white" | "next-admin-btn-bg-light-grey" | "next-admin-btn-bg-grey" | "next-admin-btn-bg-black" | "next-admin-btn-bg-blue" | "next-admin-btn-bg-green" | "next-admin-btn-bg-red" | "next-admin-btn-no-bg" | "next-admin-btn-no-bg-white" | "next-admin-btn-no-bg-dark-blue" | "next-admin-btn-no-bg-blue" | "next-admin-btn-no-bg-red";
+        static getColorStyleClass(style: ButtonStyle): "next-admin-btn-default" | "next-admin-btn-blue" | "next-admin-btn-light-blue" | "next-admin-btn-green" | "next-admin-btn-light-green" | "next-admin-btn-red" | "next-admin-btn-bg-white" | "next-admin-btn-bg-light-grey" | "next-admin-btn-bg-grey" | "next-admin-btn-bg-black" | "next-admin-btn-bg-blue" | "next-admin-btn-bg-green" | "next-admin-btn-bg-red" | "next-admin-btn-no-bg" | "next-admin-btn-no-bg-white" | "next-admin-btn-no-bg-light-grey" | "next-admin-btn-no-bg-dark-blue" | "next-admin-btn-no-bg-blue" | "next-admin-btn-no-bg-red";
         private _isPressed;
         press(disbaleClick?: boolean): void;
         release(): void;
@@ -2038,16 +2046,18 @@ declare namespace NextAdmin.UI {
         bgGreen = 11,
         bgRed = 12,
         noBg = 13,
-        noBgWhite = 14,
-        noBgBlue = 15,
-        noBgDarkBlue = 16,
-        noBgRed = 17
+        noBgLightGrey = 14,
+        noBgWhite = 15,
+        noBgBlue = 16,
+        noBgDarkBlue = 17,
+        noBgRed = 18
     }
     enum ButtonSize {
         extraSmall = 0,
         small = 1,
         medium = 2,
-        large = 3
+        large = 3,
+        largeResponsive = 4
     }
     interface ButtonBadgeOptions {
         text?: string;
@@ -2191,6 +2201,175 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
+    class FormControl extends Control implements IFormControl {
+        onValueChanged: EventHandler<IFormControl, ValueChangeEventArgs>;
+        static onCreated: EventHandler<FormControl, FormControlOptions>;
+        options: FormControlOptions;
+        constructor(elementType?: string, options?: FormControlOptions);
+        enable(): void;
+        disable(): void;
+        isEnable(): boolean;
+        setValue(value: any, fireChange?: boolean): void;
+        getValue(): any;
+        getLabel(): string;
+        setLabel(label: string): void;
+        setError(message: string): void;
+        displayAsRequired(): void;
+        displayAsNotRequired(): void;
+        getPrintableElement(options?: any): HTMLElement;
+        getDisplayValue(): string;
+        protected _dataController?: NextAdmin.Business.DataController_;
+        protected _bindedPropertyName?: string;
+        /**
+         * Should not be called
+         * @param dataController
+         * @param propertyName
+         */
+        setDataController(dataController: NextAdmin.Business.DataController_, propertyName: string): void;
+        getDataController(): NextAdmin.Business.DataController_;
+        getBindedPropertyName(): string;
+        protected _propertyInfo: NextAdmin.Business.DataPropertyInfo;
+        setPropertyInfo(propertyInfo?: NextAdmin.Business.DataPropertyInfo): void;
+        getPropertyInfo(): NextAdmin.Business.DataPropertyInfo;
+    }
+    interface FormControlOptions extends ControlOptions {
+        onValueChanged?: (control: FormControl, args: ValueChangeEventArgs) => void;
+        value?: any;
+        required?: boolean;
+        disabled?: boolean;
+        propertyInfo?: NextAdmin.Business.DataPropertyInfo;
+    }
+}
+declare namespace NextAdmin.UI {
+    class LabelFormControl extends FormControl {
+        element: HTMLTableElement;
+        label: HTMLLabelElement;
+        asterisk: HTMLLabelElement;
+        labelContainer: HTMLTableCellElement;
+        controlContainer: HTMLTableCellElement;
+        options: LabelFormControlOptions;
+        static defaultLabelWidth: string;
+        static style: string;
+        static onCreated: EventHandler<LabelFormControl, LabelFormControlOptions>;
+        constructor(options?: LabelFormControlOptions);
+        setPropertyInfo(propertyInfo?: NextAdmin.Business.DataPropertyInfo): void;
+        setLabelWidth(width: string): void;
+        /**
+       * Add addon at the right of the control
+       * @param addon
+       */
+        addRightAddon<TAddon extends string | HTMLElement | Control | FormControlAddon>(addon: TAddon): TAddon;
+        /**
+         * Add addon at the left of the input
+         * @param addon
+         */
+        addLeftAddon<TAddon extends string | HTMLElement | Control | FormControlAddon>(addon: TAddon): TAddon;
+        private appendAddonCell;
+        getFormControlAddon(addon: FormControlAddon): NextAdmin.UI.Control;
+        setValue(value: any, fireChange?: boolean): void;
+        getValue(): any;
+        setLabel(text: string): LabelFormControl;
+        getLabel(): string;
+        private _errorMessage;
+        setError(message?: string): void;
+        private _tooltipMessage;
+        setTooltip(message?: string): void;
+        displayAsRequired(): void;
+        displayAsNotRequired(): void;
+        protected _disabled: boolean;
+        isEnable(): boolean;
+        enable(): void;
+        disable(): void;
+        getToolTip(): string;
+    }
+    interface LabelFormControlOptions extends FormControlOptions {
+        label?: string;
+        labelPosition?: FormControlLabelPosition;
+        labelWidth?: string;
+        leftAddons?: Array<string | HTMLElement | Control | FormControlAddon>;
+        rightAddons?: Array<string | HTMLElement | Control | FormControlAddon>;
+    }
+    enum FormControlAddon {
+        clipboardCopy = 1
+    }
+    enum FormControlLabelPosition {
+        left = "left",
+        top = "top",
+        hidden = "hidden"
+    }
+}
+declare namespace NextAdmin.UI {
+    class Input extends LabelFormControl {
+        static defaultStyle?: InputStyle;
+        input: HTMLInputElement;
+        options: InputOptions;
+        static style: string;
+        static onCreated: EventHandler<Input, InputOptions>;
+        constructor(options?: InputOptions);
+        setStyle(style?: InputStyle): void;
+        setSize(size?: InputSize): void;
+        displayAsRequired(): void;
+        displayAsNotRequired(): void;
+        setError(message?: string): void;
+        setPropertyInfo(propertyInfo: NextAdmin.Business.DataPropertyInfo): void;
+        setPlaceholder(text: string): Input;
+        setValue(value: any, fireChange?: boolean): void;
+        getValue(): any;
+        enable(): void;
+        disable(): void;
+    }
+    interface InputOptions extends LabelFormControlOptions {
+        inputType?: InputType;
+        decimalCount?: number;
+        placeHolder?: string;
+        style?: InputStyle | any;
+        size?: InputSize;
+        inlineGrid?: boolean;
+        outputNullIfEmpty?: boolean;
+    }
+    enum InputType {
+        button = "button",
+        checkbox = "checkbox",
+        color = "color",
+        date = "date",
+        datetimeLocal = "datetime-local",
+        email = "email",
+        file = "file",
+        hidden = "hidden",
+        image = "image",
+        month = "month",
+        number = "number",
+        password = "password",
+        radio = "radio",
+        range = "range",
+        reset = "reset",
+        search = "search",
+        submit = "submit",
+        tel = "tel",
+        text = "text",
+        time = "time",
+        url = "url",
+        week = "week"
+    }
+    enum InputStyle {
+        default = 0,
+        modern = 1,
+        noBackground = 2
+    }
+    enum InputSize {
+        medium = 0,
+        large = 1,
+        ultraLarge = 2
+    }
+}
+declare namespace NextAdmin.UI {
+    class Checkbox extends Input {
+        constructor(options?: InputOptions);
+        getValue(): boolean;
+        isChecked(): boolean;
+    }
+}
+declare namespace NextAdmin.UI {
     class Collapsible extends Control {
         header: HTMLDivElement;
         title: HTMLElement;
@@ -2310,6 +2489,7 @@ declare namespace NextAdmin.UI {
         dataName?: string;
         dataPrimaryKey?: any;
         isDetailFormModal?: boolean;
+        hasValidateButton?: boolean;
         hasFooterCloseButton?: boolean;
         canSave?: boolean;
         canDelete?: boolean;
@@ -2340,47 +2520,6 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
-    class FormControl extends Control implements IFormControl {
-        onValueChanged: EventHandler<IFormControl, ValueChangeEventArgs>;
-        static onCreated: EventHandler<FormControl, FormControlOptions>;
-        options: FormControlOptions;
-        constructor(elementType?: string, options?: FormControlOptions);
-        enable(): void;
-        disable(): void;
-        isEnable(): boolean;
-        setValue(value: any, fireChange?: boolean): void;
-        getValue(): any;
-        getLabel(): string;
-        setLabel(label: string): void;
-        setError(message: string): void;
-        displayAsRequired(): void;
-        displayAsNotRequired(): void;
-        getPrintableElement(options?: any): HTMLElement;
-        getDisplayValue(): string;
-        protected _dataController?: NextAdmin.Business.DataController_;
-        protected _bindedPropertyName?: string;
-        /**
-         * Should not be called
-         * @param dataController
-         * @param propertyName
-         */
-        setDataController(dataController: NextAdmin.Business.DataController_, propertyName: string): void;
-        getDataController(): NextAdmin.Business.DataController_;
-        getBindedPropertyName(): string;
-        protected _propertyInfo: NextAdmin.Business.DataPropertyInfo;
-        setPropertyInfo(propertyInfo?: NextAdmin.Business.DataPropertyInfo): void;
-        getPropertyInfo(): NextAdmin.Business.DataPropertyInfo;
-    }
-    interface FormControlOptions extends ControlOptions {
-        onValueChanged?: (control: FormControl, args: ValueChangeEventArgs) => void;
-        value?: any;
-        required?: boolean;
-        disabled?: boolean;
-        propertyInfo?: NextAdmin.Business.DataPropertyInfo;
-        setLabelFromPropertyInfo?: boolean;
-    }
-}
-declare namespace NextAdmin.UI {
     class FormLayout<T> extends NextAdmin.UI.Control {
         static defaultViewName: string;
         options: FormLayoutOptions;
@@ -2393,9 +2532,9 @@ declare namespace NextAdmin.UI {
             control: Control;
         }>;
         dataController?: NextAdmin.Business.DataController<T>;
-        controlsDictionary: Dictionary<HTMLElement | Control>;
         protected _columnCount: number;
         protected _rowCount: number;
+        protected _controlsDictionary: Dictionary<HTMLElement | Control>;
         protected _itemsDictionary: Dictionary<FormLayoutItem>;
         protected _cellsDictionary: Dictionary<HTMLTableCellElement>;
         protected _viewsDictionary: Dictionary<FormLayoutView>;
@@ -2415,15 +2554,24 @@ declare namespace NextAdmin.UI {
         setRowCount(rowCount: number): void;
         setColumnWidth(columnIndex: number, width: string): void;
         addItem<TElement extends Control | HTMLElement>(item: FormLayoutControlItem<TElement>): TElement;
-        removeItem(col: number, row: number): void;
+        removeItemByPosition(col: number, row: number): void;
+        removeItem(itemId: string, tryDispose?: boolean): void;
+        moveItem(itemId: string, targetCol: number, targetRow: number, disposeTargetPositionControl?: boolean): void;
+        setFormControlPosition(property: string, col: number, row: number): void;
         clear(): void;
         getItems(): FormLayoutItem[];
+        getItem(id?: string): FormLayoutItem;
+        getControl(id?: string): Control | HTMLElement;
+        getControlByPosition(col: number, row: number): NextAdmin.UI.Control;
+        getFormControlItem(property: ((dataDef: T) => any) | string): FormLayoutItem;
+        getItemByPosition(col: number, row: number): FormLayoutItem;
         getPrintableElement(options?: any): HTMLTableElement;
+        getControls(): Array<NextAdmin.UI.Control>;
+        getFormControls(): Array<NextAdmin.UI.Control>;
         unbindControls(): void;
         bindControls(updateControlValueFromData?: boolean): void;
         getRow(rowIndex: number): HTMLTableRowElement;
         getCell(col: number, row: number): HTMLTableCellElement;
-        getControl(col: number, row: number): NextAdmin.UI.Control;
         getCells(): Array<HTMLTableCellElement>;
         getRowCount(): number;
         getColumnCount(): number;
@@ -2708,7 +2856,7 @@ declare namespace NextAdmin.UI {
         propertyInfo: NextAdmin.Business.DataPropertyInfo;
         constructor(grid: DataGrid_, column: DataGridColumn, row: DataGridRow_);
         initControl(): void;
-        setControl(control: FormControl): void;
+        setFormControl(control: FormControl): void;
         setValue(value: any, updateData?: boolean): void;
         setData(value: any): void;
         getValue(): any;
@@ -2890,128 +3038,6 @@ declare namespace NextAdmin.UI {
         fireChange?: boolean;
     }
     export {};
-}
-declare namespace NextAdmin.UI {
-    class LabelFormControl extends FormControl {
-        element: HTMLTableElement;
-        label: HTMLLabelElement;
-        asterisk: HTMLLabelElement;
-        labelContainer: HTMLTableCellElement;
-        controlContainer: HTMLTableCellElement;
-        options: LabelFormControlOptions;
-        static defaultLabelWidth: string;
-        static style: string;
-        static onCreated: EventHandler<LabelFormControl, LabelFormControlOptions>;
-        constructor(options?: LabelFormControlOptions);
-        setLabelWidth(width: string): void;
-        /**
-       * Add addon at the right of the control
-       * @param addon
-       */
-        addRightAddon<TAddon extends string | HTMLElement | Control | FormControlAddon>(addon: TAddon): TAddon;
-        /**
-         * Add addon at the left of the input
-         * @param addon
-         */
-        addLeftAddon<TAddon extends string | HTMLElement | Control | FormControlAddon>(addon: TAddon): TAddon;
-        private appendAddonCell;
-        getFormControlAddon(addon: FormControlAddon): NextAdmin.UI.Control;
-        setValue(value: any, fireChange?: boolean): void;
-        getValue(): any;
-        setLabel(text: string): LabelFormControl;
-        getLabel(): string;
-        private _errorMessage;
-        setError(message?: string): void;
-        private _tooltipMessage;
-        setTooltip(message?: string): void;
-        displayAsRequired(): void;
-        displayAsNotRequired(): void;
-        protected _disabled: boolean;
-        isEnable(): boolean;
-        enable(): void;
-        disable(): void;
-        getToolTip(): string;
-    }
-    interface LabelFormControlOptions extends FormControlOptions {
-        label?: string;
-        labelPosition?: FormControlLabelPosition;
-        labelWidth?: string;
-        leftAddons?: Array<string | HTMLElement | Control | FormControlAddon>;
-        rightAddons?: Array<string | HTMLElement | Control | FormControlAddon>;
-    }
-    enum FormControlAddon {
-        clipboardCopy = 1
-    }
-    enum FormControlLabelPosition {
-        left = "left",
-        top = "top"
-    }
-}
-declare namespace NextAdmin.UI {
-    class Input extends LabelFormControl {
-        static defaultStyle?: InputStyle;
-        input: HTMLInputElement;
-        options: InputOptions;
-        static style: string;
-        static onCreated: EventHandler<Input, InputOptions>;
-        constructor(options?: InputOptions);
-        setStyle(style?: InputStyle): void;
-        setSize(size?: InputSize): void;
-        displayAsRequired(): void;
-        displayAsNotRequired(): void;
-        setError(message?: string): void;
-        setPropertyInfo(propertyInfo: NextAdmin.Business.DataPropertyInfo): void;
-        setPlaceholder(text: string): Input;
-        setLabel(text: string): Input;
-        getLabel(): string;
-        setValue(value: any, fireChange?: boolean): void;
-        getValue(): any;
-        enable(): void;
-        disable(): void;
-    }
-    interface InputOptions extends LabelFormControlOptions {
-        inputType?: InputType;
-        decimalCount?: number;
-        placeHolder?: string;
-        style?: InputStyle | any;
-        size?: InputSize;
-        inlineGrid?: boolean;
-        outputNullIfEmpty?: boolean;
-    }
-    enum InputType {
-        button = "button",
-        checkbox = "checkbox",
-        color = "color",
-        date = "date",
-        datetimeLocal = "datetime-local",
-        email = "email",
-        file = "file",
-        hidden = "hidden",
-        image = "image",
-        month = "month",
-        number = "number",
-        password = "password",
-        radio = "radio",
-        range = "range",
-        reset = "reset",
-        search = "search",
-        submit = "submit",
-        tel = "tel",
-        text = "text",
-        time = "time",
-        url = "url",
-        week = "week"
-    }
-    enum InputStyle {
-        default = 0,
-        modern = 1,
-        noBackground = 2
-    }
-    enum InputSize {
-        medium = 0,
-        large = 1,
-        ultraLarge = 2
-    }
 }
 declare namespace NextAdmin.UI {
     class InputSelect extends Input {
@@ -3327,7 +3353,7 @@ declare namespace NextAdmin.UI {
         constructor(options?: GridFormPanelOptions);
     }
     interface GridFormPanelOptions extends ControlOptions {
-        gridOption?: DataGridOptions_;
+        gridOptions?: DataGridOptions_;
         formPanelOption?: FormPanelOptions;
         onSelectedDataChanged?: (row: DataGridRow_, panel: FormPanel) => void;
         onAppendDataItem?: (sender: GridFormPanel_, data: any) => void;
@@ -3416,7 +3442,8 @@ declare namespace NextAdmin.UI {
     }
     enum ImageStyle {
         none = 0,
-        lightBordered = 1
+        lightBordered = 1,
+        whiteBordered = 2
     }
     enum ImageDisplayMode {
         contain = 0,
@@ -3664,6 +3691,24 @@ declare namespace NextAdmin.UI {
         min?: number;
         max?: number;
         progressLabelValueFunc?: (progress: Progress) => string;
+    }
+}
+declare namespace NextAdmin.UI {
+    class Range extends Input {
+        options: RangeOptions;
+        _valueLabel: HTMLDivElement;
+        constructor(options?: RangeOptions);
+        getValue(): number;
+        setValue(value: number, fireChange?: boolean): void;
+        appendValueLabel(): void;
+        updateValueLabel(): void;
+    }
+    interface RangeOptions extends InputOptions {
+        hasValueLabel?: boolean;
+        unit?: string;
+        maxValue?: number;
+        minValue?: number;
+        step?: number;
     }
 }
 declare namespace NextAdmin.UI {
@@ -3917,8 +3962,7 @@ declare namespace NextAdmin.UI {
         select: HTMLSelectElement;
         options: SelectOptions;
         static style: string;
-        static onCreated: EventHandler<Select, SelectOptions>;
-        private _previousValue?;
+        private _currentValue?;
         constructor(options?: SelectOptions);
         setStyle(style?: SelectStyle): void;
         setSize(size?: SelectSize): void;
@@ -3931,10 +3975,11 @@ declare namespace NextAdmin.UI {
         setItems<T>(dataset: Array<T>, valueFunc: (data: T) => string, captionFunc?: (data: T) => string): Array<HTMLOptionElement>;
         getItems(): Array<HTMLOptionElement>;
         removeItem(item: HTMLOptionElement): void;
-        removeItemByValue(value: string): void;
+        removeItemByValue(value: any): void;
         clearItems(): void;
         clearAll(): void;
         setPlaceholder(text: string): Select;
+        getItem(value: any): HTMLOptionElement;
         setValue(value: any, fireChange?: boolean): void;
         getValue(): any;
         getSelectedItem(): HTMLOptionElement;
@@ -3949,8 +3994,6 @@ declare namespace NextAdmin.UI {
         style?: SelectStyle | any;
         size?: SelectSize | any;
         inlineGrid?: boolean;
-        isNumeric?: boolean;
-        valueType?: SelectValueType;
         allowNullValue?: boolean;
         outputNullIfEmpty?: boolean;
     }
@@ -3968,11 +4011,6 @@ declare namespace NextAdmin.UI {
         medium = 0,
         large = 1,
         ultraLarge = 2
-    }
-    enum SelectValueType {
-        string = 0,
-        number = 1,
-        date = 2
     }
 }
 declare namespace NextAdmin.UI {
@@ -3994,7 +4032,7 @@ declare namespace NextAdmin.UI {
         getItemButton(value?: any): Button;
         clearItems(): void;
         clearAll(): void;
-        setPropertyInfo(ropertyInfo?: NextAdmin.Business.DataPropertyInfo): void;
+        setPropertyInfo(propertyInfo?: NextAdmin.Business.DataPropertyInfo): void;
     }
     interface AddButtonArgs {
         button: Button;
@@ -4182,8 +4220,8 @@ declare namespace NextAdmin.UI {
     interface TextOptions extends ControlOptions {
         htmlTag?: string;
         isResponsive?: boolean;
-        style: TextStyle;
-        size: TextSize;
+        style?: TextStyle;
+        size?: TextSize;
         text?: string;
     }
     enum TextSize {
@@ -4212,12 +4250,13 @@ declare namespace NextAdmin.UI {
         constructor(options?: TextAreaOptions);
         setStyle(style?: InputStyle): void;
         setPlaceholder(text: string): TextArea;
-        setValue(value: any): void;
+        setValue(value: any, fireChange?: boolean): void;
         getValue(): any;
     }
     interface TextAreaOptions extends LabelFormControlOptions {
         displayMode?: TextAreaDisplayMode;
         style?: TextAreaStyle | any;
+        height?: string;
     }
     enum TextAreaStyle {
         default = 0,
@@ -4247,16 +4286,20 @@ declare namespace NextAdmin.UI {
     }
     enum TitleSize {
         large = 0,
-        medium = 1
+        medium = 1,
+        small = 2,
+        ultraSmall = 3
     }
     enum TitleStyle {
-        lightGrey = 0,
-        darkGrey = 1,
-        dark = 2,
-        thinLightGrey = 3,
-        thinDarkGrey = 4,
-        thinDark = 5,
-        thinUltraLightGrey = 6
+        ultraLightGreyThin = 0,
+        lightGrey = 1,
+        lightGreyThin = 2,
+        grey = 3,
+        greyThin = 4,
+        darkGrey = 5,
+        darkGreyThin = 6,
+        dark = 7,
+        darkThin = 8
     }
 }
 declare namespace NextAdmin.UI {

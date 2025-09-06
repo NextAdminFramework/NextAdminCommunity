@@ -74,6 +74,7 @@ namespace NextAdmin.UI {
             }));
             this.miniatureImagesContainer = this.element.appendHTML('div', (miniatureImagesContainer) => {
                 miniatureImagesContainer.style.marginTop = '5px';
+                miniatureImagesContainer.style.display = 'none';
             });
             if (this.options.imageItems) {
                 for (let imageItem of this.options.imageItems) {
@@ -103,6 +104,9 @@ namespace NextAdmin.UI {
                     this.setActiveImage(imageId)
                 });
             });
+            if (this._images.getValues().length > 1) {
+                this.miniatureImagesContainer.style.display = '';
+            }
             if (this._activeImageId == null) {
                 this.setActiveImage(imageId);
             }

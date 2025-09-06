@@ -3,6 +3,10 @@ namespace NextAdmin {
 
     export class String {
 
+        static isNullOrEmptyString(str: any): boolean {
+            return str === undefined || str === null || (typeof str === 'string' && str == '');
+        }
+
         static isNullOrEmpty(str: string): boolean {
             return str == null || str == '';
         }

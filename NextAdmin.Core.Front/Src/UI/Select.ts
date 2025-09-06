@@ -84,16 +84,13 @@ namespace NextAdmin.UI {
         }
         `;
 
-        public static onCreated = new EventHandler<Select, SelectOptions>();
-
-        private _previousValue?: any;
+        private _currentValue?: any = null;
 
         constructor(options?: SelectOptions) {
             super({
                 autoFill: true,
                 style: Select.defaultStyle,
                 size: InputSize.medium,
-                valueType: SelectValueType.string,
                 ...options
             } as SelectOptions);
 
@@ -108,8 +105,9 @@ namespace NextAdmin.UI {
             }
 
             this.select.addEventListener("input", () => {
-                this.onValueChanged.dispatch(this, { value: this.select.value, previousValue: this._previousValue } as ValueChangeEventArgs);
-                this._previousValue = this.select.value;
+                let previousValue = this._currentValue;
+                this._currentValue = this.getValue();
+                this.onValueChanged.dispatch(this, { value: this._currentValue, previousValue: previousValue } as ValueChangeEventArgs);
             });
             this.controlContainer.appendChild(this.select);
             if (this.options.items) {
@@ -117,7 +115,6 @@ namespace NextAdmin.UI {
             }
             this.setStyle(this.options.style);
             this.setSize(this.options.size);
-            Select.onCreated.dispatch(this, this.options);
         }
 
         public setStyle(style?: SelectStyle) {
@@ -159,9 +156,6 @@ namespace NextAdmin.UI {
                     this.addItem(memberValue.value, memberValue.label);
                 }
             }
-            if (propertyInfo.type == 'number') {
-                this.options.valueType = SelectValueType.number;
-            }
         }
 
 
@@ -173,9 +167,6 @@ namespace NextAdmin.UI {
             let optionElements = [];
             for (let valueItem of selectItems) {
                 optionElements.add(this.addSelectItem(valueItem));
-            }
-            if (this._previousValue == null) {
-                this._previousValue = this.getValue();
             }
             return optionElements;
         }
@@ -191,15 +182,16 @@ namespace NextAdmin.UI {
         }
 
         addItem(value: string | number, label = value, selected?: boolean): HTMLOptionElement {
-
+            if (value === undefined) {
+                value = null;
+            }
             let option = document.createElement('option');
             option.innerHTML = label.toString();
-            option.value = value == null ? '' : value.toString();
+            option.value = value === null ? '' : value.toString();
+            option['_rowValue'] = value;
             option.selected = selected;
             this.select.appendChild(option);
-            if (this._previousValue == null) {
-                this._previousValue = this.getValue();
-            }
+            this._currentValue = this.getValue();
             return option;
         }
 
@@ -210,9 +202,6 @@ namespace NextAdmin.UI {
             for (let data of dataset) {
                 let item = this.addItem(valueFunc(data), captionFunc == null ? undefined : captionFunc(data));
                 items.push(item);
-            }
-            if (this._previousValue == null) {
-                this._previousValue = this.getValue();
             }
             return items;
         }
@@ -237,11 +226,10 @@ namespace NextAdmin.UI {
             item.remove();
         }
 
-        removeItemByValue(value: string) {
-            for (let item of this.getItems()) {
-                if (item.value == value) {
-                    item.remove();
-                }
+        removeItemByValue(value: any) {
+            let item = this.getItem(value);
+            if (item) {
+                item.remove();
             }
         }
 
@@ -261,36 +249,39 @@ namespace NextAdmin.UI {
             return this;
         }
 
+        getItem(value: any): HTMLOptionElement {
+            return this.getItems().firstOrDefault(a => a.value == value || a['_rowValue'] == value);
+        }
+
 
         setValue(value: any, fireChange?: boolean) {
-            if (value && this.getItems().firstOrDefault(a => a.value == value) == null) {
+            if (value === undefined) {
+                value = null;
+            }
+            if (value !== null && this.getItem(value) == null) {
                 this.addItem(value);
             }
-            this.select.value = value ?? '';
+            this.select.value = value === null ? '' : value.toString()
+
+            value = this.getValue();
             if (fireChange) {
-                this.onValueChanged.dispatch(this, { value: value, previousValue: this._previousValue, origin: ChangeOrigin.code });
+                this.onValueChanged.dispatch(this, { value: value, previousValue: this._currentValue, origin: ChangeOrigin.code });
             }
-            this._previousValue = value;
+            this._currentValue = value;
         }
 
 
         getValue(): any {
-            switch (this.options.valueType) {
-                default:
-                case SelectValueType.string:
-                    if (this.options.outputNullIfEmpty && NextAdmin.String.isNullOrEmpty(this.select.value)) {
-                        return null;
-                    }
-                    return this.select.value;
-                case SelectValueType.number:
-                    return NextAdmin.String.isNullOrWhiteSpace(this.select.value) ? null : Number(this.select.value);
-                case SelectValueType.date:
-                    return NextAdmin.String.isNullOrWhiteSpace(this.select.value) ? null : new Date(this.select.value);
+            let item = this.getSelectedItem();
+            let value = item ? item['_rowValue'] : this.select.value;
+            if (this.options.outputNullIfEmpty && NextAdmin.String.isNullOrEmptyString(value)) {
+                value = null;
             }
+            return value;
         }
 
         getSelectedItem(): HTMLOptionElement {
-            return this.getItems().firstOrDefault(a => a.value == this.getValue());
+            return this.getItem(this.select.value);
         }
 
         getValueText(): string {
@@ -324,10 +315,6 @@ namespace NextAdmin.UI {
 
         inlineGrid?: boolean;
 
-        isNumeric?: boolean;
-
-        valueType?: SelectValueType;
-
         allowNullValue?: boolean;
 
         outputNullIfEmpty?: boolean;
@@ -353,14 +340,4 @@ namespace NextAdmin.UI {
         large,
         ultraLarge
     }
-
-
-    export enum SelectValueType {
-        string,
-        number,
-        date,
-    }
-
-
-
 }

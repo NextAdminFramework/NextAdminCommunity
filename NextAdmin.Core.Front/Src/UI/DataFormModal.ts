@@ -86,6 +86,9 @@ namespace NextAdmin.UI {
                 this.options.isDetailFormModal = true;
                 this.dataController = new NextAdmin.Business.LocalDataController<T>({ dataName: this.options.dataName });
             }
+            if (this.options.isDetailFormModal) {
+                this.options.hasValidateButton = true;
+            }
 
             this.dataController.onStartChangeData.subscribe(async (sender, args) => {
                 await this.initialize(args.newData, args.newDataState);
@@ -181,7 +184,7 @@ namespace NextAdmin.UI {
             });
 
 
-            if (this.options.isDetailFormModal) {
+            if (this.options.hasValidateButton) {
                 this.saveButton.element.remove();
                 this.deleteButton.element.remove();
                 //this.cancelButton.element.remove();
@@ -211,9 +214,19 @@ namespace NextAdmin.UI {
             DataFormModal_.onCreated.dispatch(this, this.options);
         }
 
+
         public async validate(): Promise<boolean> {
             this.onValidate.dispatch(this, this.dataController.data);
-            this.close();
+            if (!this.options.isDetailFormModal) {
+                this.startSpin();
+                let result = await this.dataController.save();
+                this.stopSpin();
+                if (result.success) {
+                    this.close();
+                }
+            } else {
+                this.close();
+            }
             return true;
         }
 
@@ -285,7 +298,7 @@ namespace NextAdmin.UI {
 
         public close(args?: CloseFormModalArgs) {
             args = {
-                chackDataState: !this.options.isDetailFormModal,
+                chackDataState: !this.options.isDetailFormModal && !this.options.hasValidateButton,
                 ...args
             };
             if (args.chackDataState) {
@@ -331,6 +344,8 @@ namespace NextAdmin.UI {
         dataPrimaryKey?: any;
 
         isDetailFormModal?: boolean;
+
+        hasValidateButton?: boolean;
 
         hasFooterCloseButton?: boolean;
 

@@ -101,14 +101,14 @@ namespace NextAdmin.UI {
 
                         contentContainer.appendControl(new NextAdmin.UI.Title({
                             htmlTag: 'h2',
-                            style: NextAdmin.UI.TitleStyle.thinDarkGrey,
+                            style: NextAdmin.UI.TitleStyle.darkGreyThin,
                             size: NextAdmin.UI.TitleSize.large,
                             text: this.options.title,
                         }));
 
                         contentContainer.appendControl(new NextAdmin.UI.Title({
                             htmlTag: 'h3',
-                            style: NextAdmin.UI.TitleStyle.thinDarkGrey,
+                            style: NextAdmin.UI.TitleStyle.darkGreyThin,
                             size: NextAdmin.UI.TitleSize.medium,
                             text: this.options.subTitle,
                         }));

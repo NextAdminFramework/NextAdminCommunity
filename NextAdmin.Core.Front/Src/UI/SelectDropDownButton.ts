@@ -121,10 +121,13 @@ namespace NextAdmin.UI {
             this.setValue(null);
         }
 
-        setPropertyInfo(ropertyInfo?: NextAdmin.Business.DataPropertyInfo) {
-            super.setPropertyInfo(ropertyInfo);
-            if (this.options.autoFill && ropertyInfo?.values?.length) {
-                this.setItems(ropertyInfo.values);
+        setPropertyInfo(propertyInfo?: NextAdmin.Business.DataPropertyInfo) {
+            super.setPropertyInfo(propertyInfo);
+            if (!NextAdmin.String.isNullOrEmpty(propertyInfo?.displayName) && NextAdmin.String.isNullOrEmpty(this.getLabel())) {
+                this.setLabel(propertyInfo.displayName);
+            }
+            if (this.options.autoFill && propertyInfo?.values?.length) {
+                this.setItems(propertyInfo.values);
             }
         }
 

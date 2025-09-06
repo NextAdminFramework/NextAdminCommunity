@@ -724,6 +724,10 @@ var NextAdmin;
             appendCard(card, controlOption) {
                 this.body.appendControl(card, controlOption);
                 card.element.style.margin = this.options.margin;
+                return card;
+            }
+            appendControl(control, configAction) {
+                return this.body.appendControl(control, configAction);
             }
             clear() {
                 this.body.innerHTML = '';
@@ -1328,13 +1332,13 @@ var NextAdmin;
                             contentContainer.style.padding = '10px';
                             contentContainer.appendControl(new NextAdmin.UI.Title({
                                 htmlTag: 'h2',
-                                style: NextAdmin.UI.TitleStyle.thinDarkGrey,
+                                style: NextAdmin.UI.TitleStyle.darkGreyThin,
                                 size: NextAdmin.UI.TitleSize.large,
                                 text: this.options.title,
                             }));
                             contentContainer.appendControl(new NextAdmin.UI.Title({
                                 htmlTag: 'h3',
-                                style: NextAdmin.UI.TitleStyle.thinDarkGrey,
+                                style: NextAdmin.UI.TitleStyle.darkGreyThin,
                                 size: NextAdmin.UI.TitleSize.medium,
                                 text: this.options.subTitle,
                             }));
@@ -1447,6 +1451,7 @@ var NextAdmin;
                 }));
                 this.miniatureImagesContainer = this.element.appendHTML('div', (miniatureImagesContainer) => {
                     miniatureImagesContainer.style.marginTop = '5px';
+                    miniatureImagesContainer.style.display = 'none';
                 });
                 if (this.options.imageItems) {
                     for (let imageItem of this.options.imageItems) {
@@ -1474,6 +1479,9 @@ var NextAdmin;
                         this.setActiveImage(imageId);
                     });
                 });
+                if (this._images.getValues().length > 1) {
+                    this.miniatureImagesContainer.style.display = '';
+                }
                 if (this._activeImageId == null) {
                     this.setActiveImage(imageId);
                 }

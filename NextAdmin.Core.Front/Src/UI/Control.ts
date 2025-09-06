@@ -139,7 +139,7 @@ namespace NextAdmin.UI {
 
 
     export interface CssDeclaration {
-
+        width?: string;
         alignContent?: string;
         alignItems?: string;
         alignSelf?: string;

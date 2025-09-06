@@ -360,4 +360,6 @@
         replaceState = 2
     }
 
+    export const CacheKey = NextAdmin.Guid.createStrGuid();
+
 }

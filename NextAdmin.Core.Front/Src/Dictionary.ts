@@ -70,6 +70,10 @@
             }
         }
 
+        public clone(): Dictionary<T> {
+            return new Dictionary<T>(this);
+        }
+
 
     }
 }

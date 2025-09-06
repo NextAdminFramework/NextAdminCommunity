@@ -10,27 +10,39 @@ namespace NextAdmin.UI {
             margin-top:5px;
             margin-bottom:5px;
         }
-        .next-admin-title-thin-light-grey {
-            font-weight:100;
-            color:#888;
-        }
+
         .next-admin-title-thin-ultra-light-grey{
             font-weight:100;
-            color:#ccc;
+            color:#bbb;
         }
+
+        .next-admin-title-thin-light-grey{
+            font-weight:100;
+            color:#999;
+        }
+        .next-admin-title-light-grey {
+            color:#999;
+        }
+
+        .next-admin-title-thin-grey {
+            font-weight:100;
+            color:#777;
+        }
+        .next-admin-title-grey{
+            color:#777;
+        }
+
         .next-admin-title-thin-dark-grey {
             font-weight:100;
             color:#444;
         }
+        .next-admin-title-dark-grey {
+            color:#444;
+        }
+
         .next-admin-title-thin-dark {
             font-weight:100;
             color:#222;
-        }
-        .next-admin-title-light-grey {
-            color:#888;
-        }
-        .next-admin-title-dark-grey {
-            color:#444;
         }
         .next-admin-title-dark {
             color:#222;
@@ -42,12 +54,21 @@ namespace NextAdmin.UI {
         .next-admin-title-medium {
             font-size:24px;
         }
+        .next-admin-title-small {
+            font-size:20px;
+        }
+        .next-admin-title-ultra-small{
+            font-size:16px;
+        }
         @media (max-width: 1280px) {
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:32px;
             }
             .next-admin-title-responsive.next-admin-title-medium {
                 font-size:20px;
+            }
+            .next-admin-title-responsive.next-admin-title-small {
+                font-size:18px;
             }
         }
         @media (max-width: 1024px) {
@@ -57,6 +78,12 @@ namespace NextAdmin.UI {
             .next-admin-title-responsive.next-admin-title-medium {
                 font-size:18px;
             }
+            .next-admin-title-responsive.next-admin-title-small {
+                font-size:16px;
+            }
+            .next-admin-title-responsive.next-admin-title-small {
+                font-size:14px;
+            }
         }
         @media (max-width: 768px) {
             .next-admin-title-responsive.next-admin-title-large {
@@ -65,6 +92,9 @@ namespace NextAdmin.UI {
             .next-admin-title-responsive.next-admin-title-medium {
                 font-size:16px;
             }
+            .next-admin-title-responsive.next-admin-title-small {
+                font-size:14px;
+            }
         }
         `;
 
@@ -72,7 +102,7 @@ namespace NextAdmin.UI {
             super(options?.htmlTag ?? 'h1', {
                 isResponsive: true,
                 size: TitleSize.large,
-                style: TitleStyle.thinLightGrey,
+                style: TitleStyle.greyThin,
                 ...options
             } as TitleOptions);
 
@@ -92,27 +122,36 @@ namespace NextAdmin.UI {
 
         setStyle(style?: TitleStyle) {
             switch (style) {
-                default:
-                case TitleStyle.thinLightGrey:
-                    this.element.classList.add('next-admin-title-thin-light-grey');
+                case TitleStyle.ultraLightGreyThin:
+                    this.element.classList.add('next-admin-title-thin-ultra-light-grey');
                     break;
-                case TitleStyle.thinDarkGrey:
-                    this.element.classList.add('next-admin-title-thin-dark-grey');
-                    break;
-                case TitleStyle.thinDark:
-                    this.element.classList.add('next-admin-title-thin-dark');
-                    break;
+
                 case TitleStyle.lightGrey:
                     this.element.classList.add('next-admin-title-light-grey');
                     break;
+                case TitleStyle.lightGreyThin:
+                    this.element.classList.add('next-admin-title-thin-light-grey');
+                    break;
+
+                default:
+                case TitleStyle.greyThin:
+                    this.element.classList.add('next-admin-title-thin-grey');
+                    break;
+                case TitleStyle.grey:
+                    this.element.classList.add('next-admin-title-grey');
+                    break;
+
                 case TitleStyle.darkGrey:
                     this.element.classList.add('next-admin-title-dark-grey');
+                    break;
+                case TitleStyle.darkGreyThin:
+                    this.element.classList.add('next-admin-title-thin-dark-grey');
                     break;
                 case TitleStyle.dark:
                     this.element.classList.add('next-admin-title-dark');
                     break;
-                case TitleStyle.thinUltraLightGrey:
-                    this.element.classList.add('next-admin-title-thin-ultra-light-grey');
+                case TitleStyle.darkThin:
+                    this.element.classList.add('next-admin-title-thin-dark');
                     break;
             }
         }
@@ -126,6 +165,12 @@ namespace NextAdmin.UI {
                     break;
                 case TitleSize.medium:
                     this.element.classList.add('next-admin-title-medium');
+                    break;
+                case TitleSize.small:
+                    this.element.classList.add('next-admin-title-small');
+                    break;
+                case TitleSize.ultraSmall:
+                    this.element.classList.add('next-admin-title-ultra-small');
                     break;
             }
         }
@@ -149,17 +194,22 @@ namespace NextAdmin.UI {
     export enum TitleSize {
         large,
         medium,
+        small,
+        ultraSmall
     }
 
 
     export enum TitleStyle {
+        ultraLightGreyThin,
         lightGrey,
+        lightGreyThin,
+        grey,
+        greyThin,
         darkGrey,
+        darkGreyThin,
         dark,
-        thinLightGrey,
-        thinDarkGrey,
-        thinDark,
-        thinUltraLightGrey,
+        darkThin,
+
     }
 
 }

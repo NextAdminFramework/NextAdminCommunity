@@ -47,6 +47,7 @@ namespace NextAdmin.UI {
         constructor(options?: LabelFormControlOptions) {
             super("table", {
                 labelWidth: LabelFormControl.defaultLabelWidth,
+                labelPosition: FormControlLabelPosition.left,
                 ...options
             } as LabelFormControlOptions);
 
@@ -56,8 +57,23 @@ namespace NextAdmin.UI {
             this.element.style.borderCollapse = 'collapse';
 
             this.element.style.width = '100%';
-            if (this.options.labelPosition == FormControlLabelPosition.top) {
+            if (this.options.labelPosition == FormControlLabelPosition.left) {
                 this.element.appendHTML('tr', tr => {
+                    this.labelContainer = tr.appendHTML('td');
+                    this.labelContainer.classList.add('next-admin-layout-form-control-cell');
+                    this.setLabelWidth(this.options.labelWidth);
+                    this.label = this.labelContainer.appendHTML('label');
+                    this.asterisk = this.labelContainer.appendHTML('label');
+                    this.asterisk.classList.add('next-admin-layout-form-control-asterisk');
+                    this.controlContainer = tr.appendHTML('td');
+                    this.controlContainer.classList.add('next-admin-layout-form-control-cell');
+                });
+            }
+            else {
+                this.element.appendHTML('tr', tr => {
+                    if (this.options.labelPosition == FormControlLabelPosition.hidden) {
+                        tr.style.display = 'none';
+                    }
                     this.labelContainer = tr.appendHTML('td');
                     this.labelContainer.colSpan = 10;
                     this.labelContainer.classList.add('next-admin-layout-form-control-cell');
@@ -71,28 +87,12 @@ namespace NextAdmin.UI {
                     this.controlContainer.classList.add('next-admin-layout-form-control-cell');
                 });
             }
-            else {//default inline
-                this.element.appendHTML('tr', tr => {
-                    this.labelContainer = tr.appendHTML('td');
-                    this.labelContainer.classList.add('next-admin-layout-form-control-cell');
-                    this.setLabelWidth(this.options.labelWidth);
-                    this.label = this.labelContainer.appendHTML('label');
-                    this.asterisk = this.labelContainer.appendHTML('label');
-                    this.asterisk.classList.add('next-admin-layout-form-control-asterisk');
-                    this.controlContainer = tr.appendHTML('td');
-                    this.controlContainer.classList.add('next-admin-layout-form-control-cell');
-                });
-            }
 
             this.labelContainer.classList.add('next-admin-layout-form-control-label-container');
             this.controlContainer.classList.add('next-admin-layout-form-control-control-container');
 
-            if (this.options.label) {
-                this.label.innerHTML = this.options.label;
-            }
-            else {
-                this.labelContainer.style.display = 'none';
-            }
+
+            this.setLabel(this.options.label);
             this.onValueChanged.subscribe(() => {
                 this.setError(null);
             });
@@ -110,8 +110,18 @@ namespace NextAdmin.UI {
             LabelFormControl.onCreated.dispatch(this, this.options);
         }
 
+        setPropertyInfo(propertyInfo?: NextAdmin.Business.DataPropertyInfo) {
+            super.setPropertyInfo(propertyInfo);
+            if (!NextAdmin.String.isNullOrEmpty(propertyInfo?.displayName) && NextAdmin.String.isNullOrEmpty(this.getLabel())) {
+                this.setLabel(propertyInfo.displayName);
+            }
+        }
+
+
         setLabelWidth(width: string) {
-            this.labelContainer.style.width = width;
+            if (this.labelContainer) {
+                this.labelContainer.style.width = width;
+            }
         }
 
 
@@ -181,22 +191,23 @@ namespace NextAdmin.UI {
         }
 
         public setLabel(text: string): LabelFormControl {
-            this.label.innerHTML = text;
-            if (text) {
-                this.label.style.display = '';
+            if (!NextAdmin.String.isNullOrEmpty(text)) {
                 this.labelContainer.style.display = '';
+                this.label.style.display = '';
+                this.label.innerHTML = text;
             }
             else {
                 this.labelContainer.style.display = 'none';
                 this.label.style.display = 'none';
+                this.label.innerHTML = '';
             }
+
             return this;
         }
 
         getLabel(): string {
-            return this.label.innerText;
+            return this.label?.innerText ?? '';
         }
-
 
         private _errorMessage = null;
         setError(message?: string) {
@@ -285,6 +296,7 @@ namespace NextAdmin.UI {
     export enum FormControlLabelPosition {
         left = "left",
         top = "top",
+        hidden = "hidden",
     }
 
 }

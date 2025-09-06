@@ -18,11 +18,11 @@ namespace NextAdmin.UI {
 
         dataController?: NextAdmin.Business.DataController<T>;
 
-        public controlsDictionary = new Dictionary<Control | HTMLElement>();
-
         protected _columnCount = 0;
 
         protected _rowCount = 0;
+
+        protected _controlsDictionary = new Dictionary<Control | HTMLElement>();
 
         protected _itemsDictionary = new Dictionary<FormLayoutItem>();
 
@@ -174,7 +174,7 @@ namespace NextAdmin.UI {
 
             let items = new Array<FormLayoutItem>();
             for (let viewItem of view.items) {
-                let control = this.controlsDictionary.get(viewItem.id);
+                let control = this._controlsDictionary.get(viewItem.id);
                 if (control == null) {
                     console.log('View: ' + viewName + ', unable to find control : ' + viewItem.id);
                     continue;
@@ -229,7 +229,6 @@ namespace NextAdmin.UI {
             else if (columnCount < this._columnCount) {
                 this.initialize(columnCount, this._rowCount, this._itemsDictionary.getValues())
             }
-
         }
 
         setRowCount(rowCount: number) {
@@ -310,7 +309,7 @@ namespace NextAdmin.UI {
             }
             if (this.options.dataController != null && item.propertyName != null && control instanceof FormControl && control.getBindedPropertyName() == null) {
                 this.options.dataController.bindControl(control, item.propertyName);
-                control['_bindedPropertyName'] = item.propertyName;
+                control['_bindedPropertyName'] = item.propertyName;/*Not required because dataController.bindControl will set this property */
             }
             if (item.labelWidth && control instanceof LabelFormControl) {
                 control.setLabelWidth(item.labelWidth);
@@ -326,7 +325,7 @@ namespace NextAdmin.UI {
                 else {
                     cell.appendChild(control);
                 }
-                this.controlsDictionary.set(item.id, control);
+                this._controlsDictionary.set(item.id, control);
             }
 
             let restaurCellToDefault = (c) => {
@@ -369,7 +368,7 @@ namespace NextAdmin.UI {
         }
 
 
-        public removeItem(col: number, row: number) {
+        public removeItemByPosition(col: number, row: number) {
             let cell = this._cellsDictionary[col + ',' + row];
             if (cell != null && cell['_control'] != null) {
                 this._itemsDictionary.remove(cell['_id']);
@@ -378,15 +377,97 @@ namespace NextAdmin.UI {
             }
         }
 
+        public removeItem(itemId: string, tryDispose: boolean = true) {
+            let item = this.getItem(itemId);
+            if (!item) {
+                return;
+            }
+            if (tryDispose && item.control) {
+                if (item.control instanceof NextAdmin.UI.FormControl) {
+                    this.dataController.unbindControl(item.control);
+                }
+                if (item.control instanceof Control) {
+                    item.control.dispose();
+                }
+            }
+            let cell = this._cellsDictionary.get(item.col + ',' + item.row);
+            if (cell) {
+                cell.innerHTML = '';
+                delete cell['_id'];
+            }
+            this._controlsDictionary.remove(item.id);
+            this._itemsDictionary.remove(item.id);
+        }
+
+        public moveItem(itemId: string, targetCol: number, targetRow: number, disposeTargetPositionControl: boolean = true) {
+            let item = this.getItem(itemId);
+            if (item == null) {
+                return;
+            }
+            let targetPositionItem = this.getItemByPosition(targetCol, targetRow);
+            if (targetPositionItem) {
+                this.removeItem(targetPositionItem.id, disposeTargetPositionControl);
+            }
+            this.removeItem(itemId, false);
+            item.col = targetCol;
+            item.row = targetRow;
+            this.addItem(item as any);
+        }
+
+        public setFormControlPosition(property: string, col: number, row: number) {
+            let control = this.dataController.getControl(property);
+            if (control == null) {
+                return;
+            }
+            let item = this.getItem(property);
+            if (item != null) {
+                this.moveItem(item.id, col, row, false);
+            }
+            else {
+                let itemAtTargetPosition = this.getItemByPosition(col, row)
+                if (itemAtTargetPosition != null) {
+                    this.removeItem(itemAtTargetPosition.id, false);
+                }
+                this.addItem({ col: col, row: row, control: control });
+            }
+        }
+
         public clear() {
             this.initialize(0, 0);
         }
-
 
         public getItems() {
             return this._itemsDictionary.getValues();
         }
 
+        public getItem(id?: string): FormLayoutItem {
+            return this._itemsDictionary.get(id);
+        }
+
+        public getControl(id?: string): Control | HTMLElement {
+            return this._controlsDictionary.get(id);
+        }
+
+        public getControlByPosition(col: number, row: number): NextAdmin.UI.Control {
+            let cell = this.getCell(col, row);
+            if (cell == null) {
+                return null;
+            }
+            return cell['_control'] as NextAdmin.UI.Control;
+        }
+
+        public getFormControlItem(property: ((dataDef: T) => any) | string): FormLayoutItem {
+            let control = this.dataController.getControl(property);
+            return this.getItems().firstOrDefault(a => a.control == control);
+        }
+
+        public getItemByPosition(col: number, row: number): FormLayoutItem {
+            let cell = this._cellsDictionary.get(col + ',' + row);
+            if (!cell || !cell['_id']) {
+                return null;
+            }
+            return this.getItem(cell['_id']);
+        }
 
         public getPrintableElement(options?: any): HTMLTableElement {
             //return document.createElement('table');
@@ -413,8 +494,17 @@ namespace NextAdmin.UI {
             return printableElement;
         }
 
+        public getControls(): Array<NextAdmin.UI.Control> {
+            return this._controlsDictionary.getValues().where(a => a instanceof NextAdmin.UI.Control) as Array<NextAdmin.UI.Control>;
+        }
+
+        public getFormControls(): Array<NextAdmin.UI.Control> {
+            return this._controlsDictionary.getValues().where(a => a instanceof NextAdmin.UI.FormControl) as Array<NextAdmin.UI.FormControl>;
+        }
+
+
         public unbindControls() {
-            for (let control of this.controlsDictionary.getValues()) {
+            for (let control of this._controlsDictionary.getValues()) {
                 if (control instanceof NextAdmin.UI.FormControl) {
                     this.dataController.unbindControl(control);
                 }
@@ -422,7 +512,7 @@ namespace NextAdmin.UI {
         }
 
         public bindControls(updateControlValueFromData = true) {
-            for (let control of this.controlsDictionary.getValues()) {
+            for (let control of this._controlsDictionary.getValues()) {
                 if (control instanceof NextAdmin.UI.FormControl && control['_bindedPropertyName']) {
                     this.dataController.bindControl(control, control['_bindedPropertyName']);
                     if (updateControlValueFromData) {
@@ -439,14 +529,6 @@ namespace NextAdmin.UI {
 
         public getCell(col: number, row: number) {
             return this._cellsDictionary.get(col + ',' + row);
-        }
-
-        public getControl(col: number, row: number): NextAdmin.UI.Control {
-            let cell = this.getCell(col, row);
-            if (cell == null) {
-                return null;
-            }
-            return cell['_control'] as NextAdmin.UI.Control;
         }
 
         public getCells(): Array<HTMLTableCellElement> {

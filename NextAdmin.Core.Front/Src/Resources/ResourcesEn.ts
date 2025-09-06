@@ -298,6 +298,8 @@ namespace NextAdmin {
 
         recoverPasswordDefaultError = "An error occurred while sending the recovery email, this error has been forwarded to our technical services.";
 
+        newData = "New data";
+
     }
 
     export var Resources = new ResourcesEn();

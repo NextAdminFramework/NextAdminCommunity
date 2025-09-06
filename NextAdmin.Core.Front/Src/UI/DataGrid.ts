@@ -1163,7 +1163,7 @@ namespace NextAdmin.UI {
                     this.viewFiltersLayout.element.style.marginTop = '4px';
                     if (this.viewFiltersLayout.options.items && this.viewFiltersLayout.options.items.length > 0) {
                         for (let item of this.viewFiltersLayout.options.items) {
-                            let control = this.viewFiltersLayout.formLayout.getControl(item.col, item.row) as NextAdmin.UI.FormControl;
+                            let control = this.viewFiltersLayout.formLayout.getControlByPosition(item.col, item.row) as NextAdmin.UI.FormControl;
                             if (control != null) {
                                 control.onValueChanged.subscribe((sender, args) => {
                                     this.onFilterValueChanged.dispatch(this, {
@@ -1195,7 +1195,7 @@ namespace NextAdmin.UI {
         public getFilter(filterName?: string): FormControl {
             let filterGridItem = this.viewFiltersLayout.options.items.firstOrDefault(a => a.propertyName == filterName);
             if (filterGridItem != null) {
-                return this.viewFiltersLayout.formLayout.getControl(filterGridItem.col, filterGridItem.row) as FormControl;
+                return this.viewFiltersLayout.formLayout.getControlByPosition(filterGridItem.col, filterGridItem.row) as FormControl;
             }
             return null;
         }
@@ -1208,7 +1208,7 @@ namespace NextAdmin.UI {
                 if (a != null) {
                     return {
                         filterName: a.propertyName,
-                        filter: this.viewFiltersLayout.formLayout.getControl(a.col, a.row) as FormControl
+                        filter: this.viewFiltersLayout.formLayout.getControlByPosition(a.col, a.row) as FormControl
                     };
                 }
                 return null;
@@ -1248,7 +1248,7 @@ namespace NextAdmin.UI {
                                 let filterValue = null;
                                 let filterOption = view.filters.firstOrDefault(e => e.propertyName == filterName);
                                 if (filterOption != null) {
-                                    let filter = this.viewFiltersLayout.formLayout.getControl(filterOption.col, filterOption.row) as NextAdmin.UI.FormControl;
+                                    let filter = this.viewFiltersLayout.formLayout.getControlByPosition(filterOption.col, filterOption.row) as NextAdmin.UI.FormControl;
                                     if (filter != null) {
                                         filterValue = filter.getValue();
                                     }
@@ -3264,18 +3264,18 @@ namespace NextAdmin.UI {
                 return;
             }
             if (this.column.options.controlFactory != null) {
-                this.setControl(this.column.options.controlFactory(this));
+                this.setFormControl(this.column.options.controlFactory(this));
             }
             else if (this.column.options.useDefaultControl && this.propertyInfo != null) {
                 let control = Helper.getDefaultPropertyFormControl(this.propertyInfo, this.grid.options.style == TableStyle.modernNoCellPadding);
                 if (control != null) {
-                    this.setControl(control);
+                    this.setFormControl(control);
                 }
             }
         }
 
 
-        public setControl(control: FormControl) {
+        public setFormControl(control: FormControl) {
             this.control = control;
             this.element.innerHTML = '';
             if (control == null)
@@ -3284,6 +3284,9 @@ namespace NextAdmin.UI {
 
             if (this.propertyInfo != null) {
                 this.control.setPropertyInfo(this.propertyInfo);
+                if (control instanceof LabelFormControl) {
+                    control.setLabel('');
+                }
             }
 
             if (this.grid.isEnable()) {
@@ -3620,7 +3623,7 @@ namespace NextAdmin.UI {
                         btn.element.remove();
                         let col = Number(cellKey.split(',')[0]);
                         let row = Number(cellKey.split(',')[1]);
-                        this.removeItem(col, row);
+                        this.removeItemByPosition(col, row);
                         cell.enable();
                         appendAddControlButtonToCell(cell, cellKey);
 

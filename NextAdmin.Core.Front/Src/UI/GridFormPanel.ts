@@ -88,7 +88,7 @@ namespace NextAdmin.UI {
                         let row = this.grid.addDataItem(data, NextAdmin.Business.DataState.append);
                         this.grid.selectRow(row);
                     },
-                    ...this.options.gridOption
+                    ...this.options.gridOptions
                 }));
                 this.grid.onSelectedRowsChanged.subscribe((grid, rows) => {
                     let row = rows.firstOrDefault();
@@ -152,7 +152,7 @@ namespace NextAdmin.UI {
     export interface GridFormPanelOptions extends ControlOptions {
 
 
-        gridOption?: DataGridOptions_;
+        gridOptions?: DataGridOptions_;
 
         formPanelOption?: FormPanelOptions;
 

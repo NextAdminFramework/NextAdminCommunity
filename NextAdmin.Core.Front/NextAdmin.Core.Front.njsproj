@@ -102,6 +102,7 @@
     <TypeScriptCompile Include="Src\UI\AspectRatioContainer.ts" />
     <TypeScriptCompile Include="Src\UI\Button.ts" />
     <TypeScriptCompile Include="Src\UI\ChangePasswordModal.ts" />
+    <TypeScriptCompile Include="Src\UI\Checkbox.ts" />
     <TypeScriptCompile Include="Src\UI\CollapsibleFilter.ts" />
     <TypeScriptCompile Include="Src\UI\Container.ts" />
     <TypeScriptCompile Include="Src\UI\FlexLayout.ts" />
@@ -111,6 +112,7 @@
     <TypeScriptCompile Include="Src\UI\Link.ts" />
     <TypeScriptCompile Include="Src\UI\MenuModal.ts" />
     <TypeScriptCompile Include="Src\UI\NoUiModal.ts" />
+    <TypeScriptCompile Include="Src\UI\Range.ts" />
     <TypeScriptCompile Include="Src\UI\ScrollableHorizontalBar.ts" />
     <TypeScriptCompile Include="Src\UI\SelectDropDownButton.ts" />
     <TypeScriptCompile Include="Src\UI\Text.ts" />

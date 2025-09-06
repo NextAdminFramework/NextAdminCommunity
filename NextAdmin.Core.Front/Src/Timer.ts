@@ -36,8 +36,8 @@
         }
 
 
-        public throttle(callBack: () => void, delay: number) {
-            if (!this.isRuning()) {
+        public throttle(callBack: () => void, delay: number, restartTimer?: boolean) {
+            if (restartTimer || !this.isRuning()) {
                 this.start(delay);
             }
             this.executeAtNextTick(() => {

@@ -26,6 +26,7 @@ namespace NextAdmin.UI {
             + ".next-admin-btn-small{height:24px;font-size:10px;padding-left:2px;padding-right:2px}"
             + ".next-admin-btn-medium{height:34px;font-size:14px;font-weight:500;padding-left:5px;padding-right:5px}"
             + ".next-admin-btn-large{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px}"
+            + ".next-admin-btn-large-responsive{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px; @media (max-width: 768px) { height:34px;font-size:14px; }}"
 
 
             + ".next-admin-btn-default{background:#FFF;color:#444;}.next-admin-btn-default:hover,.next-admin-btn-white.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
@@ -44,6 +45,7 @@ namespace NextAdmin.UI {
             + ".next-admin-btn-bg-black{background:#3A3A3A;color:#fff;}.next-admin-btn-bg-black:hover,.next-admin-btn-bg-black.next-admin-btn-pressed{background:#151515;box-shadow:inset 0px 0px 4px #444}"
             + ".next-admin-btn-no-bg{background:rgba(255,255,255,0);color:#000; border:0px}.next-admin-btn-no-bg:hover,.next-admin-btn-no-bg.next-admin-btn-pressed{color:#105ABE;text-decoration: underline;border:0px!important;}"
             + ".next-admin-btn-no-bg-white{background:rgba(255,255,255,0);color:#fff; border:0px}.next-admin-btn-no-bg-white:hover,.next-admin-btn-no-bg-white.next-admin-btn-pressed{color:#f0f0f0;text-decoration: underline;border:0px!important;}"
+            + ".next-admin-btn-no-bg-light-grey{background:rgba(255,255,255,0);color:#777; border:0px}.next-admin-btn-no-bg-light-grey:hover,.next-admin-btn-no-bg-light-grey.next-admin-btn-pressed{color:#444;text-decoration: underline;border:0px!important;}"
             + ".next-admin-btn-no-bg-blue{background:rgba(255,255,255,0);color:#0d6efd; border:0px}.next-admin-btn-no-bg-blue:hover,.next-admin-btn-no-blue-bg.next-admin-btn-pressed{color:#053b8a;text-decoration: underline;border:0px!important;}"
             + ".next-admin-btn-no-bg-dark-blue{background:rgba(255,255,255,0);color:" + DefaultStyle.BlueTwo + "; border:0px}.next-admin-btn-no-bg-dark-blue:hover,.next-admin-btn-no-bg.next-admin-btn-pressed{color:#053b8a;text-decoration: underline;border:0px!important;}"
             + ".next-admin-btn-no-bg-red{background:rgba(255,255,255,0);color:" + DefaultStyle.RedOne + "; border:0px}.next-admin-btn-no-bg-red:hover,.next-admin-btn-no-bg.next-admin-btn-pressed{color:#053b8a;text-decoration: underline;border:0px!important;}";
@@ -81,9 +83,11 @@ namespace NextAdmin.UI {
                 case ButtonSize.medium:
                     this.element.classList.add('next-admin-btn-medium');
                     break;
-
                 case ButtonSize.large:
                     this.element.classList.add('next-admin-btn-large');
+                    break;
+                case ButtonSize.largeResponsive:
+                    this.element.classList.add('next-admin-btn-large-responsive');
                     break;
             }
 
@@ -151,6 +155,8 @@ namespace NextAdmin.UI {
                     return 'next-admin-btn-no-bg';
                 case ButtonStyle.noBgWhite:
                     return 'next-admin-btn-no-bg-white';
+                case ButtonStyle.noBgLightGrey:
+                    return 'next-admin-btn-no-bg-light-grey';
                 case ButtonStyle.noBgDarkBlue:
                     return 'next-admin-btn-no-bg-dark-blue';
                 case ButtonStyle.noBgBlue:
@@ -276,6 +282,7 @@ namespace NextAdmin.UI {
         bgGreen,
         bgRed,
         noBg,
+        noBgLightGrey,
         noBgWhite,
         noBgBlue,
         noBgDarkBlue,
@@ -288,6 +295,7 @@ namespace NextAdmin.UI {
         small,
         medium,
         large,
+        largeResponsive,
     }
 
     export interface ButtonBadgeOptions {

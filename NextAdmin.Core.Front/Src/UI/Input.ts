@@ -124,7 +124,9 @@ namespace NextAdmin.UI {
                 this.input.setAttribute('autocomplete', 'new-password');
             }
             if (this.options.decimalCount != null) {
-                this.options.inputType = InputType.number;
+                if (this.options.inputType == null) {
+                    this.options.inputType = InputType.number;
+                }
                 let step = '0.';
                 for (let i = 1; i < this.options.decimalCount; i++) {
                     step += '0';
@@ -222,24 +224,6 @@ namespace NextAdmin.UI {
             this.input.setAttribute('placeholder', text);
             return this;
         }
-
-        public setLabel(text: string): Input {
-            this.label.innerHTML = text;
-            if (text) {
-                this.label.style.display = '';
-                this.labelContainer.style.display = '';
-            }
-            else {
-                this.labelContainer.style.display = 'none';
-                this.label.style.display = 'none';
-            }
-            return this;
-        }
-
-        getLabel(): string {
-            return this.label.innerText;
-        }
-
 
 
         setValue(value: any, fireChange?: boolean) {

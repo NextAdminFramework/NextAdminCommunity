@@ -140,9 +140,9 @@ namespace NextAdmin.UI {
 
         isResponsive?: boolean;
 
-        style: TextStyle;
+        style?: TextStyle;
 
-        size: TextSize;
+        size?: TextSize;
 
         text?: string;
 

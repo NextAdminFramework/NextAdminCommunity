@@ -24,7 +24,11 @@ namespace NextAdmin.UI {
                 border-radius:6px;
                 box-shadow:0px 0px 2px rgba(0,0,0,0.25);
             }
-
+            .next-admin-image.next-admin-image-white-border{
+                background-color:#f9f9f9;
+                border-radius:6px;
+                box-shadow:0px 0px 2px rgba(0,0,0,0.25);
+            }
         }
 
         `;
@@ -36,8 +40,8 @@ namespace NextAdmin.UI {
                 ...options
             } as ImageOptions);
 
-            Style.append("NextAdmin.UI.Image", Input.style);
-            this.element.classList.add('next-admin-image');
+            Style.append("NextAdmin.UI.Image", Image.style);
+            this.element.classList.add('next-admin-image-container');
             if (this.options.width) {
                 this.element.style.width = this.options.width;
             }
@@ -49,7 +53,7 @@ namespace NextAdmin.UI {
                 image.classList.add('next-admin-image');
                 image.style.width = '100%';
                 image.style.height = '100%';
-                image.style.backgroundColor = '#f9f9f9';
+                //image.style.backgroundColor = '#f9f9f9';
                 image.src = this.options.src;
             });
 
@@ -64,6 +68,9 @@ namespace NextAdmin.UI {
                     break;
                 case ImageStyle.lightBordered:
                     this.image.classList.add('next-admin-image-light-border');
+                    break;
+                case ImageStyle.whiteBordered:
+                    this.image.classList.add('next-admin-image-white-border');
                     break;
             }
         }
@@ -102,7 +109,8 @@ namespace NextAdmin.UI {
 
     export enum ImageStyle {
         none,
-        lightBordered
+        lightBordered,
+        whiteBordered
     }
 
     export enum ImageDisplayMode {
