@@ -11,6 +11,21 @@ namespace NextAdmin.UI {
             height:100%;
             display:flex;
         }
+        .next-admin-flex-layout.responsive-small{
+            @media (max-width: 512px) {
+                display:block;
+            }
+        }
+        .next-admin-flex-layout.responsive-medium{
+            @media (max-width: 768px) {
+                display:block;
+            }
+        }
+        .next-admin-flex-layout.responsive-large{
+            @media (max-width: 1024px) {
+                display:block;
+            }
+        }
 
         `;
 
@@ -126,13 +141,45 @@ namespace NextAdmin.UI {
     }
 
     export class HorizontalFlexLayout extends FlexLayout {
-        constructor(options?: FlexLayoutOptions) {
+
+        options: HorizontalFlexLayoutOptions;
+        constructor(options?: HorizontalFlexLayoutOptions) {
             super({
                 direction: FlexLayoutDirection.horizontal,
                 ...options
             });
+            if (this.options.responsiveMode) {
+                this.setResponsiveMode(this.options.responsiveMode);
+            }
         }
+
+        setResponsiveMode(responsiveMode?: HorizontalLayoutResponsiveMode) {
+            switch (responsiveMode) {
+                default:
+                case HorizontalLayoutResponsiveMode.disabled:
+                    break;
+                case HorizontalLayoutResponsiveMode.small:
+                    this.element.classList.add('responsive-small');
+                    break;
+                case HorizontalLayoutResponsiveMode.medium:
+                    this.element.classList.add('responsive-medium');
+                    break;
+                case HorizontalLayoutResponsiveMode.large:
+                    this.element.classList.add('responsive-large');
+                    break;
+            }
+
+
+        }
+
     }
+
+    export interface HorizontalFlexLayoutOptions extends FlexLayoutOptions {
+
+        responsiveMode?: HorizontalLayoutResponsiveMode;
+
+    }
+
     export class VerticalFlexLayout extends FlexLayout {
         constructor(options?: FlexLayoutOptions) {
             super({
@@ -140,6 +187,13 @@ namespace NextAdmin.UI {
                 ...options
             });
         }
+    }
+
+    export enum HorizontalLayoutResponsiveMode {
+        disabled = 0,
+        small = 512,
+        medium = 768,
+        large = 1024,
     }
 
 }

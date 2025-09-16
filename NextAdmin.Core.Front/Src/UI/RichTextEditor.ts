@@ -191,7 +191,10 @@ namespace NextAdmin.UI {
                 if (!fireChange) {
                     this.suspendChange = true;
                 }
+
+                this.quillContainer.style.display = 'none';//bug fix to avoid scroll to editr
                 this.quill.pasteHTML((value as string ?? '').replace(new RegExp('<p><br></p>', 'g'), '<br/>').replace(new RegExp('<p>', 'g'), '<p><br/>').replaceAll('<p><br/>', '<p>'));
+                this.quillContainer.style.display = '';
                 this.suspendChange = false;
             },0);
         }

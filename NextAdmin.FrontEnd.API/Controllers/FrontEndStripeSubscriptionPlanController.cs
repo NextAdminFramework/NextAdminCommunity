@@ -43,7 +43,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                     return ApiResponse<string>.Error("INVALID_PLAN");
                 }
 
-                var service = new SessionService(new StripeClient(NextAdminFrontEndHelper.StripeApiKey));
+                var service = new SessionService(new StripeClient(GetStripeSecretApiKey()));
                 Session stripeSession = service.Create(new SessionCreateOptions
                 {
                     Mode = "subscription",
@@ -108,7 +108,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                     return ApiResponse.Error(ApiResponseCode.ParametersError);
                 }
 
-                var stripeSubscriptionService = new SubscriptionService(new StripeClient(NextAdminFrontEndHelper.StripeApiKey));
+                var stripeSubscriptionService = new SubscriptionService(new StripeClient(NextAdminFrontEndHelper.StripeSecretApiKey));
                 var stripeSubscription = stripeSubscriptionService.Get(userSubscription.Id);
                 if (stripeSubscription == null)
                 {
@@ -158,7 +158,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                     return ApiResponse.Error(ApiResponseCode.ParametersError);
                 }
 
-                var stripeSubscriptionService = new SubscriptionService(new StripeClient(NextAdminFrontEndHelper.StripeApiKey));
+                var stripeSubscriptionService = new SubscriptionService(new StripeClient(NextAdminFrontEndHelper.StripeSecretApiKey));
                 var stripeSubscription = stripeSubscriptionService.Get(userSubscription.Id);
                 if (stripeSubscription == null)
                 {
@@ -219,11 +219,22 @@ namespace NextAdmin.FrontEnd.API.Controllers
             }
         }
 
+        protected virtual string GetStripeSecretApiKey()
+        {
+            var key = NextAdminFrontEndHelper.StripeSecretApiKey;
+            if (key == null)
+            {
+                throw new Exception("FrontEndStripeWebhookController.GetStripeApiKey : StripeApiKey is required");
+            }
+            return key;
+        }
+
 
         protected abstract ISubscriptionInfo GetSubscriptionInfo(string planId);
 
         protected abstract string? GetSuccessPaymentUrl(string planId);
 
         protected abstract string? GetCancelPaymentUrl(string planId);
+
     }
 }

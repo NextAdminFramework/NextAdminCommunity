@@ -219,6 +219,7 @@ namespace NextAdmin.UI {
                 minHeight: '200px',
                 canSelectView: options?.views?.length > 1,
                 enableDoubleClickOpenModal: true,
+                hasHeader: true,
                 hasTopBar: true,
                 reorderingRowMode: DataGridReorderingRowMode.dragAndDropHandle,
                 columns: [],
@@ -325,6 +326,9 @@ namespace NextAdmin.UI {
             this.tHead = document.createElement('thead');
             this.tHead.classList.add('next-admin-table-thead');
             this.table.appendChild(this.tHead);
+            if (!this.options.hasHeader) {
+                this.tHead.style.visibility = 'collapse';
+            }
 
             this.headerRow = document.createElement('tr');
             this.headerRow.classList.add('next-admin-table-thead-row');
@@ -686,7 +690,7 @@ namespace NextAdmin.UI {
                 let navigateFromFunc = (sender, args: NavigateFromArgs) => {
                     if (checkDataState) {
                         args.cancelNavigation = true;
-                        this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(async() => {
+                        this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(async () => {
                             checkDataState = false;
                             await this.options.page.navigationController.navigateTo(args.nextPage.options.name, args.nextPageParameters);
                             checkDataState = true;
@@ -2553,7 +2557,7 @@ namespace NextAdmin.UI {
         }
 
         getDropDownSearchFilter(): NextAdmin.UI.DropDownButton {
-            if (!NextAdmin.String.isNullOrEmpty(this.options.propertyName) && this.grid.options.searchMode == DataSearchMode.server && this.options.searchable !== false && this.options.queryble !== false) {
+            if (!NextAdmin.String.isNullOrEmpty(this.options.propertyName) && this.grid.options.searchMode == DataSearchMode.server && this.options.searchable !== false && this.options.queryable !== false) {
                 let propertyInfo = this.tryGetPropertyInfo();
                 if (propertyInfo?.type == 'string') {
                     return this.getTextSearchFilter();
@@ -2808,7 +2812,7 @@ namespace NextAdmin.UI {
             });
             headerColumnSearchFilter.dropDown.element.style.zIndex = '9999';
             this.searchBox = headerColumnSearchFilter.addElement(new NextAdmin.UI.Input({
-                placeHolder: Resources.search,
+                placeholder: Resources.search,
                 css: { boxShadow: '0px 1px 2px rgba(0,0,0,0.2)' },
             })) as NextAdmin.UI.Input;
             this.searchBox.controlContainer.style.padding = '5px';
@@ -2987,7 +2991,7 @@ namespace NextAdmin.UI {
         }
 
         isQueryble() {
-            return this.options.queryble !== false;
+            return this.options.queryable !== false;
         }
 
     }
@@ -3719,6 +3723,8 @@ namespace NextAdmin.UI {
 
         hasTopBar?: boolean;
 
+        hasHeader?: boolean;
+
         actionMenuItems?: MenuItem[];
 
         canExport?: boolean;
@@ -3802,7 +3808,7 @@ namespace NextAdmin.UI {
 
         defaultOrdering?: ColumnOrdering;
 
-        queryble?: boolean;
+        queryable?: boolean;
 
         hidden?: boolean;
 

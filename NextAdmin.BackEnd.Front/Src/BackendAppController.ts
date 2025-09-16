@@ -192,11 +192,11 @@ namespace NextAdmin {
             }
         }
 
-        async navigateTo(pageName: string, parameters?: any, updateBrowserUrl?: boolean, force?: boolean): Promise<NextAdmin.UI.Page> {
+        async navigateTo(pageName: string, parameters?: any, updateNavigatorState?: UpdateNavigatorState, force?: boolean): Promise<NextAdmin.UI.Page> {
             if (pageName == this.options.defaultPage && this.user != null) {
-                return super.navigateTo(this.options.afterLoginPage, null, false);
+                return super.navigateTo(this.options.afterLoginPage, null, UpdateNavigatorState.none);
             }
-            return await super.navigateTo(pageName, parameters, updateBrowserUrl, force);
+            return await super.navigateTo(pageName, parameters, updateNavigatorState, force);
         }
 
         public logOutUser(reloadPage = true) {

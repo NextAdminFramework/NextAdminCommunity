@@ -20,27 +20,29 @@ namespace NextAdmin.UI {
             });
 
             this.container = this.body.appendHTML('div', (container) => {
-                container.style.padding = '40px';
+                container.style.padding = '20px';
+
 
                 this.loginInput = container.appendControl(new NextAdmin.UI.Input({
                     labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                     size: NextAdmin.UI.InputSize.large,
-                    placeHolder: 'E-mail',
-                }), (emailInput) => {
-                    emailInput.setValue(this.options.email);
-                    emailInput.element.style.marginBottom = '20px';
-                });
-            });
+                    placeholder: 'E-mail',
+                    value: this.options.email,
+                    css: { marginBottom:'30px' }
+                }));
 
-            this.sendEmailButton = this.rightFooter.appendControl(new NextAdmin.UI.Button({
-                css: { cssFloat:'right' },
-                style: NextAdmin.UI.ButtonStyle.lightBlue,
-                text: Resources.emailIcon + ' ' + Resources.recoverMyPassword,
-                action: (button) => {
-                    this.sendPasswordRecoveryEmail();
-                }
-            }));
-            this.sendEmailButton.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(this.loginInput.getValue()), this.loginInput);
+                this.sendEmailButton = container.appendControl(new NextAdmin.UI.Button({
+                    style: NextAdmin.UI.ButtonStyle.lightBlue,
+                    text: Resources.emailIcon + ' ' + Resources.recoverMyPassword,
+                    css: { width:'100%' },
+                    action: (button) => {
+                        this.sendPasswordRecoveryEmail();
+                    }
+                }), (sendEmailButton) => {
+                    sendEmailButton.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(this.loginInput.getValue()), this.loginInput);
+                });
+
+            });
         }
 
         async sendPasswordRecoveryEmail() {

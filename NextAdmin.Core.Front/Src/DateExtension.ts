@@ -7,6 +7,18 @@ interface Date {
 
     getWeek();
 
+    truncateToDate();
+
+    truncateToHour();
+
+    truncateToMinute();
+
+    addSeconds(seconds: number): Date;
+
+    addMinutes(minutes: number): Date;
+
+    addHours(hours: number): Date;
+
     addDays(days: number): Date;
 
     addMonths(days: number): Date;
@@ -15,6 +27,11 @@ interface Date {
 
     clone(): Date;
 
+    toLocalShortTimeString(timeSeparator?: string): string;
+
+    toISODateString(): string;
+
+    isToday(): boolean;
 }
 
 
@@ -33,6 +50,48 @@ try {
             - 3 + (week1.getDay() + 6) % 7) / 7);
     };
 
+
+    Date.prototype.truncateToDate = function (): Date {
+        let _this = this as Date;
+        _this.setHours(0);
+        _this.setMinutes(0);
+        _this.setSeconds(0);
+        _this.setMilliseconds(0);
+        return this;
+    };
+
+    Date.prototype.truncateToHour = function (): Date {
+        let _this = this as Date;
+        _this.setMinutes(0);
+        _this.setSeconds(0);
+        _this.setMilliseconds(0);
+        return this;
+    };
+
+    Date.prototype.truncateToMinute = function (): Date {
+        let _this = this as Date;
+        _this.setSeconds(0);
+        _this.setMilliseconds(0);
+        return this;
+    };
+
+    Date.prototype.addSeconds = function (seconds: number): Date {
+        let _this = this as Date;
+        _this.setSeconds(_this.getSeconds() + seconds);
+        return this;
+    };
+
+    Date.prototype.addMinutes = function (minutes: number): Date {
+        let _this = this as Date;
+        _this.setMinutes(_this.getMinutes() + minutes);
+        return this;
+    };
+
+    Date.prototype.addHours = function (hours: number): Date {
+        let _this = this as Date;
+        _this.setHours(_this.getHours() + hours);
+        return this;
+    };
 
     Date.prototype.addDays = function (days: number): Date {
         this.setDate(this.getDate() + days);
@@ -60,6 +119,21 @@ try {
         const millisecondsPerDay = 24 * 60 * 60 * 1000; // Nombre de millisecondes dans une journée
         const diffInMilliseconds = (<Date>this).getTime() - new Date(0, 0, 1).getTime(); // Différence en millisecondes
         return Math.floor(diffInMilliseconds / millisecondsPerDay);
+    };
+
+    Date.prototype.toLocalShortTimeString = function (timeSeparator = ':'): string {
+        let _this = this as Date;
+        return _this.getHours() + timeSeparator + NextAdmin.Numeric.pad(_this.getMinutes(), 2);
+    };
+
+    Date.prototype.toISODateString = function (): string {
+        let _this = this as Date;
+        return _this.toISOString().substring(0, 10);
+    };
+
+    Date.prototype.isToday = function (): boolean {
+        let _this = this as Date;
+        return _this.toISODateString() == new Date().toISODateString();
     };
 
 }

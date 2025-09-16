@@ -7,6 +7,8 @@ namespace NextAdmin.Models {
 
         password: string;
 
+        verificationCode?: string;
+
     }
 
 }

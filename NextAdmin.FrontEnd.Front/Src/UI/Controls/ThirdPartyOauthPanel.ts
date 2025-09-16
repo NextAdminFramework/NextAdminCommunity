@@ -38,7 +38,7 @@ namespace NextAdmin.UI {
                         if (this.options.afterOAuthUrlCookieName) {
                             NextAdmin.Cookies.set(this.options.afterOAuthUrlCookieName, window.location.href);
                         }
-                        window.location.href = ThirdPartyOauthPanel.getOAuthUrl(this.options.googleOauthOptions);
+                        window.location.href = ThirdPartyOauthPanel.getOAuthUrl(this.options.googleOauthOptions, this.options.emailAddress);
                     }
                 }), (btn) => {
                     btn.element.style.width = '100%';
@@ -69,6 +69,8 @@ namespace NextAdmin.UI {
         googleOauthOptions?: GoogleOauthOptions;
 
         afterOAuthUrlCookieName?: string;
+
+        emailAddress?: string;
 
     }
 

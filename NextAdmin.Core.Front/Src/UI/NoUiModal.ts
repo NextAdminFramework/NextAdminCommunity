@@ -30,7 +30,7 @@ namespace NextAdmin.UI {
 
         constructor(options: noUiModalOptions) {
             super({
-                size: NextAdmin.UI.ModalSize.large,
+                size: NextAdmin.UI.ModalSize.ultraLarge,
                 canMoveAndResize: false,
                 canChangeScreenMode: false,
                 canMinimize:false,

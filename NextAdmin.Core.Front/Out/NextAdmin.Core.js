@@ -471,6 +471,42 @@ try {
         return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
             - 3 + (week1.getDay() + 6) % 7) / 7);
     };
+    Date.prototype.truncateToDate = function () {
+        let _this = this;
+        _this.setHours(0);
+        _this.setMinutes(0);
+        _this.setSeconds(0);
+        _this.setMilliseconds(0);
+        return this;
+    };
+    Date.prototype.truncateToHour = function () {
+        let _this = this;
+        _this.setMinutes(0);
+        _this.setSeconds(0);
+        _this.setMilliseconds(0);
+        return this;
+    };
+    Date.prototype.truncateToMinute = function () {
+        let _this = this;
+        _this.setSeconds(0);
+        _this.setMilliseconds(0);
+        return this;
+    };
+    Date.prototype.addSeconds = function (seconds) {
+        let _this = this;
+        _this.setSeconds(_this.getSeconds() + seconds);
+        return this;
+    };
+    Date.prototype.addMinutes = function (minutes) {
+        let _this = this;
+        _this.setMinutes(_this.getMinutes() + minutes);
+        return this;
+    };
+    Date.prototype.addHours = function (hours) {
+        let _this = this;
+        _this.setHours(_this.getHours() + hours);
+        return this;
+    };
     Date.prototype.addDays = function (days) {
         this.setDate(this.getDate() + days);
         return this;
@@ -492,6 +528,18 @@ try {
         const millisecondsPerDay = 24 * 60 * 60 * 1000; // Nombre de millisecondes dans une journée
         const diffInMilliseconds = this.getTime() - new Date(0, 0, 1).getTime(); // Différence en millisecondes
         return Math.floor(diffInMilliseconds / millisecondsPerDay);
+    };
+    Date.prototype.toLocalShortTimeString = function (timeSeparator = ':') {
+        let _this = this;
+        return _this.getHours() + timeSeparator + NextAdmin.Numeric.pad(_this.getMinutes(), 2);
+    };
+    Date.prototype.toISODateString = function () {
+        let _this = this;
+        return _this.toISOString().substring(0, 10);
+    };
+    Date.prototype.isToday = function () {
+        let _this = this;
+        return _this.toISODateString() == new Date().toISODateString();
     };
 }
 catch {
@@ -1209,7 +1257,9 @@ try {
     };
     HTMLElement.prototype.disable = function () {
         let element = this;
-        element.style.position = 'relative';
+        if (element.style.position != 'relative' && element.style.position != 'absolute' && element.style.position != 'fixed') {
+            element.style.position = 'relative';
+        }
         let disableContainer = element['_disableContainer'];
         if (disableContainer != null) {
             return disableContainer;
@@ -1640,6 +1690,19 @@ var NextAdmin;
         UpdateNavigatorState[UpdateNavigatorState["replaceState"] = 2] = "replaceState";
     })(UpdateNavigatorState = NextAdmin.UpdateNavigatorState || (NextAdmin.UpdateNavigatorState = {}));
     NextAdmin.CacheKey = NextAdmin.Guid.createStrGuid();
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    class Numeric {
+        static pad(number, digitCount) {
+            let strNumber = number.toFixed(0);
+            while (strNumber.length < digitCount) {
+                strNumber = "0" + strNumber;
+            }
+            return strNumber;
+        }
+    }
+    NextAdmin.Numeric = Numeric;
 })(NextAdmin || (NextAdmin = {}));
 try {
     Number.prototype.toStringDigit = function (digitCount) {
@@ -4258,7 +4321,7 @@ var NextAdmin;
                 return (await this.entityClient.countEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: this.query.columnToSelectNames, orderColumnNames: this.query.orderColumnNames })).data;
             }
             async sum(member) {
-                return (await this.entityClient.sumEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: this.query.columnToSelectNames, orderColumnNames: this.query.orderColumnNames })).data;
+                return (await this.entityClient.sumEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: [member], orderColumnNames: this.query.orderColumnNames })).data;
             }
             async min(propertyName) {
                 return (await this.entityClient.minEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: propertyName ? [propertyName] : this.query.columnToSelectNames, orderColumnNames: this.query.orderColumnNames })).data;
@@ -4387,6 +4450,9 @@ var NextAdmin;
             }
             async max_(property) {
                 return this.max(this.entityInfo.getPropertyName(property));
+            }
+            async sum_(property) {
+                return this.sum(this.entityInfo.getPropertyName(property));
             }
         }
         Business.EntityDbSetHandler = EntityDbSetHandler;
@@ -4607,7 +4673,7 @@ var NextAdmin;
             this.emailIcon = '<i class="fas fa-envelope"></i>';
             this.lockIcon = '<i class="fas fa-lock"></i>';
             this.noDataIcon = '<i class="fas fa-database"></i>';
-            this.copyIcon = '<i class="fa-solid fa-copy"></i>';
+            this.copyIcon = '<i class="fas fa-copy"></i>';
             this.dragIcon = '<i class="fas fa-grip-vertical"></i>';
             this.backIcon = '<i class="fas fa-arrow-alt-left"></i>';
             this.linkIcon = '<i class="fas fa-link"></i>';
@@ -5650,6 +5716,9 @@ var NextAdmin;
                     case ButtonSize.medium:
                         this.element.classList.add('next-admin-btn-medium');
                         break;
+                    case ButtonSize.mediumResponsive:
+                        this.element.classList.add('next-admin-btn-medium-responsive');
+                        break;
                     case ButtonSize.large:
                         this.element.classList.add('next-admin-btn-large');
                         break;
@@ -5787,8 +5856,9 @@ var NextAdmin;
             + '.next-admin-btn-extra-small{height:12.5px;font-size:10px;padding:0px;}'
             + ".next-admin-btn-small{height:24px;font-size:10px;padding-left:2px;padding-right:2px}"
             + ".next-admin-btn-medium{height:34px;font-size:14px;font-weight:500;padding-left:5px;padding-right:5px}"
+            + ".next-admin-btn-medium-responsive{height:34px;font-size:14px;font-weight:500;padding-left:5px;padding-right:5px; @media (max-width: 768px) { height:24px;font-size:12px; } @media (max-width: 512px) { height:24px;font-size:10px;padding-left:2px;padding-right:2px; }} "
             + ".next-admin-btn-large{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px}"
-            + ".next-admin-btn-large-responsive{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px; @media (max-width: 768px) { height:34px;font-size:14px; }}"
+            + ".next-admin-btn-large-responsive{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px; @media (max-width: 768px) { height:34px;font-size:14px; } @media (max-width: 512px) { padding-left:4px;padding-right:4px; }}"
             + ".next-admin-btn-default{background:#FFF;color:#444;}.next-admin-btn-default:hover,.next-admin-btn-white.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-red{background:#FFF;color:" + UI.DefaultStyle.RedOne + ";}.next-admin-btn-red:hover,.next-admin-btn-red.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-green{background:#FFF;color:" + UI.DefaultStyle.GreenOne + ";}.next-admin-btn-green:hover,.next-admin-btn-green.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
@@ -5836,8 +5906,9 @@ var NextAdmin;
             ButtonSize[ButtonSize["extraSmall"] = 0] = "extraSmall";
             ButtonSize[ButtonSize["small"] = 1] = "small";
             ButtonSize[ButtonSize["medium"] = 2] = "medium";
-            ButtonSize[ButtonSize["large"] = 3] = "large";
-            ButtonSize[ButtonSize["largeResponsive"] = 4] = "largeResponsive";
+            ButtonSize[ButtonSize["mediumResponsive"] = 3] = "mediumResponsive";
+            ButtonSize[ButtonSize["large"] = 4] = "large";
+            ButtonSize[ButtonSize["largeResponsive"] = 5] = "largeResponsive";
         })(ButtonSize = UI.ButtonSize || (UI.ButtonSize = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
@@ -5967,7 +6038,7 @@ var NextAdmin;
                     style: Modal.defaultStyle,
                     canChangeScreenMode: (options == null || (options.size != ModalSize.smallFitContent && options.size != ModalSize.mediumFitContent)) && NextAdmin.UserAgent.isDesktop(),
                     parentElement: document.body,
-                    size: ModalSize.large,
+                    size: ModalSize.ultraLarge,
                     hasBodyOverflow: true,
                     removeOnClose: true,
                     canClose: true,
@@ -6161,6 +6232,9 @@ var NextAdmin;
                         break;
                     case ModalSize.large:
                         this._currentModalSizeClass = 'next-admin-modal-large';
+                        break;
+                    case ModalSize.ultraLarge:
+                        this._currentModalSizeClass = 'next-admin-modal-ultra-large';
                         break;
                 }
                 this.modal.classList.add(this._currentModalSizeClass);
@@ -6702,25 +6776,28 @@ var NextAdmin;
         }
         Modal.style = '.next-admin-modal-btn-close{border-top-right-radius:4px}'
             + '.next-admin-modal-toolbar-button{ display:inline-block;float:right;font-size:20px;height:32px;width:32px;text-align:center;cursor:pointer }'
-            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:4vh;width:80%;height:95%; } }' //large modal
-            + '@media (max-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
-            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
-            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:5vh;width:70%;height:90%; } }' //mediaum modal
-            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:5vh;width:50%;height:90%;max-width:900px } }' //mediaum modal
-            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
-            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:5vh;width:90%;height:90%; } }' //mediaum modal
-            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:5vh;width:65%;height:90%;max-width:1100px } }' //mediaum modal
-            + '@media (max-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
-            + '@media (min-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:70%;height:90%; } }' //small modal
-            + '@media (min-width: 900px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:50%;height:90%; } }' //small modal
-            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:35%;height:90%;max-width:600px } }' //small modal
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-ultra-large{ margin:0 auto;margin-top:4vh;width:80%;height:95%; } }'
+            + '@media (max-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-ultra-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-ultra-large .next-admin-modal-button-full-screen{display:none} }'
+            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } }'
+            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:5vh;width:90%;height:90%; } }'
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:5vh;width:80%;height:90%;max-width:1400px } }'
+            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } }'
+            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:5vh;width:90%;height:90%; } }'
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:5vh;width:70%;height:90%;max-width:1200px } }'
+            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } }'
+            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:5vh;width:70%;height:90%; } }'
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:5vh;width:50%;height:90%;max-width:900px } }'
+            + '@media (max-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } }'
+            + '@media (min-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:70%;height:90%; } }'
+            + '@media (min-width: 900px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:50%;height:90%; } }'
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:35%;height:90%;max-width:600px } }'
             + '.next-admin-modal-autosizing.next-admin-modal-small-fit-content{ top:50%;transform:perspective(1px) translateY(-50%) }'
-            + '@media (max-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
+            + '@media (max-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:100%; } }'
             + '@media (min-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:70%; } }' //small modal
             + '@media (min-width: 900px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:50%; } }' //small modal
             + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:35%;max-width:600px } }' //small modal
             + '.next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ top:50%;transform:perspective(1px) translateY(-50%) }'
-            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ margin:auto auto;width:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
+            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ margin:auto auto;width:100%; } }'
             + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ margin:auto auto;width:80%; } }' //small modal
             + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ margin:auto auto;width:50%;max-width:900px } }' //small modal
             + '.next-admin-modal .next-admin-panel-header{border-radius:0px;border-top:0px;border-left:0px;border-right:0px;} .next-admin-modal .next-admin-panel-footer{border-radius:0px;border-bottom:0px;border-left:0px;border-right:0px;} .next-admin-modal .next-admin-panel-body{border-left:0px;border-right:0px;border-bottom:0px}'
@@ -6824,6 +6901,7 @@ var NextAdmin;
             ModalSize[ModalSize["mediumFitContent"] = 3] = "mediumFitContent";
             ModalSize[ModalSize["mediumLarge"] = 4] = "mediumLarge";
             ModalSize[ModalSize["large"] = 5] = "large";
+            ModalSize[ModalSize["ultraLarge"] = 6] = "ultraLarge";
         })(ModalSize = UI.ModalSize || (UI.ModalSize = {}));
         let ModalStyle;
         (function (ModalStyle) {
@@ -6849,6 +6927,7 @@ var NextAdmin;
                     let newPassword1 = container.appendControl(new NextAdmin.UI.Input({
                         label: NextAdmin.Resources.newPassword,
                         labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
+                        size: NextAdmin.UI.InputSize.large,
                         inputType: NextAdmin.UI.InputType.password
                     }), (input) => {
                         input.element.style.marginBottom = '20px';
@@ -6856,12 +6935,14 @@ var NextAdmin;
                     let newPassword2 = container.appendControl(new NextAdmin.UI.Input({
                         label: NextAdmin.Resources.newPasswordRepeat,
                         labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
+                        size: NextAdmin.UI.InputSize.large,
                         inputType: NextAdmin.UI.InputType.password
                     }), (input) => {
-                        input.element.style.marginBottom = '20px';
+                        input.element.style.marginBottom = '40px';
                     });
-                    this.rightFooter.appendControl(new UI.Button({
+                    container.appendControl(new UI.Button({
                         text: NextAdmin.Resources.checkIcon + ' ' + NextAdmin.Resources.validate, style: NextAdmin.UI.ButtonStyle.blue,
+                        css: { width: '100%' },
                         action: async (button) => {
                             if (newPassword1.getValue() != newPassword2.getValue()) {
                                 NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, NextAdmin.Resources.error_passwordAreNotSame);
@@ -6881,7 +6962,6 @@ var NextAdmin;
                             }
                         }
                     }), (btn) => {
-                        btn.element.style.cssFloat = 'right';
                         btn.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(newPassword1.getValue()) && !NextAdmin.String.isNullOrEmpty(newPassword2.getValue()), newPassword1, newPassword2);
                     });
                 });
@@ -7308,8 +7388,8 @@ var NextAdmin;
                     }
                     this.onValueChanged.dispatch(this, { value: value });
                 });
-                if (this.options.placeHolder != null) {
-                    this.setPlaceholder(this.options.placeHolder);
+                if (this.options.placeholder != null) {
+                    this.setPlaceholder(this.options.placeholder);
                 }
                 this.setStyle(this.options.style);
                 this.setSize(this.options.size);
@@ -8657,6 +8737,7 @@ var NextAdmin;
                     minHeight: '200px',
                     canSelectView: options?.views?.length > 1,
                     enableDoubleClickOpenModal: true,
+                    hasHeader: true,
                     hasTopBar: true,
                     reorderingRowMode: DataGridReorderingRowMode.dragAndDropHandle,
                     columns: [],
@@ -8784,6 +8865,9 @@ var NextAdmin;
                 this.tHead = document.createElement('thead');
                 this.tHead.classList.add('next-admin-table-thead');
                 this.table.appendChild(this.tHead);
+                if (!this.options.hasHeader) {
+                    this.tHead.style.visibility = 'collapse';
+                }
                 this.headerRow = document.createElement('tr');
                 this.headerRow.classList.add('next-admin-table-thead-row');
                 this.tHead.appendChild(this.headerRow);
@@ -10815,7 +10899,7 @@ var NextAdmin;
                 }
             }
             getDropDownSearchFilter() {
-                if (!NextAdmin.String.isNullOrEmpty(this.options.propertyName) && this.grid.options.searchMode == DataSearchMode.server && this.options.searchable !== false && this.options.queryble !== false) {
+                if (!NextAdmin.String.isNullOrEmpty(this.options.propertyName) && this.grid.options.searchMode == DataSearchMode.server && this.options.searchable !== false && this.options.queryable !== false) {
                     let propertyInfo = this.tryGetPropertyInfo();
                     if (propertyInfo?.type == 'string') {
                         return this.getTextSearchFilter();
@@ -11030,7 +11114,7 @@ var NextAdmin;
                 });
                 headerColumnSearchFilter.dropDown.element.style.zIndex = '9999';
                 this.searchBox = headerColumnSearchFilter.addElement(new NextAdmin.UI.Input({
-                    placeHolder: NextAdmin.Resources.search,
+                    placeholder: NextAdmin.Resources.search,
                     css: { boxShadow: '0px 1px 2px rgba(0,0,0,0.2)' },
                 }));
                 this.searchBox.controlContainer.style.padding = '5px';
@@ -11192,7 +11276,7 @@ var NextAdmin;
                 return false;
             }
             isQueryble() {
-                return this.options.queryble !== false;
+                return this.options.queryable !== false;
             }
         }
         class DataGridRow extends UI.Control {
@@ -12737,8 +12821,12 @@ var NextAdmin;
                 }
                 let dropDownPosition = this.dropDownPosition;
                 if (dropDownPosition == null) {
+                    dropDownPosition = NextAdmin.UI.DropDownPosition.down;
                     let rightSpace = window.innerWidth - this.element.getBoundingClientRect().left;
-                    dropDownPosition = rightSpace > 400 ? NextAdmin.UI.DropDownPosition.down : NextAdmin.UI.DropDownPosition.downLeft;
+                    let leftSpace = window.innerWidth - this.element.getBoundingClientRect().left;
+                    if (rightSpace < 300 && leftSpace > 300) {
+                        dropDownPosition = NextAdmin.UI.DropDownPosition.downLeft;
+                    }
                 }
                 this.dropDown.open('0px', '0px');
                 this.dropDown.element.style.visibility = 'hidden';
@@ -13083,6 +13171,21 @@ var NextAdmin;
             height:100%;
             display:flex;
         }
+        .next-admin-flex-layout.responsive-small{
+            @media (max-width: 512px) {
+                display:block;
+            }
+        }
+        .next-admin-flex-layout.responsive-medium{
+            @media (max-width: 768px) {
+                display:block;
+            }
+        }
+        .next-admin-flex-layout.responsive-large{
+            @media (max-width: 1024px) {
+                display:block;
+            }
+        }
 
         `;
         UI.FlexLayout = FlexLayout;
@@ -13097,6 +13200,25 @@ var NextAdmin;
                     direction: FlexLayoutDirection.horizontal,
                     ...options
                 });
+                if (this.options.responsiveMode) {
+                    this.setResponsiveMode(this.options.responsiveMode);
+                }
+            }
+            setResponsiveMode(responsiveMode) {
+                switch (responsiveMode) {
+                    default:
+                    case HorizontalLayoutResponsiveMode.disabled:
+                        break;
+                    case HorizontalLayoutResponsiveMode.small:
+                        this.element.classList.add('responsive-small');
+                        break;
+                    case HorizontalLayoutResponsiveMode.medium:
+                        this.element.classList.add('responsive-medium');
+                        break;
+                    case HorizontalLayoutResponsiveMode.large:
+                        this.element.classList.add('responsive-large');
+                        break;
+                }
             }
         }
         UI.HorizontalFlexLayout = HorizontalFlexLayout;
@@ -13109,6 +13231,13 @@ var NextAdmin;
             }
         }
         UI.VerticalFlexLayout = VerticalFlexLayout;
+        let HorizontalLayoutResponsiveMode;
+        (function (HorizontalLayoutResponsiveMode) {
+            HorizontalLayoutResponsiveMode[HorizontalLayoutResponsiveMode["disabled"] = 0] = "disabled";
+            HorizontalLayoutResponsiveMode[HorizontalLayoutResponsiveMode["small"] = 512] = "small";
+            HorizontalLayoutResponsiveMode[HorizontalLayoutResponsiveMode["medium"] = 768] = "medium";
+            HorizontalLayoutResponsiveMode[HorizontalLayoutResponsiveMode["large"] = 1024] = "large";
+        })(HorizontalLayoutResponsiveMode = UI.HorizontalLayoutResponsiveMode || (UI.HorizontalLayoutResponsiveMode = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -13456,6 +13585,39 @@ var NextAdmin;
         UI.FormPanel = FormPanel;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
+        class GoogleMap extends UI.Control {
+            constructor(options) {
+                super('div', {
+                    height: '400px',
+                    initialLocation: { lat: -34.397, lng: 150.644 },
+                    initialZoom: 8,
+                    ...options
+                });
+                if (NextAdmin.String.isNullOrEmpty(this.options.apiKey)) {
+                    throw new Error("API key is required to init GoogleMap");
+                }
+                this.element.style.height = this.options.height;
+                this.initializeMap();
+            }
+            async initializeMap() {
+                await NextAdmin.Script.load(GoogleMap.getGoogleMapScriptUrl(this.options.apiKey), 'NextAdmin.UI.GoogleMap');
+                const { Map } = await google.maps.importLibrary("maps");
+                this.map = new Map(this.element, {
+                    center: this.options.initialLocation,
+                    zoom: this.options.initialZoom,
+                });
+            }
+            static getGoogleMapScriptUrl(key) {
+                return 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=maps&v=beta';
+            }
+        }
+        UI.GoogleMap = GoogleMap;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
 /// <reference path="Panel.ts"/>
 var NextAdmin;
 (function (NextAdmin) {
@@ -13625,7 +13787,7 @@ var NextAdmin;
                     this.element.style.width = this.options.width;
                 }
                 if (this.options.height) {
-                    this.element.style.width = this.options.height;
+                    this.element.style.height = this.options.height;
                 }
                 this.image = this.element.appendHTML('img', (image) => {
                     image.classList.add('next-admin-image');
@@ -13734,6 +13896,9 @@ var NextAdmin;
                 if (this.options.href) {
                     this.element.href = this.options.href;
                 }
+                if (this.options.openInNewTab) {
+                    this.element.target = '_blank';
+                }
                 this.setStyle(this.options.style);
             }
             isEnable() {
@@ -13782,6 +13947,10 @@ var NextAdmin;
                         break;
                     case LinkStyle.white:
                         this.element.classList.add('white');
+                        break;
+                    case LinkStyle.grey:
+                        this.element.classList.add('grey');
+                        break;
                 }
             }
             startSpin() {
@@ -13802,6 +13971,13 @@ var NextAdmin;
         }
         .next-admin-link.blue:hover{
             color:'#1a66ce';
+        }
+
+        .next-admin-link.grey{
+            color:#777;
+        }
+        .next-admin-link.grey:hover{
+            color:'#999';
         }
 
         .next-admin-link.dark{
@@ -13835,7 +14011,94 @@ var NextAdmin;
             LinkStyle[LinkStyle["blue"] = 0] = "blue";
             LinkStyle[LinkStyle["dark"] = 1] = "dark";
             LinkStyle[LinkStyle["white"] = 2] = "white";
+            LinkStyle[LinkStyle["grey"] = 3] = "grey";
         })(LinkStyle = UI.LinkStyle || (UI.LinkStyle = {}));
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
+        class MapboxMap extends UI.Control {
+            constructor(options) {
+                super('div', {
+                    height: '400px',
+                    mapboxMapStyle: MapboxMapStyle.streets,
+                    initialLocation: { lat: 47, lng: 2 },
+                    initialZoom: 8,
+                    ...options
+                });
+                this.onMapInitialized = new NextAdmin.EventHandler();
+                if (NextAdmin.String.isNullOrEmpty(this.options.mapboxAccessToken)) {
+                    throw new Error("API key is required to init GoogleMap");
+                }
+                if (NextAdmin.String.isNullOrEmpty(this.options.mapboxDependencyRootUrl)) {
+                    throw new Error("Dependencies URL are required");
+                }
+                this.element.style.height = this.options.height;
+                this.initializeMap();
+            }
+            async initializeMap() {
+                this.element.startSpin();
+                await NextAdmin.DependenciesController.load([this.options.mapboxDependencyRootUrl + '/mapbox-gl.css', this.options.mapboxDependencyRootUrl + '/mapbox-gl.js']);
+                this.initialLocation = this.options.initialLocation;
+                if (!NextAdmin.String.isNullOrEmpty(this.options.initialLocationAddress)) {
+                    this.initialLocation = await this.getLocationFromAddress(this.options.initialLocationAddress);
+                }
+                this.element.stopSpin();
+                await NextAdmin.Timer.sleep(1);
+                mapboxgl.accessToken = this.options.mapboxAccessToken;
+                this.map = new mapboxgl.Map({
+                    container: this.element,
+                    style: this.options.mapboxMapStyle,
+                    center: this.initialLocation,
+                    zoom: this.options.initialZoom // starting zoom
+                });
+                this.map.addControl(new mapboxgl.NavigationControl({
+                    showCompass: false
+                }), 'bottom-left');
+                if (this.options.hasMarkerToInitialLocation) {
+                    this.addMarker(this.initialLocation);
+                }
+                this.onMapInitialized.dispatch(this, this.map);
+            }
+            async getLocationFromAddress(address) {
+                let result = await new NextAdmin.Services.HttpClient().get('https://api.mapbox.com/search/geocode/v6/forward', {
+                    q: address,
+                    access_token: this.options.mapboxAccessToken
+                });
+                if (!result?.success) {
+                    return null;
+                }
+                let features = result.parseJson();
+                let feature = features?.features?.firstOrDefault();
+                let coordinates = feature.properties?.coordinates;
+                if (coordinates == null) {
+                    return null;
+                }
+                return {
+                    lat: coordinates['latitude'],
+                    lng: coordinates['longitude']
+                };
+            }
+            addMarker(location) {
+                let marker = new mapboxgl.Marker().setLngLat(location);
+                marker.addTo(this.map);
+                return marker;
+            }
+        }
+        UI.MapboxMap = MapboxMap;
+        let MapboxMapStyle;
+        (function (MapboxMapStyle) {
+            MapboxMapStyle["streets"] = "mapbox://styles/mapbox/streets-v11";
+            MapboxMapStyle["satellite_streets"] = "mapbox://styles/mapbox/satellite-streets-v11";
+            MapboxMapStyle["outdoors"] = "mapbox://styles/mapbox/outdoors-v11";
+            MapboxMapStyle["light"] = "mapbox://styles/mapbox/light-v11";
+            MapboxMapStyle["dark"] = "mapbox://styles/mapbox/dark-v11";
+            MapboxMapStyle["satellite"] = "mapbox://styles/mapbox/satellite-v9";
+            MapboxMapStyle["navigation"] = "mapbox://styles/mapbox/navigation-day-v1";
+            MapboxMapStyle["navigation_night"] = "mapbox://styles/mapbox/navigation-night-v1";
+        })(MapboxMapStyle = UI.MapboxMapStyle || (UI.MapboxMapStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -13854,12 +14117,13 @@ var NextAdmin;
                     hasBackButton: true,
                     ...options
                 });
+                this.modal.style.maxHeight = '80vh';
                 this.leftHeader.style.fontSize = '20px';
-                if (NextAdmin.String.isNullOrEmpty(this.options.title)) {
+                if (NextAdmin.String.isNullOrEmpty(this.options.title) && !this.options.canClose) {
                     this.header.style.height = '3px';
                 }
                 this.mainContainer = this.body.appendHTML('div', (container) => {
-                    container.style.padding = '10px';
+                    container.style.padding = '20px';
                     if (this.options.text) {
                         container.appendHTML('p', this.options.text);
                     }
@@ -14447,7 +14711,7 @@ var NextAdmin;
         class NoUiModal extends NextAdmin.UI.Modal {
             constructor(options) {
                 super({
-                    size: NextAdmin.UI.ModalSize.large,
+                    size: NextAdmin.UI.ModalSize.ultraLarge,
                     canMoveAndResize: false,
                     canChangeScreenMode: false,
                     canMinimize: false,
@@ -15140,25 +15404,25 @@ var NextAdmin;
                     ...options
                 });
                 this.container = this.body.appendHTML('div', (container) => {
-                    container.style.padding = '40px';
+                    container.style.padding = '20px';
                     this.loginInput = container.appendControl(new NextAdmin.UI.Input({
                         labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
                         size: NextAdmin.UI.InputSize.large,
-                        placeHolder: 'E-mail',
-                    }), (emailInput) => {
-                        emailInput.setValue(this.options.email);
-                        emailInput.element.style.marginBottom = '20px';
+                        placeholder: 'E-mail',
+                        value: this.options.email,
+                        css: { marginBottom: '30px' }
+                    }));
+                    this.sendEmailButton = container.appendControl(new NextAdmin.UI.Button({
+                        style: NextAdmin.UI.ButtonStyle.lightBlue,
+                        text: NextAdmin.Resources.emailIcon + ' ' + NextAdmin.Resources.recoverMyPassword,
+                        css: { width: '100%' },
+                        action: (button) => {
+                            this.sendPasswordRecoveryEmail();
+                        }
+                    }), (sendEmailButton) => {
+                        sendEmailButton.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(this.loginInput.getValue()), this.loginInput);
                     });
                 });
-                this.sendEmailButton = this.rightFooter.appendControl(new NextAdmin.UI.Button({
-                    css: { cssFloat: 'right' },
-                    style: NextAdmin.UI.ButtonStyle.lightBlue,
-                    text: NextAdmin.Resources.emailIcon + ' ' + NextAdmin.Resources.recoverMyPassword,
-                    action: (button) => {
-                        this.sendPasswordRecoveryEmail();
-                    }
-                }));
-                this.sendEmailButton.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(this.loginInput.getValue()), this.loginInput);
             }
             async sendPasswordRecoveryEmail() {
                 this.sendEmailButton.startSpin();
@@ -15330,7 +15594,9 @@ var NextAdmin;
                     if (!fireChange) {
                         this.suspendChange = true;
                     }
+                    this.quillContainer.style.display = 'none'; //bug fix to avoid scroll to editr
                     this.quill.pasteHTML((value ?? '').replace(new RegExp('<p><br></p>', 'g'), '<br/>').replace(new RegExp('<p>', 'g'), '<p><br/>').replaceAll('<p><br/>', '<p>'));
+                    this.quillContainer.style.display = '';
                     this.suspendChange = false;
                 }, 0);
             }
@@ -16967,6 +17233,12 @@ var NextAdmin;
                     case TextStyle.lightGrey:
                         this.element.classList.add('next-admin-text-light-grey');
                         break;
+                    case TextStyle.lightBlue:
+                        this.element.classList.add('next-admin-text-light-blue');
+                        break;
+                    case TextStyle.blue:
+                        this.element.classList.add('next-admin-text-blue');
+                        break;
                     case TextStyle.grey:
                         this.element.classList.add('next-admin-text-grey');
                         break;
@@ -17000,6 +17272,12 @@ var NextAdmin;
         }
         .next-admin-text-light-grey{
             color:#999;
+        }
+        .next-admin-text-light-blue{
+            color:#7ba2d7;
+        }
+        .next-admin-text-blue{
+            color:` + UI.DefaultStyle.BlueOne + `;
         }
         .next-admin-text-grey-thin{
             color:#777;
@@ -17050,10 +17328,12 @@ var NextAdmin;
             TextStyle[TextStyle["greyThin"] = 1] = "greyThin";
             TextStyle[TextStyle["darkGreyThin"] = 2] = "darkGreyThin";
             TextStyle[TextStyle["lightGrey"] = 3] = "lightGrey";
-            TextStyle[TextStyle["grey"] = 4] = "grey";
-            TextStyle[TextStyle["darkGrey"] = 5] = "darkGrey";
-            TextStyle[TextStyle["dark"] = 6] = "dark";
-            TextStyle[TextStyle["black"] = 7] = "black";
+            TextStyle[TextStyle["lightBlue"] = 4] = "lightBlue";
+            TextStyle[TextStyle["blue"] = 5] = "blue";
+            TextStyle[TextStyle["grey"] = 6] = "grey";
+            TextStyle[TextStyle["darkGrey"] = 7] = "darkGrey";
+            TextStyle[TextStyle["dark"] = 8] = "dark";
+            TextStyle[TextStyle["black"] = 9] = "black";
         })(TextStyle = UI.TextStyle || (UI.TextStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
@@ -17071,6 +17351,9 @@ var NextAdmin;
                 NextAdmin.Style.append('NextAdmin.UI.TextArea', TextArea.style);
                 this.textArea = document.createElement('textarea');
                 this.textArea.classList.add('next-admin-textarea');
+                if (this.options.placeholder) {
+                    this.textArea.placeholder = this.options.placeholder;
+                }
                 this.textArea.addEventListener("input", () => {
                     this.onValueChanged.dispatch(this, { value: this.textArea.value });
                 });
@@ -17217,6 +17500,9 @@ var NextAdmin;
                     case TitleStyle.darkThin:
                         this.element.classList.add('next-admin-title-thin-dark');
                         break;
+                    case TitleStyle.black:
+                        this.element.classList.add('next-admin-title-black');
+                        break;
                 }
             }
             setSize(size) {
@@ -17278,6 +17564,9 @@ var NextAdmin;
         }
         .next-admin-title-dark {
             color:#222;
+        }
+        .next-admin-title-black {
+            color:#000;
         }
 
         .next-admin-title-large {
@@ -17348,6 +17637,7 @@ var NextAdmin;
             TitleStyle[TitleStyle["darkGreyThin"] = 6] = "darkGreyThin";
             TitleStyle[TitleStyle["dark"] = 7] = "dark";
             TitleStyle[TitleStyle["darkThin"] = 8] = "darkThin";
+            TitleStyle[TitleStyle["black"] = 9] = "black";
         })(TitleStyle = UI.TitleStyle || (UI.TitleStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));

@@ -35,7 +35,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 {
                     return ApiResponse<string>.Error("INVALID_ITEM");
                 }
-                var stripeService = new StripeService<TUser, TStripeUserPaymentSession>(DbContext);
+                var stripeService = new StripeService<TUser, TStripeUserPaymentSession>(DbContext, GetStripeSecretApiKey());
                 var paymentSession = stripeService.CreatePaymentSession(item, User, GetSuccessPaymentUrl(itemId), GetCancelPaymentUrl(itemId));
                 if (string.IsNullOrEmpty(paymentSession.StripeSession.Url))
                 {
@@ -54,6 +54,17 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 return ApiResponse<string>.Error(ex);
             }
         }
+
+        protected virtual string GetStripeSecretApiKey()
+        {
+            var key = NextAdminFrontEndHelper.StripeSecretApiKey;
+            if (key == null)
+            {
+                throw new Exception("FrontEndStripeWebhookController.GetStripeSecretWebhookSignatureKey : StripeApiKey is required");
+            }
+            return key;
+        }
+
 
         protected abstract IItemInfo? GetItemInfo(string itemId);
 

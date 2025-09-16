@@ -80,5 +80,26 @@ namespace NextAdmin.Services {
             return httpResponse.parseJson();
         }
 
+
+        public async isUserAccountExistAndIsActivated(email: string): Promise<boolean> {
+            let httpResponse = await this.get('isUserAccountExistAndIsActivated', {
+                email: email
+            });
+            if (httpResponse == null || !httpResponse.success) {
+                return null;
+            }
+            return httpResponse.parseJson();
+        }
+
+        public async getUserAuthProviderName(email: string): Promise<string> {
+            let httpResponse = await this.get('getUserAuthProviderName', {
+                email: email
+            });
+            if (httpResponse == null || !httpResponse.success) {
+                return null;
+            }
+            return httpResponse.content;
+        }
+
     }
 }

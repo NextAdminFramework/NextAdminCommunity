@@ -47,6 +47,9 @@ namespace NextAdmin.UI {
         .next-admin-title-dark {
             color:#222;
         }
+        .next-admin-title-black {
+            color:#000;
+        }
 
         .next-admin-title-large {
             font-size:36px;
@@ -153,6 +156,9 @@ namespace NextAdmin.UI {
                 case TitleStyle.darkThin:
                     this.element.classList.add('next-admin-title-thin-dark');
                     break;
+                case TitleStyle.black:
+                    this.element.classList.add('next-admin-title-black');
+                    break;
             }
         }
 
@@ -209,6 +215,7 @@ namespace NextAdmin.UI {
         darkGreyThin,
         dark,
         darkThin,
+        black
 
     }
 

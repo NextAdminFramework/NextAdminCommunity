@@ -7,9 +7,9 @@ namespace NextAdmin.FrontEnd.API
     {
         public static IConfiguration? Configuration { get; set; }
 
-        public static string? StripeApiKey => Configuration?["StripeApiKey"];
+        public static string? StripeSecretApiKey => Configuration?["StripeSecretApiKey"];
 
-        public static string? StripeEndpointScretKey => Configuration?["StripeEndpointScretKey"];
+        public static string? StripeSecretWebhookSignatureKey => Configuration?["StripeSecretWebhookSignatureKey"];
 
         public static void AddNextAdminFrontEndServices(this IServiceCollection services, IConfiguration configuration)
         {

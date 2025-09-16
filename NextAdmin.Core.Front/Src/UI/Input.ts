@@ -149,8 +149,8 @@ namespace NextAdmin.UI {
                 }
                 this.onValueChanged.dispatch(this, { value: value } as ValueChangeEventArgs);
             });
-            if (this.options.placeHolder != null) {
-                this.setPlaceholder(this.options.placeHolder);
+            if (this.options.placeholder != null) {
+                this.setPlaceholder(this.options.placeholder);
             }
             this.setStyle(this.options.style);
             this.setSize(this.options.size);
@@ -315,7 +315,7 @@ namespace NextAdmin.UI {
 
         decimalCount?: number;
 
-        placeHolder?: string;
+        placeholder?: string;
 
         style?: InputStyle | any;
 

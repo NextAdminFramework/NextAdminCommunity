@@ -20,6 +20,7 @@ namespace NextAdmin.UI {
                 let newPassword1 = container.appendControl(new NextAdmin.UI.Input({
                     label: Resources.newPassword,
                     labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
+                    size: NextAdmin.UI.InputSize.large,
                     inputType: NextAdmin.UI.InputType.password
                 }), (input) => {
                     input.element.style.marginBottom = '20px';
@@ -28,13 +29,17 @@ namespace NextAdmin.UI {
                 let newPassword2 = container.appendControl(new NextAdmin.UI.Input({
                     label: Resources.newPasswordRepeat,
                     labelPosition: NextAdmin.UI.FormControlLabelPosition.top,
+                    size: NextAdmin.UI.InputSize.large,
                     inputType: NextAdmin.UI.InputType.password
                 }), (input) => {
-                    input.element.style.marginBottom = '20px';
+                    input.element.style.marginBottom = '40px';
                 });
 
-                this.rightFooter.appendControl(new Button({
+
+
+                container.appendControl(new Button({
                     text: NextAdmin.Resources.checkIcon + ' ' + Resources.validate, style: NextAdmin.UI.ButtonStyle.blue,
+                    css: { width:'100%' },
                     action: async (button) => {
                         if (newPassword1.getValue() != newPassword2.getValue()) {
                             NextAdmin.UI.MessageBox.createOk(Resources.error, Resources.error_passwordAreNotSame);
@@ -54,7 +59,6 @@ namespace NextAdmin.UI {
                         }
                     }
                 }), (btn) => {
-                    btn.element.style.cssFloat = 'right';
                     btn.changeEnableStateOnControlsRequiredValueChanged(() => !NextAdmin.String.isNullOrEmpty(newPassword1.getValue()) && !NextAdmin.String.isNullOrEmpty(newPassword2.getValue()), newPassword1, newPassword2);
                 });
             });

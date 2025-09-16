@@ -63,6 +63,7 @@
     <TypeScriptCompile Include="Src\Business\DatasetController.ts" />
     <TypeScriptCompile Include="Src\Business\EntityInfos.ts" />
     <TypeScriptCompile Include="Src\Models\EntityArgs.ts" />
+    <TypeScriptCompile Include="Src\Number.ts" />
     <TypeScriptCompile Include="Src\Resources\NextAdminIcons.ts" />
     <TypeScriptCompile Include="Src\Resources\ResourcesEn.ts" />
     <TypeScriptCompile Include="Src\Services\EntityClient.ts" />
@@ -107,9 +108,11 @@
     <TypeScriptCompile Include="Src\UI\Container.ts" />
     <TypeScriptCompile Include="Src\UI\FlexLayout.ts" />
     <TypeScriptCompile Include="Src\UI\FormModal.ts" />
+    <TypeScriptCompile Include="Src\UI\GoogleMap.ts" />
     <TypeScriptCompile Include="Src\UI\GridFormPanel.ts" />
     <TypeScriptCompile Include="Src\UI\Image.ts" />
     <TypeScriptCompile Include="Src\UI\Link.ts" />
+    <TypeScriptCompile Include="Src\UI\MapboxMap.ts" />
     <TypeScriptCompile Include="Src\UI\MenuModal.ts" />
     <TypeScriptCompile Include="Src\UI\NoUiModal.ts" />
     <TypeScriptCompile Include="Src\UI\Range.ts" />

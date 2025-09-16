@@ -18,6 +18,8 @@ namespace NextAdmin.Core.Model
 
         public bool Disabled { get; set; }
 
+        public string AuthProviderName { get; set; }
+
         public string CreateAuthToken(NextAdminDbContext context, ITokenSerializer tokenSerilizer, string issuer, int duration = 30);
 
         public object GetId();

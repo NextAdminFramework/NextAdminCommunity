@@ -30,6 +30,12 @@ namespace NextAdmin.UI {
         .next-admin-text-light-grey{
             color:#999;
         }
+        .next-admin-text-light-blue{
+            color:#7ba2d7;
+        }
+        .next-admin-text-blue{
+            color:`+ DefaultStyle.BlueOne + `;
+        }
         .next-admin-text-grey-thin{
             color:#777;
         }
@@ -123,6 +129,12 @@ namespace NextAdmin.UI {
                 case TextStyle.lightGrey:
                     this.element.classList.add('next-admin-text-light-grey');
                     break;
+                case TextStyle.lightBlue:
+                    this.element.classList.add('next-admin-text-light-blue');
+                    break;
+                case TextStyle.blue:
+                    this.element.classList.add('next-admin-text-blue');
+                    break;
                 case TextStyle.grey:
                     this.element.classList.add('next-admin-text-grey');
                     break;
@@ -159,6 +171,8 @@ namespace NextAdmin.UI {
         greyThin,
         darkGreyThin,
         lightGrey,
+        lightBlue,
+        blue,
         grey,
         darkGrey,
         dark,

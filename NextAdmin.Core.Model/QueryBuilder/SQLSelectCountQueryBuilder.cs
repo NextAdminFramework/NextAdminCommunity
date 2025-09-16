@@ -9,6 +9,11 @@ namespace NextAdmin.Core.Model.QueryBuilder
 
         }
 
+        public SQLSelectCountQueryBuilder(SQLSelectQueryBuilder query) : base(query)
+        {
+
+        }
+
         public override SQLSelectCountQueryBuilder Select(params string[] columns)
         {
             return new SQLSelectCountQueryBuilder(base.Select(columns));

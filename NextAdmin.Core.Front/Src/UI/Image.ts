@@ -46,7 +46,7 @@ namespace NextAdmin.UI {
                 this.element.style.width = this.options.width;
             }
             if (this.options.height) {
-                this.element.style.width = this.options.height;
+                this.element.style.height = this.options.height;
             }
 
             this.image = this.element.appendHTML('img', (image) => {

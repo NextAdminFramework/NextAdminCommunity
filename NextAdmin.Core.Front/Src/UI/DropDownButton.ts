@@ -140,8 +140,12 @@ namespace NextAdmin.UI {
 
             let dropDownPosition = this.dropDownPosition;
             if (dropDownPosition == null) {
+                dropDownPosition = NextAdmin.UI.DropDownPosition.down;
                 let rightSpace = window.innerWidth - this.element.getBoundingClientRect().left;
-                dropDownPosition = rightSpace > 400 ? NextAdmin.UI.DropDownPosition.down : NextAdmin.UI.DropDownPosition.downLeft;
+                let leftSpace = window.innerWidth - this.element.getBoundingClientRect().left;
+                if (rightSpace < 300 && leftSpace > 300) {
+                    dropDownPosition = NextAdmin.UI.DropDownPosition.downLeft;
+                }
             }
             
             this.dropDown.open('0px', '0px');

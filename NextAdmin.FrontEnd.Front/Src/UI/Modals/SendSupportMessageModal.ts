@@ -48,7 +48,7 @@ namespace NextAdmin.UI {
                     action: async () => {
                         this.startSpin();
 
-                        let response = await this.options.commonServicesClient.sendSupportMessage(this.textArea.getValue(), this.emailInput.getValue());
+                        let response = await this.options.commonServicesClient.sendContactMessage(this.textArea.getValue(), this.emailInput.getValue());
                         if (response?.isSuccess) {
                             this.close();
                             NextAdmin.UI.MessageBox.createOk(NextAdmin.FrontEndResources.messageSentTitle, NextAdmin.FrontEndResources.messageSentText);

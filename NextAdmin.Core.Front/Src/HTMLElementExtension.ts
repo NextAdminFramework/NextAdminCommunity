@@ -430,7 +430,9 @@ try {
 
     HTMLElement.prototype.disable = function () {
         let element = this as HTMLElement;
-        element.style.position = 'relative';
+        if (element.style.position != 'relative' && element.style.position != 'absolute' && element.style.position != 'fixed') {
+            element.style.position = 'relative';
+        }
         let disableContainer = element['_disableContainer'] as HTMLElement;
         if (disableContainer != null) {
             return disableContainer;

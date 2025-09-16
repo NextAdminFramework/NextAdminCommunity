@@ -23,5 +23,6 @@ namespace NextAdmin {
 
         signUpWithGoogle = 'Sign-up with Google';
 
+        displayOnGoogleMap = "Display on google map";
     }
 }

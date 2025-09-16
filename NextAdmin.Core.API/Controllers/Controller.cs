@@ -23,7 +23,17 @@ namespace NextAdmin.Core.API.Controllers
 
         public virtual string UserAuthTokenName => NextAdminHelper.AdminAuthTokenName;
 
-
+        public virtual SmtpServerAccount AppSmtpServerAccount
+        {
+            get
+            {
+                if (NextAdminHelper.AppSmtpServerAccount == null)
+                {
+                    throw new Exception("No default server account configured");
+                }
+                return NextAdminHelper.AppSmtpServerAccount;
+            }
+        }
 
         public Controller(NextAdminDbContext? dbContext = null, IConfiguration? configuration = null)
         {
@@ -100,7 +110,6 @@ namespace NextAdmin.Core.API.Controllers
             return UserHelper.FindUserFromToken<TUser>(DbContext, new AuthTokenSerializer(), AuthTokenIssuer, GetUserAuthToken());
         }
 
-
         public override void OnActionExecuted(ActionExecutedContext context)
         {
             base.OnActionExecuted(context);
@@ -109,8 +118,6 @@ namespace NextAdmin.Core.API.Controllers
                 DbContext.Dispose();
             }
         }
-
-
 
     }
 }

@@ -25,8 +25,9 @@ namespace NextAdmin.UI {
             + '.next-admin-btn-extra-small{height:12.5px;font-size:10px;padding:0px;}'
             + ".next-admin-btn-small{height:24px;font-size:10px;padding-left:2px;padding-right:2px}"
             + ".next-admin-btn-medium{height:34px;font-size:14px;font-weight:500;padding-left:5px;padding-right:5px}"
+            + ".next-admin-btn-medium-responsive{height:34px;font-size:14px;font-weight:500;padding-left:5px;padding-right:5px; @media (max-width: 768px) { height:24px;font-size:12px; } @media (max-width: 512px) { height:24px;font-size:10px;padding-left:2px;padding-right:2px; }} "
             + ".next-admin-btn-large{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px}"
-            + ".next-admin-btn-large-responsive{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px; @media (max-width: 768px) { height:34px;font-size:14px; }}"
+            + ".next-admin-btn-large-responsive{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px; @media (max-width: 768px) { height:34px;font-size:14px; } @media (max-width: 512px) { padding-left:4px;padding-right:4px; }}"
 
 
             + ".next-admin-btn-default{background:#FFF;color:#444;}.next-admin-btn-default:hover,.next-admin-btn-white.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
@@ -82,6 +83,9 @@ namespace NextAdmin.UI {
                 default:
                 case ButtonSize.medium:
                     this.element.classList.add('next-admin-btn-medium');
+                    break;
+                case ButtonSize.mediumResponsive:
+                    this.element.classList.add('next-admin-btn-medium-responsive');
                     break;
                 case ButtonSize.large:
                     this.element.classList.add('next-admin-btn-large');
@@ -294,6 +298,7 @@ namespace NextAdmin.UI {
         extraSmall,
         small,
         medium,
+        mediumResponsive,
         large,
         largeResponsive,
     }

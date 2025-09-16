@@ -23,6 +23,8 @@ namespace NextAdmin {
 
         signUpWithGoogle = "S'inscrire avec Google";
 
+        displayOnGoogleMap = "Afficher sur google map";
+
 
     }
     export var FrontEndResources: FrontEndResourcesEn;

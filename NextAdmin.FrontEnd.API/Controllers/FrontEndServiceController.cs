@@ -10,14 +10,14 @@ using NextAdmin.FrontEnd.Model;
 namespace NextAdmin.FrontEnd.API.Controllers
 {
     [ApiController, Route("/api/frontEnd/service/{action}/{id?}")]
-    public abstract class FrontEndServiceController<TUser, TSupportMessage> : Controller<TUser>
+    public abstract class FrontEndServiceController<TUser, TContactMessage> : Controller<TUser>
         where TUser : class, IFrontEndUser
-        where TSupportMessage : SupportMessage<TUser>
+        where TContactMessage : ContactMessage
     {
 
-        public virtual string SupportEmail => NextAdminHelper.AdminEmailAddress;
+        public virtual string ContactMessageAdminRecipientEmailAddress => NextAdminHelper.AdminEmailAddress;
 
-        public virtual string SupportEmailSubject => NextAdminHelper.AppName + " : New support request";
+        public virtual string ContactEmailSubject => NextAdminHelper.AppName + " : New support request";
 
         public FrontEndServiceController(NextAdminDbContext dbContext = null, IConfiguration configuration = null)
             : base(dbContext, configuration)
@@ -26,7 +26,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
         }
 
         [HttpGet]
-        public ApiResponse SendSupportMessage(string message, string? email = null)
+        public ApiResponse SendContactMessage(string message, string? email = null)
         {
             try
             {
@@ -43,12 +43,14 @@ namespace NextAdmin.FrontEnd.API.Controllers
                     return ApiResponse.Error("INVALID_EMAIL");
                 }
 
-                var supportMessage = DbContext.CreateEntity<TSupportMessage>(true, true);
+                var supportMessage = DbContext.CreateEntity<TContactMessage>(true, true);
                 supportMessage.UserId = User?.Id;
-                supportMessage.SupportEmail = SupportEmail;
+                supportMessage.AdminEmail = ContactMessageAdminRecipientEmailAddress;
                 supportMessage.UserEmail = email;
                 supportMessage.Message = message;
-                supportMessage.IsSuccessfullySent = NextAdminHelper.AppSmtpServerAccount.TrySendEmail(SupportEmailSubject, $"<b>From: {email}</b><br /><br />{message}", new string[] { NextAdminHelper.AdminEmailAddress });
+
+                var emailMessage = supportMessage.GetAdminNotificationEmail(DbContext);
+                supportMessage.IsSuccessfullySent = AppSmtpServerAccount.TrySendEmail(emailMessage);
 
                 if (!DbContext.ValidateAndSave().Success)
                 {

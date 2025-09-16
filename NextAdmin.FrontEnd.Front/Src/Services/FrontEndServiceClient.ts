@@ -23,8 +23,8 @@ namespace NextAdmin.Services {
             return this.headerParams[this.authTokenName];
         }
 
-        public async sendSupportMessage(message: string, email?: string): Promise<NextAdmin.Models.ApiResponse> {
-            let httpResponse = await this.get('sendSupportMessage', { message: message, email: email });
+        public async sendContactMessage(message: string, email?: string): Promise<NextAdmin.Models.ApiResponse> {
+            let httpResponse = await this.get('sendContactMessage', { message: message, email: email });
             if (httpResponse == null || !httpResponse.success) {
                 return null;
             }

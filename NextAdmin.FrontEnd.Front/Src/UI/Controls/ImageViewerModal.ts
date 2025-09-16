@@ -9,7 +9,7 @@ namespace NextAdmin.UI {
 
         constructor(options: ImageViewerModalOptions) {
             super({
-                size: NextAdmin.UI.ModalSize.large,
+                size: NextAdmin.UI.ModalSize.ultraLarge,
                 ...options,
             });
 

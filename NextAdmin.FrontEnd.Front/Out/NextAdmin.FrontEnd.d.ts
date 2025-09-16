@@ -43,6 +43,9 @@ declare namespace NextAdmin.Models {
 declare namespace NextAdmin {
     class FrontEndResourcesBase {
         googleIcon: string;
+        locationIcon: string;
+        mapIcon: string;
+        phoneIcon: string;
     }
 }
 declare namespace NextAdmin {
@@ -56,6 +59,7 @@ declare namespace NextAdmin {
         or: string;
         signInWithGoogle: string;
         signUpWithGoogle: string;
+        displayOnGoogleMap: string;
     }
 }
 declare namespace NextAdmin {
@@ -69,6 +73,7 @@ declare namespace NextAdmin {
         or: string;
         signInWithGoogle: string;
         signUpWithGoogle: string;
+        displayOnGoogleMap: string;
     }
     var FrontEndResources: FrontEndResourcesEn;
 }
@@ -78,7 +83,7 @@ declare namespace NextAdmin.Services {
         constructor(rootServiceURL?: string, authTokenName?: string, authToken?: string);
         setAuthToken(authToken: string): void;
         getAuthToken(): any;
-        sendSupportMessage(message: string, email?: string): Promise<NextAdmin.Models.ApiResponse>;
+        sendContactMessage(message: string, email?: string): Promise<NextAdmin.Models.ApiResponse>;
     }
 }
 declare namespace NextAdmin.Services {
@@ -90,6 +95,8 @@ declare namespace NextAdmin.Services {
         signUpUser(args: NextAdmin.Models.SignUpUserArgs): Promise<NextAdmin.Models.ApiResponse<string>>;
         confirmUserSignUpEmailCode(userId: any, code: string): Promise<NextAdmin.Models.ApiResponse>;
         isUserAccountExist(email: string): Promise<boolean>;
+        isUserAccountExistAndIsActivated(email: string): Promise<boolean>;
+        getUserAuthProviderName(email: string): Promise<string>;
     }
 }
 declare namespace NextAdmin.Services {
@@ -200,6 +207,23 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
+    class ContactCard extends HorizontalFlexLayout {
+        options: ContactCardOptions;
+        infosContainer: HTMLDivElement;
+        static style: string;
+        constructor(options: ContactCardOptions);
+    }
+    interface ContactCardOptions extends HorizontalFlexLayoutOptions {
+        responsiveMode?: NextAdmin.UI.HorizontalLayoutResponsiveMode;
+        contactName?: string;
+        contactAddress?: string;
+        contactEmail?: string;
+        contactPhone?: string;
+        mapboxAccessToken?: string;
+        mapboxDependencyRootUrl?: string;
+    }
+}
+declare namespace NextAdmin.UI {
     class IconCard extends Control {
         static style: string;
         options: IconCardOptions;
@@ -247,24 +271,28 @@ declare namespace NextAdmin.UI {
         action?: (card: ImageCard) => void;
     }
     enum ImageCardSize {
-        extraSmall_1_1 = 0,
-        small_1_1 = 1,
-        small_4_3 = 2,
-        small_3_4 = 3,
-        small_9_16 = 4,
-        medium_1_1 = 5,
-        medium_4_3 = 6,
-        medium_3_4 = 7,
-        medium_9_16 = 8,
-        large_1_1 = 9,
-        large_4_3 = 10,
-        large_3_4 = 11,
-        large_9_16 = 12
+        extraSmall_1_1 = 100,
+        small_1_1 = 300,
+        small_4_3 = 301,
+        small_3_4 = 302,
+        small_9_16 = 303,
+        medium_1_1 = 500,
+        medium_4_3 = 501,
+        medium_3_4 = 502,
+        medium_9_16 = 503,
+        large_1_1 = 700,
+        large_4_3 = 701,
+        large_3_4 = 702,
+        large_9_16 = 703
     }
     enum ImageCardStyle {
-        fullImageLightBordered = 0,
-        fullImageShadowedBorderRadius = 1,
-        fullImageShadowedBorderRadiusB = 2
+        imageNoBorderTextCenter = 0,
+        imageLightBorderedTextLeft = 10,
+        imageLightBorderedTextCenter = 11,
+        imageShadowedBorderRadiusTextLeft = 20,
+        imageShadowedBorderRadiusTextCenter = 21,
+        imageShadowedBorderRadiusBTextLeft = 30,
+        imageShadowedBorderRadiusBTextCenter = 31
     }
 }
 declare namespace NextAdmin.UI {
@@ -491,6 +519,7 @@ declare namespace NextAdmin.UI {
     interface ThirdPartyOauthPanelOptions extends ControlOptions {
         googleOauthOptions?: GoogleOauthOptions;
         afterOAuthUrlCookieName?: string;
+        emailAddress?: string;
     }
     interface GoogleOauthOptions {
         oauthUrl?: string;
@@ -581,5 +610,6 @@ declare namespace NextAdmin.UI {
     interface FrontPageContaineOptions {
         hasPadding?: boolean;
         maxWidth?: string;
+        minHeight?: string;
     }
 }

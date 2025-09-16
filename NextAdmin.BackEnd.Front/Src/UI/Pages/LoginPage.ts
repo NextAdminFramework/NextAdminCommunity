@@ -158,11 +158,6 @@ namespace NextAdmin.UI {
             });
         }
 
-
-        navigateFrom(args: NextAdmin.UI.NavigateFromArgs) {
-            super.navigateFrom(args);
-        }
-
         public async tryLogUser(userAppId: string, login: string, password: string, stayConnected: boolean) {
             this.buttonLogin.startSpin();
             if (userAppId) {

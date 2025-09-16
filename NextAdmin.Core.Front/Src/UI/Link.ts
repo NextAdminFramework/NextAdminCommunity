@@ -26,6 +26,13 @@ namespace NextAdmin.UI {
             color:'#1a66ce';
         }
 
+        .next-admin-link.grey{
+            color:#777;
+        }
+        .next-admin-link.grey:hover{
+            color:'#999';
+        }
+
         .next-admin-link.dark{
             color:#222;
         }
@@ -72,6 +79,9 @@ namespace NextAdmin.UI {
             });
             if (this.options.href) {
                 this.element.href = this.options.href;
+            }
+            if (this.options.openInNewTab) {
+                this.element.target = '_blank';
             }
             this.setStyle(this.options.style);
         }
@@ -130,6 +140,10 @@ namespace NextAdmin.UI {
                     break;
                 case LinkStyle.white:
                     this.element.classList.add('white');
+                    break;
+                case LinkStyle.grey:
+                    this.element.classList.add('grey');
+                    break;
             }
         }
 
@@ -154,6 +168,8 @@ namespace NextAdmin.UI {
 
         href?: string;
 
+        openInNewTab?: boolean;
+
         style?: LinkStyle;
 
         action?: (link: Link) => void;
@@ -164,6 +180,7 @@ namespace NextAdmin.UI {
         blue,
         dark,
         white,
+        grey,
     }
 
 

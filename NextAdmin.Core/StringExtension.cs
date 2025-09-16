@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace NextAdmin.Core
 {
@@ -10,7 +7,7 @@ namespace NextAdmin.Core
 
         public static string Nl2br(this string str)
         {
-            return str.Replace("\r\n", "<br />\r\n");
+            return str.Replace("\r\n", "<br />").Replace("\n", "<br />");
         }
 
 

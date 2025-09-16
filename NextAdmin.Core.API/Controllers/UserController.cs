@@ -165,6 +165,7 @@ namespace NextAdmin.Core.API.Controllers
                     return response;
                 }
                 User.Password = newPassword;
+                User.AuthProviderName = null;
                 var result = DbContext.ValidateAndSave();
                 if (!result.Success)
                 {
@@ -191,14 +192,17 @@ namespace NextAdmin.Core.API.Controllers
             var response = new ApiResponse();
             try
             {
-                if (DbContext == null || NextAdminHelper.AppSmtpServerAccount == null)
+                if (DbContext == null)
+                {
                     return response;
+                }
 
                 var user = DbContext.FindUser(typeof(TUser).Name, userName);
                 if (user == null)
                     return response;
                 var newPassword = Guid.NewGuid().ToString().Substring(0, 8);
                 user.EncryptPassword(newPassword);
+                user.AuthProviderName = null;
                 var result = DbContext.ValidateAndSave();
                 if (!result.Success)
                 {
@@ -206,7 +210,7 @@ namespace NextAdmin.Core.API.Controllers
                     return response;
                 }
 
-                if (Core.Email.TrySendEmail(NextAdminHelper.AppSmtpServerAccount, DbContext.Resources.RecoverPasswordMailTitle, DbContext.Resources.RecoverPasswordMailMessage.Replace("{PASSWORD}", newPassword), new string[] { userName }))
+                if (Core.Email.TrySendEmail(AppSmtpServerAccount, DbContext.Resources.RecoverPasswordMailTitle, DbContext.Resources.RecoverPasswordMailMessage.Replace("{PASSWORD}", newPassword), new string[] { userName }))
                 {
                     response.Code = ApiResponseCode.Success.ToString();
                 }

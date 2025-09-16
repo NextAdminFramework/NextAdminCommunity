@@ -123,7 +123,7 @@ namespace NextAdmin.Business {
         }
 
         async sum(member: string): Promise<number> {
-            return (await this.entityClient.sumEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: this.query.columnToSelectNames, orderColumnNames: this.query.orderColumnNames })).data;
+            return (await this.entityClient.sumEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: [member], orderColumnNames: this.query.orderColumnNames })).data;
         }
 
         async min(propertyName?: string): Promise<number> {
@@ -289,6 +289,9 @@ namespace NextAdmin.Business {
             return this.max(this.entityInfo.getPropertyName(property));
         }
 
+        async sum_(property: (dataDef: TEntity) => any): Promise<number> {
+            return this.sum(this.entityInfo.getPropertyName(property));
+        }
     }
 
 }

@@ -7,6 +7,7 @@ using NextAdmin.Core.API.Controllers;
 using NextAdmin.Core.API.ViewModels.Args;
 using NextAdmin.Core.API.ViewModels.Responses;
 using NextAdmin.Core.Model;
+using NextAdmin.FrontEnd.API.Services;
 using NextAdmin.FrontEnd.API.ViewModels.Args;
 using NextAdmin.FrontEnd.Model;
 
@@ -17,78 +18,116 @@ namespace NextAdmin.FrontEnd.API.Controllers
         where TSignUpUserArgs : SignUpUserArgs
     {
 
+        public static string GoogleOAuthV2ProviderName = "GoogleOAuthV2";
+
         public FrontEndUserController(NextAdminDbContext model = null, IConfiguration configuration = null)
             : base(model, configuration)
         {
 
         }
 
+
         [HttpPost]
         public virtual ApiResponse<object> SignUpUser([FromBody] TSignUpUserArgs signUpUserArgs)
         {
-            IDbContextTransaction? transaction = null;
             try
             {
-                var yesterday = DateTime.UtcNow.AddDays(-1);
-                foreach (var oldNotActivatedUser in DbContext.Set<TUser>().Where(a => !a.EmailVerificationDate.HasValue && a.CreationDate < yesterday).ToList())
-                {
-                    DbContext.DeleteEntity(oldNotActivatedUser);
-                }
-                if (!DbContext.ValidateAndSave().Success)
-                {
-                    return ApiResponse<object>.Error(ApiResponseCode.UnknownError);
-                }
-
                 var user = DbContext.Set<TUser>().FirstOrDefault(e => e.UserName == signUpUserArgs.Email);
-                if (user != null && user.EmailVerificationDate.HasValue)
+                if (user != null && !string.IsNullOrEmpty(signUpUserArgs.VerificationCode))//try to sign up existing user already created by administrator
+                {
+                    if (user.EmailVerificationCode != signUpUserArgs.VerificationCode)
+                    {
+                        return ApiResponse<object>.Error("INVALID_VERIFICATION_CODE");
+                    }
+                    this.InitializeUser(user, signUpUserArgs);
+                    user.AuthProviderName = null;
+                    user.Disabled = false;
+                    user.EmailVerificationCode = null;
+                    user.EmailVerificationDate = DateTime.UtcNow;
+                }
+                else if (user != null && !user.EmailVerificationDate.HasValue && user.Disabled)
+                {
+                    this.InitializeUser(user, signUpUserArgs);
+                    user.AuthProviderName = null;
+                    user.EmailVerificationCode = Guid.NewGuid().ToString().Substring(0, 5);
+                }
+                else if (user == null)
+                {
+                    user = this.CreateUser();
+                    this.InitializeUser(user, signUpUserArgs);
+                    user.AuthProviderName = null;
+                    user.Disabled = true;
+                    user.EmailVerificationCode = Guid.NewGuid().ToString().Substring(0, 5);
+                    DbContext.AddEntity(user);
+                }
+                else
                 {
                     return ApiResponse<object>.Error("USER_ALREADY_EXIST");
                 }
-                transaction = DbContext.Database.BeginTransaction();
-                if (user != null)
-                {
-                    DbContext.DeleteEntity(user);
-                    if (!DbContext.ValidateAndSave().Success)
-                    {
-                        return ApiResponse<object>.Error(ApiResponseCode.UnknownError);
-                    }
-                }
-                user = CreateUser(signUpUserArgs);
-                DbContext.AddEntity(user);
                 var result = DbContext.ValidateAndSave();
                 if (!result.Success)
                 {
                     return ApiResponse<object>.Error(ApiResponseCode.UnknownError);
                 }
-
-                var emailMessage = new System.Net.Mail.MailMessage(NextAdminHelper.AppSmtpServerAccount.FullEmailAddress,
-                    user.UserName,
-                    GetConfirmationEmailTitle(user),
-                    GetConfirmationEmailContent(user, user.EmailVerificationCode));
-                emailMessage.IsBodyHtml = true;
-
-                if (!Email.TrySendEmail(NextAdminHelper.AppSmtpServerAccount, emailMessage))
+                if (string.IsNullOrEmpty(signUpUserArgs.VerificationCode))
                 {
-                    return ApiResponse<object>.Error("UNABLE_TO_SEND_EMAIL");
+                    var emailMessage = new System.Net.Mail.MailMessage(AppSmtpServerAccount.FullEmailAddress,
+                        user.UserName,
+                        GetConfirmationEmailTitle(user),
+                        GetConfirmationEmailContent(user, user.EmailVerificationCode));
+                    emailMessage.IsBodyHtml = true;
+
+                    if (!Email.TrySendEmail(AppSmtpServerAccount, emailMessage))
+                    {
+                        return ApiResponse<object>.Error("UNABLE_TO_SEND_EMAIL");
+                    }
                 }
-                transaction.Commit();
-                transaction = null;
                 return ApiResponse<object>.Success(user.GetId());
             }
             catch (Exception ex)
             {
                 return ApiResponse<object>.Error(ex);
             }
-            finally
-            {
-                if (transaction != null)
-                {
-                    transaction.Rollback();
-                }
-            }
         }
 
-        protected virtual TUser CreateUser(TSignUpUserArgs signUpUserArgs)
+
+        [NonAction]
+        public virtual TUser? TryGetUserFromGoogleAuth(GoogleAuthInfo authInfo, bool signUpUserIfNotExist = true, bool linkAccountToGoogleIfExistAndSimple = true)
+        {
+            string? userEmail = authInfo?.UserInfo?.Email;
+            if (string.IsNullOrEmpty(userEmail))
+                return null;
+
+            var user = DbContext.Set<TUser>().FirstOrDefault(e => e.UserName == userEmail);
+            if (user != null)
+            {
+                if (linkAccountToGoogleIfExistAndSimple)
+                {
+                    user.AuthProviderName = GoogleOAuthV2ProviderName;
+                    user.EncryptPassword(Guid.NewGuid().ToString());
+                }
+                return user;
+            }
+            if (signUpUserIfNotExist)
+            {
+                user = CreateUser();
+                user.UserName = userEmail;
+                user.Disabled = false;
+                user.EncryptPassword(Guid.NewGuid().ToString());
+                user.EmailVerificationDate = DateTime.UtcNow;
+                user.AuthProviderName = GoogleOAuthV2ProviderName;
+                DbContext.Add(user);
+            }
+            return user;
+        }
+
+
+        protected virtual TUser CreateUser()
+        {
+            return DbContext.CreateEntity<TUser>();
+        }
+
+        protected virtual TUser InitializeUser(TUser user, TSignUpUserArgs signUpUserArgs)
         {
             if (!UserHelper.IsValidEmail(signUpUserArgs.Email))
             {
@@ -98,13 +137,12 @@ namespace NextAdmin.FrontEnd.API.Controllers
             {
                 throw new ApiException("INVALID_PASSWORD");
             }
-            var user = DbContext.CreateEntity<TUser>();
-            user.Disabled = true;
-            user.EmailVerificationCode = Guid.NewGuid().ToString().Substring(0, 5);
             user.UserName = signUpUserArgs.Email.ToLower();
             user.Password = signUpUserArgs.Password;
             return user;
         }
+
+
 
         [HttpPost]
         [HttpGet]
@@ -169,13 +207,14 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 {
                     return ApiResponse.Error(ApiResponseCode.UnknownError);
                 }
-                var emailMessage = new System.Net.Mail.MailMessage(NextAdminHelper.AppSmtpServerAccount.FullEmailAddress,
+
+                var emailMessage = new System.Net.Mail.MailMessage(AppSmtpServerAccount.FullEmailAddress,
                     email,
                     GetConfirmationEmailTitle(User),
                     GetConfirmationEmailContent(User, code));
                 emailMessage.IsBodyHtml = true;
 
-                if (!Email.TrySendEmail(NextAdminHelper.AppSmtpServerAccount, emailMessage))
+                if (!Email.TrySendEmail(AppSmtpServerAccount, emailMessage))
                 {
                     return ApiResponse<object>.Error("UNABLE_TO_SEND_EMAIL");
                 }
@@ -254,6 +293,44 @@ namespace NextAdmin.FrontEnd.API.Controllers
             catch (Exception ex)
             {
                 return false;
+            }
+        }
+
+        [HttpPost]
+        [HttpGet]
+        public virtual bool IsUserAccountExistAndIsActivated(string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                {
+                    return false;
+                }
+                email = email.ToLower();
+                return DbContext.Set<TUser>().Any(e => e.UserName == email && e.EmailVerificationDate.HasValue);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        [HttpPost]
+        [HttpGet]
+        public virtual string? GetUserAuthProviderName(string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                {
+                    return null;
+                }
+                email = email.ToLower();
+                return DbContext.Set<TUser>().FirstOrDefault(e => e.UserName == email)?.AuthProviderName;
+            }
+            catch (Exception ex)
+            {
+                return null;
             }
         }
 

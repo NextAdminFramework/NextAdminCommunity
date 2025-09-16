@@ -15,4 +15,19 @@
     <ProjectReference Include="..\NextAdmin.Core\NextAdmin.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="ContactMessage.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>ContactMessage.cs.d.ts</LastGenOutput>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="ContactMessage.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ContactMessage.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+
 </Project>

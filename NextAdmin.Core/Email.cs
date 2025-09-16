@@ -204,74 +204,79 @@ namespace NextAdmin.Core
             return true;
         }
 
-
-        public interface ISMTPServerAccount : IServerEmailAccount
-        {
-            string SMTPServerAddress { get; set; }
-
-            int SMTPServerPort { get; set; }
-
-            string MailDisplayName { get; set; }
-        }
-
-
-        public interface IMAPServerAccount : IServerEmailAccount
-        {
-            string IMAPServerAddress { get; set; }
-
-            int IMAPServerPort { get; set; }
-
-        }
+    }
 
 
 
-        public interface IServerEmailAccount
-        {
+    public interface ISMTPServerAccount : IServerEmailAccount
+    {
+        string SMTPServerAddress { get; set; }
 
-            EmailEncryptionType EmailEncryption { get; set; }
+        int SMTPServerPort { get; set; }
 
-            string EmailServerUserName { get; set; }
-
-            string EmailServerPassword { get; set; }
-
-            string FullEmailAddress { get; set; }
-
-        }
+        string MailDisplayName { get; set; }
+    }
 
 
+    public interface IMAPServerAccount : IServerEmailAccount
+    {
+        string IMAPServerAddress { get; set; }
 
-        public enum EmailEncryptionType
-        {
-            Auto = 0,
-            None = 1,
-            Tls = 2,
-            Ssl = 3
-        }
-
-
-
-        public class ServerEmailAccount : IServerEmailAccount
-        {
-            public EmailEncryptionType EmailEncryption { get; set; }
-
-            public string EmailServerUserName { get; set; }
-
-            public string EmailServerPassword { get; set; }
-
-            public string FullEmailAddress { get; set; }
-        }
-
-
-        public class SmtpServerAccount : ServerEmailAccount
-        {
-            public string SmtpServerAddress { get; set; }
-
-            public int SmtpServerPort { get; set; }
-
-            public string EmailDisplayName { get; set; }
-        }
+        int IMAPServerPort { get; set; }
 
     }
+
+
+
+    public interface IServerEmailAccount
+    {
+
+        EmailEncryptionType EmailEncryption { get; set; }
+
+        string EmailServerUserName { get; set; }
+
+        string EmailServerPassword { get; set; }
+
+        string FullEmailAddress { get; set; }
+
+    }
+
+
+
+    public enum EmailEncryptionType
+    {
+        Auto = 0,
+        None = 1,
+        Tls = 2,
+        Ssl = 3
+    }
+
+
+
+    public class ServerEmailAccount : IServerEmailAccount
+    {
+        public EmailEncryptionType EmailEncryption { get; set; }
+
+        public string EmailServerUserName { get; set; }
+
+        public string EmailServerPassword { get; set; }
+
+        public string FullEmailAddress { get; set; }
+    }
+
+
+    public class SmtpServerAccount : ServerEmailAccount
+    {
+        public string SmtpServerAddress { get; set; }
+
+        public int SmtpServerPort { get; set; }
+
+        public string EmailDisplayName { get; set; }
+    }
+
+
+
+
 
     public class EmailMessage
     {

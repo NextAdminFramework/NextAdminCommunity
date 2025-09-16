@@ -47,7 +47,7 @@ namespace NextAdmin {
 
         noDataIcon = '<i class="fas fa-database"></i>';
 
-        copyIcon = '<i class="fa-solid fa-copy"></i>';
+        copyIcon = '<i class="fas fa-copy"></i>';
 
         dragIcon = '<i class="fas fa-grip-vertical"></i>';
 

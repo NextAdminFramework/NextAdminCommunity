@@ -55,6 +55,9 @@ namespace NextAdmin.UI {
             NextAdmin.Style.append('NextAdmin.UI.TextArea', TextArea.style);
             this.textArea = document.createElement('textarea');
             this.textArea.classList.add('next-admin-textarea');
+            if (this.options.placeholder) {
+                this.textArea.placeholder = this.options.placeholder;
+            }
             this.textArea.addEventListener("input", () => {
                 this.onValueChanged.dispatch(this, { value: this.textArea.value } as ValueChangeEventArgs);
             });
@@ -117,6 +120,8 @@ namespace NextAdmin.UI {
         style?: TextAreaStyle | any;
 
         height?: string;
+
+        placeholder?: string;
 
     }
 

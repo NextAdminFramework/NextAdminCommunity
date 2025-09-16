@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using System.Text.Json.Serialization;
 
 namespace NextAdmin.Core.Model
 {
@@ -21,7 +21,7 @@ namespace NextAdmin.Core.Model
 
         public event EventHandler<SavingArgs> OnEndSaving;
 
-        [NotMapped]
+        [NotMapped, JsonIgnore]
         public virtual int SaveOrder => 0;
 
         public event EventHandler<SavingArgs> OnEndDeleting;

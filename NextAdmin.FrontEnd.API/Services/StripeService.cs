@@ -12,17 +12,20 @@ namespace NextAdmin.FrontEnd.API.Services
     {
         public NextAdminDbContext DbContext { get; protected set; }
 
+        public string? StripeSecretApiKey { get; set; }
 
-        public StripeService(NextAdminDbContext dbContext)
+
+        public StripeService(NextAdminDbContext dbContext, string? stripeSecretApiKey = null)
         {
             DbContext = dbContext;
+            StripeSecretApiKey = stripeSecretApiKey ?? NextAdminFrontEndHelper.StripeSecretApiKey;
         }
 
         public TStripeUserPaymentSession CreatePaymentSession(IItemInfo item, TUser user, string? successPaymentUrl = null, string? cancelPaymentUrl = null)
         {
             var unitSalePrice = item.GetUnitSalePrice(DbContext);
             var elementName = item.GetItemName(DbContext);
-            var service = new SessionService(new StripeClient(NextAdminFrontEndHelper.StripeApiKey));
+            var service = new SessionService(new StripeClient(StripeSecretApiKey));
 
             if (successPaymentUrl == null)
             {

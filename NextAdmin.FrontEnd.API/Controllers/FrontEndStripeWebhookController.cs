@@ -31,7 +31,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
         {
             try
             {
-                string endpointSecretKey = GetStripeEndpointScretKey();
+                string endpointSecretKey = GetStripeSecretWebhookSignatureKey();
                 var streamReaderTask = new StreamReader(Request.Body).ReadToEndAsync();
                 streamReaderTask.Wait(30000);
                 string requestJsonData = streamReaderTask.Result;
@@ -168,20 +168,9 @@ namespace NextAdmin.FrontEnd.API.Controllers
             return saveResult.Success;
         }
 
-
-        protected virtual string GetStripeApiKey()
+        protected virtual string GetStripeSecretWebhookSignatureKey()
         {
-            var key = NextAdminFrontEndHelper.StripeApiKey;
-            if (key == null)
-            {
-                throw new Exception("FrontEndStripeWebhookController.GetStripeApiKey : StripeApiKey is required");
-            }
-            return key;
-        }
-
-        protected virtual string GetStripeEndpointScretKey()
-        {
-            var key = NextAdminFrontEndHelper.StripeEndpointScretKey;
+            var key = NextAdminFrontEndHelper.StripeSecretWebhookSignatureKey;
             if (key == null)
             {
                 throw new Exception("FrontEndStripeWebhookController.GetStripeEndpointScretKey : StripeEndpointScretKey is required");

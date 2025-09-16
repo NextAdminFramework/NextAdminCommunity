@@ -47,34 +47,36 @@ namespace NextAdmin.UI {
 
         public static style = '.next-admin-modal-btn-close{border-top-right-radius:4px}'
             + '.next-admin-modal-toolbar-button{ display:inline-block;float:right;font-size:20px;height:32px;width:32px;text-align:center;cursor:pointer }'
-            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:4vh;width:80%;height:95%; } }'//large modal
-            + '@media (max-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-ultra-large{ margin:0 auto;margin-top:4vh;width:80%;height:95%; } }'
+            + '@media (max-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-ultra-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-ultra-large .next-admin-modal-button-full-screen{display:none} }'
 
+            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } }'
+            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:5vh;width:90%;height:90%; } }'
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-large{ margin:0 auto;margin-top:5vh;width:80%;height:90%;max-width:1400px } }'
 
-            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
-            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:5vh;width:70%;height:90%; } }'//mediaum modal
-            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:5vh;width:50%;height:90%;max-width:900px } }'//mediaum modal
+            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } }'
+            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:5vh;width:90%;height:90%; } }'
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:5vh;width:70%;height:90%;max-width:1200px } }'
 
-            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
-            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:5vh;width:90%;height:90%; } }'//mediaum modal
-            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium-large{ margin:0 auto;margin-top:5vh;width:65%;height:90%;max-width:1100px } }'//mediaum modal
+            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } }'
+            + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:5vh;width:70%;height:90%; } }'
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium{ margin:0 auto;margin-top:5vh;width:50%;height:90%;max-width:900px } }'
 
-
-            + '@media (max-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
-            + '@media (min-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:70%;height:90%; } }'//small modal
-            + '@media (min-width: 900px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:50%;height:90%; } }'//small modal
-            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:35%;height:90%;max-width:600px } }'//small modal
+            + '@media (max-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:0vh;width:100%;height:100%; } }'
+            + '@media (min-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:70%;height:90%; } }'
+            + '@media (min-width: 900px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:50%;height:90%; } }'
+            + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-small{ margin:0 auto;margin-top:5vh;width:35%;height:90%;max-width:600px } }'
 
 
             + '.next-admin-modal-autosizing.next-admin-modal-small-fit-content{ top:50%;transform:perspective(1px) translateY(-50%) }'
-            + '@media (max-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
+            + '@media (max-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:100%; } }'
             + '@media (min-width: 600px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:70%; } }'//small modal
             + '@media (min-width: 900px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:50%; } }'//small modal
             + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-small-fit-content{ margin:auto auto;width:35%;max-width:600px } }'//small modal
 
 
             + '.next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ top:50%;transform:perspective(1px) translateY(-50%) }'
-            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ margin:auto auto;width:100%; } .next-admin-modal-autosizing.next-admin-modal-large .next-admin-modal-button-full-screen{display:none} }'
+            + '@media (max-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ margin:auto auto;width:100%; } }'
             + '@media (min-width: 800px) { .next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ margin:auto auto;width:80%; } }'//small modal
             + '@media (min-width: 1280px) { .next-admin-modal-autosizing.next-admin-modal-medium-fit-content{ margin:auto auto;width:50%;max-width:900px } }'//small modal
 
@@ -174,7 +176,7 @@ namespace NextAdmin.UI {
                 style: Modal.defaultStyle,
                 canChangeScreenMode: (options == null || (options.size != ModalSize.smallFitContent && options.size != ModalSize.mediumFitContent)) && NextAdmin.UserAgent.isDesktop(),
                 parentElement: document.body,
-                size: ModalSize.large,
+                size: ModalSize.ultraLarge,
                 hasBodyOverflow: true,
                 removeOnClose: true,
                 canClose: true,
@@ -390,6 +392,9 @@ namespace NextAdmin.UI {
                     break;
                 case ModalSize.large:
                     this._currentModalSizeClass = 'next-admin-modal-large';
+                    break;
+                case ModalSize.ultraLarge:
+                    this._currentModalSizeClass = 'next-admin-modal-ultra-large';
                     break;
             }
             this.modal.classList.add(this._currentModalSizeClass);
@@ -1075,6 +1080,7 @@ namespace NextAdmin.UI {
         mediumFitContent,
         mediumLarge,
         large,
+        ultraLarge,
     }
 
 

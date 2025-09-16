@@ -40,14 +40,21 @@ namespace NextAdmin.UI {
                 text-decoration:none;
                 font-size:30px;
                 font-weight:bold;
+                transition: transform 0.1s;
+                border-radius:10px;
+                margin-right:10px;
+            }
+            .top-bar-logo-link:hover{
+                box-shadow:inset 0px 0px 2px #444;
+                transform: scale(0.99);
             }
 
             .top-bar-logo{
-                margin-right:20px;
-                max-height:100%;
+                margin-left:5px;
+                margin-right:5px;
+                max-height:80%;
                 @media (max-width: 512px) {
-                    margin-right:5px;
-                    max-width:120px;
+                    max-height:50%;
                 }
             }
             
@@ -198,7 +205,7 @@ namespace NextAdmin.UI {
             switch (this.options.style) {
                 default:
                 case NavigationTopBarStyle.white:
-                    return LinkStyle.blue;
+                    return LinkStyle.dark;
                 case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
                     return LinkStyle.white;
 
@@ -219,7 +226,7 @@ namespace NextAdmin.UI {
         }
 
         .next-admin-navigation-link-active.dark{
-            color:` + FrontDefaultStyle.PrimaryColor + `;
+            color:` + DefaultStyle.BlueOne + `;
         }
 
         .next-admin-navigation-link-active.blue{

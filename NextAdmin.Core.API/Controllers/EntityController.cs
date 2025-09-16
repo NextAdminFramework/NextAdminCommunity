@@ -214,22 +214,7 @@ namespace NextAdmin.Core.API.Controllers
                 else
                 {
                     SQLSelectQueryBuilder query = DbContext.SQLQuery(args.EntityName).Select(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
-                    if (args.TakeRecordCount.HasValue)
-                    {
-                        query = query.Take(args.TakeRecordCount.Value);
-                    }
-                    if (args.SkipRecordCount.HasValue)
-                    {
-                        query = query.Skip(args.SkipRecordCount.Value);
-                    }
                     query = BuildSelectQuery(query, args);
-
-                    var entityInfo = DbContext.GetEntityInfo(args.EntityName);
-                    bool isDerived = entityInfo.EntityParentNames != null && entityInfo.EntityParentNames.Count > 0;
-                    if (isDerived)
-                    {
-                        query = query.Where($"{entityInfo.EntityTableName}.Discriminator = ?", entityInfo.EntityName);
-                    }
 
                     if (args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0)//user select columns, so we juste execute query with desired column
                     {
@@ -269,6 +254,7 @@ namespace NextAdmin.Core.API.Controllers
                     }
                     else//user no select column so we execute query and instanciate entities
                     {
+                        var entityInfo = DbContext.GetEntityInfo(args.EntityName);
                         var entityPkInfo = entityInfo.GetPrimaryKeyInfo();
                         var entitiesIds = query.Execute().Select(e => e[entityPkInfo.MemberName]).Distinct().ToList();
                         int noParam = 0;
@@ -329,13 +315,87 @@ namespace NextAdmin.Core.API.Controllers
         }
 
 
-        protected SQLSelectQueryBuilder BuildSelectQuery(SQLSelectQueryBuilder query, GetEntitiesArgs args)
+        [HttpGet, HttpPost]
+        public virtual ApiResponse<long> CountEntities([FromBody] GetEntitiesArgs args)
+        {
+            if (string.IsNullOrEmpty(args.EntityName))
+            {
+                return ApiResponse<long>.Error(ApiResponseCode.ParametersError, "EntityName required");
+            }
+            if (this.GetUserGlobalEntityRight(args.EntityName) < RightType.ReadOnly)
+            {
+                return ApiResponse<long>.Error(ApiResponseCode.PermissionLevelError, "Access denied");
+            }
+
+            var query = DbContext.SQLQuery(args.EntityName).SelectCount(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
+            query = BuildSelectQuery(query, args);
+            var count = (long)query.Execute().FirstOrDefault().FirstOrDefault().Value;
+            return ApiResponse<long>.Success(count);
+        }
+
+        [HttpGet, HttpPost]
+        public virtual ApiResponse<double> SumEntities([FromBody] GetEntitiesArgs args)
+        {
+            if (string.IsNullOrEmpty(args.EntityName))
+            {
+                return ApiResponse<double>.Error(ApiResponseCode.ParametersError, "EntityName required");
+            }
+            if (this.GetUserGlobalEntityRight(args.EntityName) < RightType.ReadOnly)
+            {
+                return ApiResponse<double>.Error(ApiResponseCode.PermissionLevelError, "Access denied");
+            }
+
+            var query = DbContext.SQLQuery(args.EntityName).SelectSum(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
+            query = BuildSelectQuery(query, args);
+            var sum = (double)query.Execute().FirstOrDefault().FirstOrDefault().Value;
+            return ApiResponse<double>.Success(sum);
+        }
+
+        [HttpGet, HttpPost]
+        public virtual ApiResponse<double> MinEntities([FromBody] GetEntitiesArgs args)
+        {
+            if (string.IsNullOrEmpty(args.EntityName))
+            {
+                return ApiResponse<double>.Error(ApiResponseCode.ParametersError, "EntityName required");
+            }
+            if (this.GetUserGlobalEntityRight(args.EntityName) < RightType.ReadOnly)
+            {
+                return ApiResponse<double>.Error(ApiResponseCode.PermissionLevelError, "Access denied");
+            }
+
+            var query = DbContext.SQLQuery(args.EntityName).SelectMin(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
+            query = BuildSelectQuery(query, args);
+            var min = (double)query.Execute().FirstOrDefault().FirstOrDefault().Value;
+            return ApiResponse<double>.Success(min);
+        }
+
+        [HttpGet, HttpPost]
+        public virtual ApiResponse<double> MaxEntities([FromBody] GetEntitiesArgs args)
+        {
+            if (string.IsNullOrEmpty(args.EntityName))
+            {
+                return ApiResponse<double>.Error(ApiResponseCode.ParametersError, "EntityName required");
+            }
+            if (this.GetUserGlobalEntityRight(args.EntityName) < RightType.ReadOnly)
+            {
+                return ApiResponse<double>.Error(ApiResponseCode.PermissionLevelError, "Access denied");
+            }
+
+            var query = DbContext.SQLQuery(args.EntityName).SelectMax(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
+            query = BuildSelectQuery(query, args);
+            var max = (double)query.Execute().FirstOrDefault().FirstOrDefault().Value;
+            return ApiResponse<double>.Success(max);
+        }
+
+
+        protected TSelectQuery BuildSelectQuery<TSelectQuery>(TSelectQuery query, GetEntitiesArgs args)
+            where TSelectQuery : SQLSelectQueryBuilder
         {
             if (!string.IsNullOrWhiteSpace(args.WhereQuery))
             {
                 if (args.WhereQueryArgs != null)
                 {
-                    query = query.Where(args.WhereQuery, args.WhereQueryArgs.Select(a =>
+                    query = (TSelectQuery)query.Where(args.WhereQuery, args.WhereQueryArgs.Select(a =>
                     {
                         if (a is JArray)
                         {
@@ -347,29 +407,37 @@ namespace NextAdmin.Core.API.Controllers
                 }
                 else
                 {
-                    query = query.Where(args.WhereQuery);
+                    query = (TSelectQuery)query.Where(args.WhereQuery);
                 }
             }
             if (args.OrderColumnNames != null && args.OrderColumnNames.Count > 0)
             {
-                query = query.OrderBy(args.OrderColumnNames.ToArray());
+                query = (TSelectQuery)query.OrderBy(args.OrderColumnNames.ToArray());
             }
             if (args.SkipRecordCount.HasValue)
             {
                 if (args.OrderColumnNames == null || args.OrderColumnNames.Count == 0)
                 {
-                    query = query.OrderBy(query.MainEntityInfo.GetPrimaryKeyName());
+                    query = (TSelectQuery)query.OrderBy(query.MainEntityInfo.GetPrimaryKeyName());
                 }
-                query = query.Skip(args.SkipRecordCount.Value);
+                query = (TSelectQuery)query.Skip(args.SkipRecordCount.Value);
             }
             if (args.TakeRecordCount.HasValue)
             {
-                query = query.Take(args.TakeRecordCount.Value);
+                query = (TSelectQuery)query.Take(args.TakeRecordCount.Value);
             }
             if (args.IsSelectDistinctQuery)
             {
-                query = query.Distinct();
+                query = (TSelectQuery)query.Distinct();
             }
+
+            var entityInfo = DbContext.GetEntityInfo(args.EntityName);
+            bool isDerived = entityInfo.EntityParentNames != null && entityInfo.EntityParentNames.Count > 0;
+            if (isDerived)
+            {
+                query = (TSelectQuery)query.Where($"{entityInfo.EntityTableName}.Discriminator = ?", entityInfo.EntityName);
+            }
+
             return query;
         }
 

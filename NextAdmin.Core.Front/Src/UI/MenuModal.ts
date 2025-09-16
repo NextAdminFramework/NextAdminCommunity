@@ -6,7 +6,9 @@ namespace NextAdmin.UI {
 
         mainContainer: HTMLDivElement;
 
-        constructor(options: MenuModalOptions) {
+        footerContainer: HTMLDivElement;
+
+        constructor(options?: MenuModalOptions) {
             super({
                 backdropColor: DefaultStyle.DarkModalBackdrop,
                 size: ModalSize.smallFitContent,
@@ -18,18 +20,20 @@ namespace NextAdmin.UI {
 
                 ...options
             });
+            this.modal.style.maxHeight = '80vh';
             this.leftHeader.style.fontSize = '20px';
-            if (NextAdmin.String.isNullOrEmpty(this.options.title)) {
+            if (NextAdmin.String.isNullOrEmpty(this.options.title) && !this.options.canClose) {
                 this.header.style.height = '3px';
             }
 
             this.mainContainer = this.body.appendHTML('div', (container) => {
-                container.style.padding = '10px';
-
+                container.style.padding = '20px';
                 if (this.options.text) {
                     container.appendHTML('p', this.options.text);
                 }
             });
+
+
             if (this.options.items) {
                 for (let item of this.options.items) {
                     this.addElement(item);
@@ -145,7 +149,7 @@ namespace NextAdmin.UI {
 
         hasBackButton?: boolean;
 
-        items?: Array<MenuItem | Button | HTMLElement>;
+        items?: Array<MenuItem | Control | HTMLElement>;
 
     }
 

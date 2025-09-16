@@ -34,6 +34,7 @@ namespace NextAdmin.UI {
             cursor:pointer;
             overflow: hidden;
             position:relative;
+            width:100%;
         }
 
         .next-admin-image-card-image{
@@ -60,147 +61,433 @@ namespace NextAdmin.UI {
         .next-admin-image-card-image:hover{
             transform: scale(1.1);
         }
-
-        .next-admin-image-card-light-bordered {
-            border:1px solid #e6e6e6;
+        .next-admin-image-card-no-border {
+            .next-admin-image-card{
+                border:0px;
+            }
+            .next-admin-image-card-outside-title{
+                text-align:center;
+            }
+            .next-admin-image-card-outside-description{
+                text-align:center;
+            }
         }
+        .next-admin-image-card-light-bordered {
+            .next-admin-image-card{
+                border:1px solid #e6e6e6;
+            }
+        }
+        .next-admin-image-card-light-bordered-text-center{
+            .next-admin-image-card{
+                border:1px solid #e6e6e6;
+            }
+            .next-admin-image-card-outside-title{
+                text-align:center;
+            }
+            .next-admin-image-card-outside-description{
+                text-align:center;
+            }
+        }
+
         .next-admin-image-card-border-radius{
-            border-radius:16px;
-            box-shadow:0px 0px 20px rgba(0,0,0,0.25);
+            .next-admin-image-card{
+                border-radius:16px;
+                box-shadow:0px 0px 20px rgba(0,0,0,0.25);
+            }
+        }
+        .next-admin-image-card-border-radius-text-center{
+            .next-admin-image-card{
+                border-radius:16px;
+                box-shadow:0px 0px 20px rgba(0,0,0,0.25);
+            }
+            .next-admin-image-card-outside-title{
+                text-align:center;
+            }
+            .next-admin-image-card-outside-description{
+                text-align:center;
+            }
         }
 
         .next-admin-image-card-border-radius-b{
-            border-radius:16px;
-            box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+            .next-admin-image-card{
+                border-radius:16px;
+                box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+            }
         }
 
-        .next-admin-image-card-extra-small-1-1{
+        .next-admin-image-card-border-radius-b-text-center{
+            .next-admin-image-card{
+                border-radius:16px;
+                box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+            }
+            .next-admin-image-card-outside-title{
+                text-align:center;
+            }
+            .next-admin-image-card-outside-description{
+                text-align:center;
+            }
+        }
+
+        .next-admin-image-card-wrapper.extra-small{
             width:200px;
-            height:200px;
+            .next-admin-image-card-title{
+                font-size:16px;
+            }
+        }
+        .next-admin-image-card-wrapper.small{
+            width:300px;
             .next-admin-image-card-title{
                 font-size:18px;
             }
         }
-        .next-admin-image-card-wrapper.responsive .next-admin-image-card-extra-small-1-1{
-            @media (max-width: 1024px) {
-                width:160px;
-                height:160px;
+        .next-admin-image-card-wrapper.medium{
+            width:400px;
+            .next-admin-image-card-title{
+                font-size:20px;
             }
-            @media (max-width: 768px) {
-                width:140px;
-                height:140px;
+        }
+        .next-admin-image-card-wrapper.large{
+            width:500px;
+            .next-admin-image-card-title{
+                font-size:24px;
             }
-            @media (max-width: 400px) {
-                width:100px;
-                height:100px;
-            }
+        }
+
+
+        .next-admin-image-card-extra-small-1-1{
+            height:200px;
         }
 
         .next-admin-image-card-small-1-1 {
-            width:300px;
             height:300px;
-            .next-admin-image-card-title{
-                font-size:18px;
-            }
         }
 
         .next-admin-image-card-small-4-3 {
-            width:300px;
             height:225px;
-            .next-admin-image-card-title{
-                font-size:18px;
-            }
         }
 
         .next-admin-image-card-small-3-4 {
-            width:225px;
-            height:300px;
-            .next-admin-image-card-title{
-                font-size:18px;
-            }
+            height:400px;
         }
 
         .next-admin-image-card-small-9-16 {
-            width:168px;
-            height:300px;
-            .next-admin-image-card-title{
-                font-size:18px;
-            }
+            height:531px;
         }
 
         .next-admin-image-card-medium-1-1 {
-            width:400px;
             height:400px;
-            .next-admin-image-card-title{
-                font-size:24px;
-            }
         }
 
         .next-admin-image-card-medium-4-3 {
-            width:400px;
             height:300px;
-            .next-admin-image-card-title{
-                font-size:24px;
-            }
         }
 
         .next-admin-image-card-medium-3-4 {
-            width:300px;
-            height:400px;
-            .next-admin-image-card-title{
-                font-size:24px;
-            }
+            height:532px;
         }
 
         .next-admin-image-card-medium-9-16 {
-            width:225px;
-            height:400px;
-            .next-admin-image-card-title{
-                font-size:24px;
-            }
+            height:708px;
         }
 
         .next-admin-image-card-large-1-1 {
-            width:600px;
-            height:600px;
+            height:500px;
         }
 
         .next-admin-image-card-large-4-3 {
-            width:600px;
-            height:450px;
+            height:375px;
         }
 
         .next-admin-image-card-large-3-4 {
-            width:600;
-            height:450;
+            height:665;
         }
 
         .next-admin-image-card-large-9-16 {
-            width:337px;
-            height:600px;
+            height:885px;
         }
 
         .next-admin-image-card-outside-text{
-
+            width:100%;
+            height:50px;
             padding-top:10px;
-
+            font-size:14px;
             .next-admin-image-card-outside-title{
-                font-size:14px;
+                text-overflow: ellipsis;
                 color:#999;
             }
 
             .next-admin-image-card-outside-description{
-                font-size:14px;
+                text-overflow: ellipsis;
                 color:#444;
             }
         }
+        .next-admin-image-card-wrapper.small{
+            .next-admin-image-card-outside-text{
+                height:40px;
+            }
+        }
+        .next-admin-image-card-wrapper.extra-small{
+            .next-admin-image-card-outside-text{
+                height:30px;
+            }
+        }
+
+
+        .next-admin-image-card-wrapper.extra-small.responsive{
+            @media (max-width: 1024px) {
+                width:160px;
+                .next-admin-image-card-outside-text{
+                    padding-top:5px;
+                    font-size:12px;
+                }
+            }
+            @media (max-width: 768px) {
+                width:140px;
+                .next-admin-image-card-outside-text{
+                    padding-top:4px;
+                    font-size:11px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:100px;
+                .next-admin-image-card-outside-text{
+                    padding-top:2px;
+                    font-size:10px;
+                }
+            }
+        }
+
+        .next-admin-image-card-wrapper.small.responsive{
+            @media (max-width: 1024px) {
+                width:240px;
+                .next-admin-image-card-outside-text{
+                    padding-top:6px;
+                    font-size:13px;
+                }
+            }
+            @media (max-width: 768px) {
+                width:180px;
+                .next-admin-image-card-outside-text{
+                    padding-top:5px;
+                    font-size:12px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:160px;
+                .next-admin-image-card-outside-text{
+                    padding-top:4px;
+                    font-size:11px;
+                }
+            }
+        }
+        .next-admin-image-card-wrapper.medium.responsive{
+            @media (max-width: 1024px) {
+                width:300px;
+                .next-admin-image-card-outside-text{
+                    padding-top:8px;
+                    font-size:14px;
+                }
+            }
+            @media (max-width: 768px) {
+                width:240px;
+                .next-admin-image-card-outside-text{
+                    padding-top:6px;
+                    font-size:13px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:180px;
+                .next-admin-image-card-outside-text{
+                    padding-top:5px;
+                    font-size:12px;
+                }
+            }
+        }
+        .next-admin-image-card-wrapper.large.responsive{
+            @media (max-width: 1024px) {
+                width:400px;
+            }
+            @media (max-width: 768px) {
+                width:300px;
+                .next-admin-image-card-outside-text{
+                    padding-top:8px;
+                    font-size:13px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:240px;
+                .next-admin-image-card-outside-text{
+                    padding-top:6px;
+                    font-size:12px;
+                }
+            }
+        }
+
+
+        .next-admin-image-card-wrapper.responsive{
+
+            .next-admin-image-card-extra-small-1-1{
+                @media (max-width: 1024px) {
+                    height:160px;
+                }
+                @media (max-width: 768px) {
+                    height:140px;
+                }
+                @media (max-width: 512px) {
+                    height:100px;
+                }
+            }
+            .next-admin-image-card-small-1-1 {
+                @media (max-width: 1024px) {
+                    height:240px;
+                }
+                @media (max-width: 768px) {
+                    height:180px;
+                }
+                @media (max-width: 512px) {
+                    height:160px;
+                }
+            }
+            .next-admin-image-card-small-4-3 {
+                @media (max-width: 1024px) {
+                    height:180px;
+                }
+                @media (max-width: 768px) {
+                    height:135px;
+                }
+                @media (max-width: 400px) {
+                    height:120px;
+                }
+            }
+
+            .next-admin-image-card-small-3-4 {
+                @media (max-width: 1024px) {
+                    height:320px;
+                }
+                @media (max-width: 768px) {
+                    height:240px;
+                }
+                @media (max-width: 400px) {
+                    height:212px;
+                }
+            }
+
+            .next-admin-image-card-small-9-16 {
+                @media (max-width: 1024px) {
+                    height:424px;
+                }
+                @media (max-width: 768px) {
+                    height:318px;
+                }
+                @media (max-width: 400px) {
+                    height:284px;
+                }
+            }
+
+            .next-admin-image-card-medium-1-1 {
+                @media (max-width: 1024px) {
+                    height:300px;
+                }
+                @media (max-width: 768px) {
+                    height:240px;
+                }
+                @media (max-width: 400px) {
+                    height:180px;
+                }
+            }
+
+            .next-admin-image-card-medium-4-3 {
+                @media (max-width: 1024px) {
+                    height:225px;
+                }
+                @media (max-width: 768px) {
+                    height:180px;
+                }
+                @media (max-width: 400px) {
+                    height:135px;
+                }
+            }
+
+            .next-admin-image-card-medium-3-4 {
+                @media (max-width: 1024px) {
+                    height:400px;
+                }
+                @media (max-width: 768px) {
+                    height:320px;
+                }
+                @media (max-width: 400px) {
+                    height:240px;
+                }
+            }
+
+            .next-admin-image-card-medium-9-16 {
+                @media (max-width: 1024px) {
+                    height:531px;
+                }
+                @media (max-width: 768px) {
+                    height:424px;
+                }
+                @media (max-width: 400px) {
+                    height:318px;
+                }
+            }
+
+            .next-admin-image-card-large-1-1 {
+                @media (max-width: 1024px) {
+                    height:400px;
+                }
+                @media (max-width: 768px) {
+                    height:300px;
+                }
+                @media (max-width: 400px) {
+                    height:240px;
+                }
+            }
+
+            .next-admin-image-card-large-4-3 {
+                @media (max-width: 1024px) {
+                    height:300px;
+                }
+                @media (max-width: 768px) {
+                    height:225x;
+                }
+                @media (max-width: 400px) {
+                    height:180x;
+                }
+            }
+
+            .next-admin-image-card-large-3-4 {
+                @media (max-width: 1024px) {
+                    height:532px;
+                }
+                @media (max-width: 768px) {
+                    height:400px;
+                }
+                @media (max-width: 400px) {
+                    height:320px;
+                }
+            }
+
+            .next-admin-image-card-large-9-16 {
+                @media (max-width: 1024px) {
+                    height:708px;
+                }
+                @media (max-width: 768px) {
+                    height:531px;
+                }
+                @media (max-width: 400px) {
+                    height:425px;
+                }
+            }
+        }
+
 
         `;
 
         constructor(options?: ImageCardOptions) {
             super('div', {
                 size: ImageCardSize.medium_4_3,
-                style: ImageCardStyle.fullImageLightBordered,
+                style: ImageCardStyle.imageLightBorderedTextLeft,
                 isResponsive: true,
                 ...options
             } as ImageCardOptions);
@@ -299,44 +586,57 @@ namespace NextAdmin.UI {
             switch (size) {
                 default:
                 case ImageCardSize.extraSmall_1_1:
+                    this.element.classList.add('extra-small');
                     this.card.classList.add('next-admin-image-card-extra-small-1-1');
                     break;
                 case ImageCardSize.small_1_1:
+                    this.element.classList.add('small');
                     this.card.classList.add('next-admin-image-card-small-1-1');
                     break;
                 case ImageCardSize.small_4_3:
+                    this.element.classList.add('small');
                     this.card.classList.add('next-admin-image-card-small-4-3');
                     break;
                 case ImageCardSize.small_3_4:
+                    this.element.classList.add('small');
                     this.card.classList.add('next-admin-image-card-small-3-4');
                     break;
                 case ImageCardSize.small_9_16:
+                    this.element.classList.add('small');
                     this.card.classList.add('next-admin-image-card-small-9-16');
                     break;
 
                 case ImageCardSize.medium_1_1:
+                    this.element.classList.add('medium');
                     this.card.classList.add('next-admin-image-card-medium-1-1');
                     break;
                 case ImageCardSize.medium_4_3:
+                    this.element.classList.add('medium');
                     this.card.classList.add('next-admin-image-card-medium-4-3');
                     break;
                 case ImageCardSize.medium_3_4:
+                    this.element.classList.add('medium');
                     this.card.classList.add('next-admin-image-card-medium-3-4');
                     break;
                 case ImageCardSize.medium_9_16:
+                    this.element.classList.add('medium');
                     this.card.classList.add('next-admin-image-card-medium-9-16');
                     break;
 
                 case ImageCardSize.large_1_1:
+                    this.element.classList.add('large');
                     this.card.classList.add('next-admin-image-card-large-1-1');
                     break;
                 case ImageCardSize.large_4_3:
+                    this.element.classList.add('large');
                     this.card.classList.add('next-admin-image-card-large-4-3');
                     break;
                 case ImageCardSize.large_3_4:
-                    this.card.classList.add('next-admin-image-card-medium-3-4');
+                    this.element.classList.add('large');
+                    this.card.classList.add('next-admin-image-card-large-3-4');
                     break;
                 case ImageCardSize.large_9_16:
+                    this.element.classList.add('large');
                     this.card.classList.add('next-admin-image-card-large-9-16');
                     break;
             }
@@ -345,14 +645,30 @@ namespace NextAdmin.UI {
         public setStyle(style: ImageCardStyle) {
             switch (style) {
                 default:
-                case ImageCardStyle.fullImageLightBordered:
-                    this.card.classList.add('next-admin-image-card-light-bordered');
+                case ImageCardStyle.imageNoBorderTextCenter:
+                    this.element.classList.add('next-admin-image-card-no-border');
                     break;
-                case ImageCardStyle.fullImageShadowedBorderRadius:
-                    this.card.classList.add('next-admin-image-card-border-radius');
+
+                case ImageCardStyle.imageLightBorderedTextLeft:
+                    this.element.classList.add('next-admin-image-card-light-bordered');
                     break;
-                case ImageCardStyle.fullImageShadowedBorderRadiusB:
-                    this.card.classList.add('next-admin-image-card-border-radius-b');
+                case ImageCardStyle.imageLightBorderedTextCenter:
+                    this.element.classList.add('next-admin-image-card-light-bordered-text-center');
+                    break;
+
+
+                case ImageCardStyle.imageShadowedBorderRadiusTextLeft:
+                    this.element.classList.add('next-admin-image-card-border-radius');
+                    break;
+                case ImageCardStyle.imageShadowedBorderRadiusTextCenter:
+                    this.element.classList.add('next-admin-image-card-border-text-center');
+                    break;
+
+                case ImageCardStyle.imageShadowedBorderRadiusBTextLeft:
+                    this.element.classList.add('next-admin-image-card-border-radius-b');
+                    break;
+                case ImageCardStyle.imageShadowedBorderRadiusBTextCenter:
+                    this.element.classList.add('next-admin-image-card-border-radius-b-text-center');
                     break;
             }
         }
@@ -400,27 +716,31 @@ namespace NextAdmin.UI {
 
 
     export enum ImageCardSize {
-        extraSmall_1_1,
-        small_1_1,
-        small_4_3,
-        small_3_4,
-        small_9_16,
+        extraSmall_1_1 = 100,
+        small_1_1 = 300,
+        small_4_3 = 301,
+        small_3_4 = 302,
+        small_9_16 = 303,
 
-        medium_1_1,
-        medium_4_3,
-        medium_3_4,
-        medium_9_16,
+        medium_1_1 = 500,
+        medium_4_3 = 501,
+        medium_3_4 = 502,
+        medium_9_16 = 503,
 
-        large_1_1,
-        large_4_3,
-        large_3_4,
-        large_9_16,
+        large_1_1 = 700,
+        large_4_3 = 701,
+        large_3_4 = 702,
+        large_9_16 = 703,
     }
 
     export enum ImageCardStyle {
-        fullImageLightBordered,
-        fullImageShadowedBorderRadius,
-        fullImageShadowedBorderRadiusB
+        imageNoBorderTextCenter = 0,
+        imageLightBorderedTextLeft = 10,
+        imageLightBorderedTextCenter = 11,
+        imageShadowedBorderRadiusTextLeft = 20,
+        imageShadowedBorderRadiusTextCenter = 21,
+        imageShadowedBorderRadiusBTextLeft = 30,
+        imageShadowedBorderRadiusBTextCenter = 31,
     }
 
 }

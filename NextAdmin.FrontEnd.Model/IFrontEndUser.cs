@@ -4,7 +4,7 @@ namespace NextAdmin.FrontEnd.Model
 {
     public interface IFrontEndUser : IUser
     {
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         public string? EmailVerificationCode { get; set; }
 

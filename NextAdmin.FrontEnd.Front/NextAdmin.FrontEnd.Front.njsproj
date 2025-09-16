@@ -60,6 +60,7 @@
     <TypeScriptCompile Include="Src\UI\Controls\CardPanel.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\CardsGrid.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\AnimatedHoverText.ts" />
+    <TypeScriptCompile Include="Src\UI\Controls\ContactCard.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\IconCard.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\ImageViewerModal.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\MultiImageTextCard.ts" />

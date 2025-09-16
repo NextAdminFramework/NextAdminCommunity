@@ -184,6 +184,9 @@ var NextAdmin;
     class FrontEndResourcesBase {
         constructor() {
             this.googleIcon = '<i class="fab fa-google"></i>';
+            this.locationIcon = '<i class="fas fa-map-marker"></i>';
+            this.mapIcon = '<i class="fas fa-map"></i>';
+            this.phoneIcon = '<i class="fas fa-phone"></i>';
         }
     }
     NextAdmin.FrontEndResourcesBase = FrontEndResourcesBase;
@@ -203,6 +206,7 @@ var NextAdmin;
             this.or = 'Or';
             this.signInWithGoogle = 'Sign-in with Google';
             this.signUpWithGoogle = 'Sign-up with Google';
+            this.displayOnGoogleMap = "Display on google map";
         }
     }
     NextAdmin.FrontEndResourcesEn = FrontEndResourcesEn;
@@ -222,6 +226,7 @@ var NextAdmin;
             this.or = 'Ou';
             this.signInWithGoogle = 'Se connecter avec Google';
             this.signUpWithGoogle = "S'inscrire avec Google";
+            this.displayOnGoogleMap = "Afficher sur google map";
         }
     }
     NextAdmin.FrontEndResourcesFr = FrontEndResourcesFr;
@@ -252,8 +257,8 @@ var NextAdmin;
                 }
                 return this.headerParams[this.authTokenName];
             }
-            async sendSupportMessage(message, email) {
-                let httpResponse = await this.get('sendSupportMessage', { message: message, email: email });
+            async sendContactMessage(message, email) {
+                let httpResponse = await this.get('sendContactMessage', { message: message, email: email });
                 if (httpResponse == null || !httpResponse.success) {
                     return null;
                 }
@@ -335,6 +340,24 @@ var NextAdmin;
                     return null;
                 }
                 return httpResponse.parseJson();
+            }
+            async isUserAccountExistAndIsActivated(email) {
+                let httpResponse = await this.get('isUserAccountExistAndIsActivated', {
+                    email: email
+                });
+                if (httpResponse == null || !httpResponse.success) {
+                    return null;
+                }
+                return httpResponse.parseJson();
+            }
+            async getUserAuthProviderName(email) {
+                let httpResponse = await this.get('getUserAuthProviderName', {
+                    email: email
+                });
+                if (httpResponse == null || !httpResponse.success) {
+                    return null;
+                }
+                return httpResponse.content;
             }
         }
         Services.FrontEndUserClient = FrontEndUserClient;
@@ -783,6 +806,106 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
+        class ContactCard extends UI.HorizontalFlexLayout {
+            constructor(options) {
+                super({
+                    responsiveMode: UI.HorizontalLayoutResponsiveMode.medium,
+                    ...options
+                });
+                NextAdmin.Style.append('NextAdmin.UI.ContactCard', ContactCard.style);
+                this.element.classList.add('next-admin-contact-card');
+                if (!NextAdmin.String.isNullOrEmpty(this.options.contactAddress)) {
+                    this.appendHTML('div', (mapContainer) => {
+                        mapContainer.classList.add('map-container');
+                        mapContainer.appendControl(new NextAdmin.UI.MapboxMap({
+                            mapboxAccessToken: this.options.mapboxAccessToken,
+                            mapboxDependencyRootUrl: this.options.mapboxDependencyRootUrl,
+                            initialLocationAddress: this.options.contactAddress,
+                            hasMarkerToInitialLocation: true,
+                            height: '400px',
+                            css: {
+                                borderRadius: '20px',
+                                boxShadow: '0px 0px 2px rgba(0,0,0,0.5)'
+                            }
+                        }));
+                    });
+                }
+                this.appendHTMLStretch('div', (infosContainer) => {
+                    infosContainer.style.paddingLeft = '20px';
+                    infosContainer.style.userSelect = 'text';
+                    this.infosContainer = infosContainer.appendHTML('div', (centeredContainer) => {
+                        centeredContainer.classList.add('contact-infos-centered-container');
+                        if (!NextAdmin.String.isNullOrEmpty(this.options.contactName)) {
+                            centeredContainer.appendControl(new NextAdmin.UI.Title({
+                                style: NextAdmin.UI.TitleStyle.greyThin,
+                                size: NextAdmin.UI.TitleSize.medium,
+                                text: this.options.contactName.toLocaleUpperCase(),
+                                css: { marginBottom: '10px' }
+                            }));
+                        }
+                        if (!NextAdmin.String.isNullOrEmpty(this.options.contactEmail)) {
+                            centeredContainer.appendControl(new NextAdmin.UI.Title({
+                                style: NextAdmin.UI.TitleStyle.lightGreyThin,
+                                size: NextAdmin.UI.TitleSize.small,
+                                text: NextAdmin.Resources.emailIcon + ' ' + this.options.contactEmail,
+                                css: { marginBottom: '10px' }
+                            }));
+                        }
+                        if (!NextAdmin.String.isNullOrEmpty(this.options.contactPhone)) {
+                            centeredContainer.appendControl(new NextAdmin.UI.Title({
+                                style: NextAdmin.UI.TitleStyle.lightGreyThin,
+                                size: NextAdmin.UI.TitleSize.small,
+                                text: NextAdmin.FrontEndResources.phoneIcon + ' ' + this.options.contactPhone,
+                                css: { marginBottom: '10px' }
+                            }));
+                        }
+                        if (!NextAdmin.String.isNullOrEmpty(this.options.contactAddress)) {
+                            centeredContainer.appendControl(new NextAdmin.UI.Title({
+                                style: NextAdmin.UI.TitleStyle.lightGreyThin,
+                                size: NextAdmin.UI.TitleSize.small,
+                                text: NextAdmin.FrontEndResources.locationIcon + ' ' + this.options.contactAddress,
+                                css: { marginBottom: '10px' }
+                            }));
+                            centeredContainer.appendControl(new NextAdmin.UI.Button({
+                                text: NextAdmin.FrontEndResources.mapIcon + ' ' + NextAdmin.FrontEndResources.displayOnGoogleMap,
+                                style: NextAdmin.UI.ButtonStyle.blue,
+                                action: () => {
+                                    window.open('https://www.google.com/maps/place/' + encodeURI(this.options.contactAddress), '_blank');
+                                }
+                            }));
+                        }
+                    });
+                });
+            }
+        }
+        ContactCard.style = `
+
+        .next-admin-contact-card{
+            .map-container{
+                @media (min-width: 769px) {
+                    width:40%;
+                }
+            }
+            .contact-infos-centered-container{
+                @media (max-width: 768px) {
+                    margin-top:20px;
+                }
+                @media (min-width: 769px) {
+                    position:relative;
+                    top:50%;
+                    transform:perspective(1px) translateY(-50%);
+                }
+            }
+        }
+
+        `;
+        UI.ContactCard = ContactCard;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
         class IconCard extends UI.Control {
             constructor(options) {
                 super('div', {
@@ -875,7 +998,7 @@ var NextAdmin;
             constructor(options) {
                 super('div', {
                     size: ImageCardSize.medium_4_3,
-                    style: ImageCardStyle.fullImageLightBordered,
+                    style: ImageCardStyle.imageLightBorderedTextLeft,
                     isResponsive: true,
                     ...options
                 });
@@ -958,42 +1081,55 @@ var NextAdmin;
                 switch (size) {
                     default:
                     case ImageCardSize.extraSmall_1_1:
+                        this.element.classList.add('extra-small');
                         this.card.classList.add('next-admin-image-card-extra-small-1-1');
                         break;
                     case ImageCardSize.small_1_1:
+                        this.element.classList.add('small');
                         this.card.classList.add('next-admin-image-card-small-1-1');
                         break;
                     case ImageCardSize.small_4_3:
+                        this.element.classList.add('small');
                         this.card.classList.add('next-admin-image-card-small-4-3');
                         break;
                     case ImageCardSize.small_3_4:
+                        this.element.classList.add('small');
                         this.card.classList.add('next-admin-image-card-small-3-4');
                         break;
                     case ImageCardSize.small_9_16:
+                        this.element.classList.add('small');
                         this.card.classList.add('next-admin-image-card-small-9-16');
                         break;
                     case ImageCardSize.medium_1_1:
+                        this.element.classList.add('medium');
                         this.card.classList.add('next-admin-image-card-medium-1-1');
                         break;
                     case ImageCardSize.medium_4_3:
+                        this.element.classList.add('medium');
                         this.card.classList.add('next-admin-image-card-medium-4-3');
                         break;
                     case ImageCardSize.medium_3_4:
+                        this.element.classList.add('medium');
                         this.card.classList.add('next-admin-image-card-medium-3-4');
                         break;
                     case ImageCardSize.medium_9_16:
+                        this.element.classList.add('medium');
                         this.card.classList.add('next-admin-image-card-medium-9-16');
                         break;
                     case ImageCardSize.large_1_1:
+                        this.element.classList.add('large');
                         this.card.classList.add('next-admin-image-card-large-1-1');
                         break;
                     case ImageCardSize.large_4_3:
+                        this.element.classList.add('large');
                         this.card.classList.add('next-admin-image-card-large-4-3');
                         break;
                     case ImageCardSize.large_3_4:
-                        this.card.classList.add('next-admin-image-card-medium-3-4');
+                        this.element.classList.add('large');
+                        this.card.classList.add('next-admin-image-card-large-3-4');
                         break;
                     case ImageCardSize.large_9_16:
+                        this.element.classList.add('large');
                         this.card.classList.add('next-admin-image-card-large-9-16');
                         break;
                 }
@@ -1001,14 +1137,26 @@ var NextAdmin;
             setStyle(style) {
                 switch (style) {
                     default:
-                    case ImageCardStyle.fullImageLightBordered:
-                        this.card.classList.add('next-admin-image-card-light-bordered');
+                    case ImageCardStyle.imageNoBorderTextCenter:
+                        this.element.classList.add('next-admin-image-card-no-border');
                         break;
-                    case ImageCardStyle.fullImageShadowedBorderRadius:
-                        this.card.classList.add('next-admin-image-card-border-radius');
+                    case ImageCardStyle.imageLightBorderedTextLeft:
+                        this.element.classList.add('next-admin-image-card-light-bordered');
                         break;
-                    case ImageCardStyle.fullImageShadowedBorderRadiusB:
-                        this.card.classList.add('next-admin-image-card-border-radius-b');
+                    case ImageCardStyle.imageLightBorderedTextCenter:
+                        this.element.classList.add('next-admin-image-card-light-bordered-text-center');
+                        break;
+                    case ImageCardStyle.imageShadowedBorderRadiusTextLeft:
+                        this.element.classList.add('next-admin-image-card-border-radius');
+                        break;
+                    case ImageCardStyle.imageShadowedBorderRadiusTextCenter:
+                        this.element.classList.add('next-admin-image-card-border-text-center');
+                        break;
+                    case ImageCardStyle.imageShadowedBorderRadiusBTextLeft:
+                        this.element.classList.add('next-admin-image-card-border-radius-b');
+                        break;
+                    case ImageCardStyle.imageShadowedBorderRadiusBTextCenter:
+                        this.element.classList.add('next-admin-image-card-border-radius-b-text-center');
                         break;
                 }
             }
@@ -1037,6 +1185,7 @@ var NextAdmin;
             cursor:pointer;
             overflow: hidden;
             position:relative;
+            width:100%;
         }
 
         .next-admin-image-card-image{
@@ -1063,164 +1212,454 @@ var NextAdmin;
         .next-admin-image-card-image:hover{
             transform: scale(1.1);
         }
-
-        .next-admin-image-card-light-bordered {
-            border:1px solid #e6e6e6;
+        .next-admin-image-card-no-border {
+            .next-admin-image-card{
+                border:0px;
+            }
+            .next-admin-image-card-outside-title{
+                text-align:center;
+            }
+            .next-admin-image-card-outside-description{
+                text-align:center;
+            }
         }
+        .next-admin-image-card-light-bordered {
+            .next-admin-image-card{
+                border:1px solid #e6e6e6;
+            }
+        }
+        .next-admin-image-card-light-bordered-text-center{
+            .next-admin-image-card{
+                border:1px solid #e6e6e6;
+            }
+            .next-admin-image-card-outside-title{
+                text-align:center;
+            }
+            .next-admin-image-card-outside-description{
+                text-align:center;
+            }
+        }
+
         .next-admin-image-card-border-radius{
-            border-radius:16px;
-            box-shadow:0px 0px 20px rgba(0,0,0,0.25);
+            .next-admin-image-card{
+                border-radius:16px;
+                box-shadow:0px 0px 20px rgba(0,0,0,0.25);
+            }
+        }
+        .next-admin-image-card-border-radius-text-center{
+            .next-admin-image-card{
+                border-radius:16px;
+                box-shadow:0px 0px 20px rgba(0,0,0,0.25);
+            }
+            .next-admin-image-card-outside-title{
+                text-align:center;
+            }
+            .next-admin-image-card-outside-description{
+                text-align:center;
+            }
         }
 
         .next-admin-image-card-border-radius-b{
-            border-radius:16px;
-            box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+            .next-admin-image-card{
+                border-radius:16px;
+                box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+            }
         }
 
-        .next-admin-image-card-extra-small-1-1{
+        .next-admin-image-card-border-radius-b-text-center{
+            .next-admin-image-card{
+                border-radius:16px;
+                box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
+            }
+            .next-admin-image-card-outside-title{
+                text-align:center;
+            }
+            .next-admin-image-card-outside-description{
+                text-align:center;
+            }
+        }
+
+        .next-admin-image-card-wrapper.extra-small{
             width:200px;
-            height:200px;
+            .next-admin-image-card-title{
+                font-size:16px;
+            }
+        }
+        .next-admin-image-card-wrapper.small{
+            width:300px;
             .next-admin-image-card-title{
                 font-size:18px;
             }
         }
-        .next-admin-image-card-wrapper.responsive .next-admin-image-card-extra-small-1-1{
-            @media (max-width: 1024px) {
-                width:160px;
-                height:160px;
+        .next-admin-image-card-wrapper.medium{
+            width:400px;
+            .next-admin-image-card-title{
+                font-size:20px;
             }
-            @media (max-width: 768px) {
-                width:140px;
-                height:140px;
+        }
+        .next-admin-image-card-wrapper.large{
+            width:500px;
+            .next-admin-image-card-title{
+                font-size:24px;
             }
-            @media (max-width: 400px) {
-                width:100px;
-                height:100px;
-            }
+        }
+
+
+        .next-admin-image-card-extra-small-1-1{
+            height:200px;
         }
 
         .next-admin-image-card-small-1-1 {
-            width:300px;
             height:300px;
-            .next-admin-image-card-title{
-                font-size:18px;
-            }
         }
 
         .next-admin-image-card-small-4-3 {
-            width:300px;
             height:225px;
-            .next-admin-image-card-title{
-                font-size:18px;
-            }
         }
 
         .next-admin-image-card-small-3-4 {
-            width:225px;
-            height:300px;
-            .next-admin-image-card-title{
-                font-size:18px;
-            }
+            height:400px;
         }
 
         .next-admin-image-card-small-9-16 {
-            width:168px;
-            height:300px;
-            .next-admin-image-card-title{
-                font-size:18px;
-            }
+            height:531px;
         }
 
         .next-admin-image-card-medium-1-1 {
-            width:400px;
             height:400px;
-            .next-admin-image-card-title{
-                font-size:24px;
-            }
         }
 
         .next-admin-image-card-medium-4-3 {
-            width:400px;
             height:300px;
-            .next-admin-image-card-title{
-                font-size:24px;
-            }
         }
 
         .next-admin-image-card-medium-3-4 {
-            width:300px;
-            height:400px;
-            .next-admin-image-card-title{
-                font-size:24px;
-            }
+            height:532px;
         }
 
         .next-admin-image-card-medium-9-16 {
-            width:225px;
-            height:400px;
-            .next-admin-image-card-title{
-                font-size:24px;
-            }
+            height:708px;
         }
 
         .next-admin-image-card-large-1-1 {
-            width:600px;
-            height:600px;
+            height:500px;
         }
 
         .next-admin-image-card-large-4-3 {
-            width:600px;
-            height:450px;
+            height:375px;
         }
 
         .next-admin-image-card-large-3-4 {
-            width:600;
-            height:450;
+            height:665;
         }
 
         .next-admin-image-card-large-9-16 {
-            width:337px;
-            height:600px;
+            height:885px;
         }
 
         .next-admin-image-card-outside-text{
-
+            width:100%;
+            height:50px;
             padding-top:10px;
-
+            font-size:14px;
             .next-admin-image-card-outside-title{
-                font-size:14px;
+                text-overflow: ellipsis;
                 color:#999;
             }
 
             .next-admin-image-card-outside-description{
-                font-size:14px;
+                text-overflow: ellipsis;
                 color:#444;
             }
         }
+        .next-admin-image-card-wrapper.small{
+            .next-admin-image-card-outside-text{
+                height:40px;
+            }
+        }
+        .next-admin-image-card-wrapper.extra-small{
+            .next-admin-image-card-outside-text{
+                height:30px;
+            }
+        }
+
+
+        .next-admin-image-card-wrapper.extra-small.responsive{
+            @media (max-width: 1024px) {
+                width:160px;
+                .next-admin-image-card-outside-text{
+                    padding-top:5px;
+                    font-size:12px;
+                }
+            }
+            @media (max-width: 768px) {
+                width:140px;
+                .next-admin-image-card-outside-text{
+                    padding-top:4px;
+                    font-size:11px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:100px;
+                .next-admin-image-card-outside-text{
+                    padding-top:2px;
+                    font-size:10px;
+                }
+            }
+        }
+
+        .next-admin-image-card-wrapper.small.responsive{
+            @media (max-width: 1024px) {
+                width:240px;
+                .next-admin-image-card-outside-text{
+                    padding-top:6px;
+                    font-size:13px;
+                }
+            }
+            @media (max-width: 768px) {
+                width:180px;
+                .next-admin-image-card-outside-text{
+                    padding-top:5px;
+                    font-size:12px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:160px;
+                .next-admin-image-card-outside-text{
+                    padding-top:4px;
+                    font-size:11px;
+                }
+            }
+        }
+        .next-admin-image-card-wrapper.medium.responsive{
+            @media (max-width: 1024px) {
+                width:300px;
+                .next-admin-image-card-outside-text{
+                    padding-top:8px;
+                    font-size:14px;
+                }
+            }
+            @media (max-width: 768px) {
+                width:240px;
+                .next-admin-image-card-outside-text{
+                    padding-top:6px;
+                    font-size:13px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:180px;
+                .next-admin-image-card-outside-text{
+                    padding-top:5px;
+                    font-size:12px;
+                }
+            }
+        }
+        .next-admin-image-card-wrapper.large.responsive{
+            @media (max-width: 1024px) {
+                width:400px;
+            }
+            @media (max-width: 768px) {
+                width:300px;
+                .next-admin-image-card-outside-text{
+                    padding-top:8px;
+                    font-size:13px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:240px;
+                .next-admin-image-card-outside-text{
+                    padding-top:6px;
+                    font-size:12px;
+                }
+            }
+        }
+
+
+        .next-admin-image-card-wrapper.responsive{
+
+            .next-admin-image-card-extra-small-1-1{
+                @media (max-width: 1024px) {
+                    height:160px;
+                }
+                @media (max-width: 768px) {
+                    height:140px;
+                }
+                @media (max-width: 512px) {
+                    height:100px;
+                }
+            }
+            .next-admin-image-card-small-1-1 {
+                @media (max-width: 1024px) {
+                    height:240px;
+                }
+                @media (max-width: 768px) {
+                    height:180px;
+                }
+                @media (max-width: 512px) {
+                    height:160px;
+                }
+            }
+            .next-admin-image-card-small-4-3 {
+                @media (max-width: 1024px) {
+                    height:180px;
+                }
+                @media (max-width: 768px) {
+                    height:135px;
+                }
+                @media (max-width: 400px) {
+                    height:120px;
+                }
+            }
+
+            .next-admin-image-card-small-3-4 {
+                @media (max-width: 1024px) {
+                    height:320px;
+                }
+                @media (max-width: 768px) {
+                    height:240px;
+                }
+                @media (max-width: 400px) {
+                    height:212px;
+                }
+            }
+
+            .next-admin-image-card-small-9-16 {
+                @media (max-width: 1024px) {
+                    height:424px;
+                }
+                @media (max-width: 768px) {
+                    height:318px;
+                }
+                @media (max-width: 400px) {
+                    height:284px;
+                }
+            }
+
+            .next-admin-image-card-medium-1-1 {
+                @media (max-width: 1024px) {
+                    height:300px;
+                }
+                @media (max-width: 768px) {
+                    height:240px;
+                }
+                @media (max-width: 400px) {
+                    height:180px;
+                }
+            }
+
+            .next-admin-image-card-medium-4-3 {
+                @media (max-width: 1024px) {
+                    height:225px;
+                }
+                @media (max-width: 768px) {
+                    height:180px;
+                }
+                @media (max-width: 400px) {
+                    height:135px;
+                }
+            }
+
+            .next-admin-image-card-medium-3-4 {
+                @media (max-width: 1024px) {
+                    height:400px;
+                }
+                @media (max-width: 768px) {
+                    height:320px;
+                }
+                @media (max-width: 400px) {
+                    height:240px;
+                }
+            }
+
+            .next-admin-image-card-medium-9-16 {
+                @media (max-width: 1024px) {
+                    height:531px;
+                }
+                @media (max-width: 768px) {
+                    height:424px;
+                }
+                @media (max-width: 400px) {
+                    height:318px;
+                }
+            }
+
+            .next-admin-image-card-large-1-1 {
+                @media (max-width: 1024px) {
+                    height:400px;
+                }
+                @media (max-width: 768px) {
+                    height:300px;
+                }
+                @media (max-width: 400px) {
+                    height:240px;
+                }
+            }
+
+            .next-admin-image-card-large-4-3 {
+                @media (max-width: 1024px) {
+                    height:300px;
+                }
+                @media (max-width: 768px) {
+                    height:225x;
+                }
+                @media (max-width: 400px) {
+                    height:180x;
+                }
+            }
+
+            .next-admin-image-card-large-3-4 {
+                @media (max-width: 1024px) {
+                    height:532px;
+                }
+                @media (max-width: 768px) {
+                    height:400px;
+                }
+                @media (max-width: 400px) {
+                    height:320px;
+                }
+            }
+
+            .next-admin-image-card-large-9-16 {
+                @media (max-width: 1024px) {
+                    height:708px;
+                }
+                @media (max-width: 768px) {
+                    height:531px;
+                }
+                @media (max-width: 400px) {
+                    height:425px;
+                }
+            }
+        }
+
 
         `;
         UI.ImageCard = ImageCard;
         let ImageCardSize;
         (function (ImageCardSize) {
-            ImageCardSize[ImageCardSize["extraSmall_1_1"] = 0] = "extraSmall_1_1";
-            ImageCardSize[ImageCardSize["small_1_1"] = 1] = "small_1_1";
-            ImageCardSize[ImageCardSize["small_4_3"] = 2] = "small_4_3";
-            ImageCardSize[ImageCardSize["small_3_4"] = 3] = "small_3_4";
-            ImageCardSize[ImageCardSize["small_9_16"] = 4] = "small_9_16";
-            ImageCardSize[ImageCardSize["medium_1_1"] = 5] = "medium_1_1";
-            ImageCardSize[ImageCardSize["medium_4_3"] = 6] = "medium_4_3";
-            ImageCardSize[ImageCardSize["medium_3_4"] = 7] = "medium_3_4";
-            ImageCardSize[ImageCardSize["medium_9_16"] = 8] = "medium_9_16";
-            ImageCardSize[ImageCardSize["large_1_1"] = 9] = "large_1_1";
-            ImageCardSize[ImageCardSize["large_4_3"] = 10] = "large_4_3";
-            ImageCardSize[ImageCardSize["large_3_4"] = 11] = "large_3_4";
-            ImageCardSize[ImageCardSize["large_9_16"] = 12] = "large_9_16";
+            ImageCardSize[ImageCardSize["extraSmall_1_1"] = 100] = "extraSmall_1_1";
+            ImageCardSize[ImageCardSize["small_1_1"] = 300] = "small_1_1";
+            ImageCardSize[ImageCardSize["small_4_3"] = 301] = "small_4_3";
+            ImageCardSize[ImageCardSize["small_3_4"] = 302] = "small_3_4";
+            ImageCardSize[ImageCardSize["small_9_16"] = 303] = "small_9_16";
+            ImageCardSize[ImageCardSize["medium_1_1"] = 500] = "medium_1_1";
+            ImageCardSize[ImageCardSize["medium_4_3"] = 501] = "medium_4_3";
+            ImageCardSize[ImageCardSize["medium_3_4"] = 502] = "medium_3_4";
+            ImageCardSize[ImageCardSize["medium_9_16"] = 503] = "medium_9_16";
+            ImageCardSize[ImageCardSize["large_1_1"] = 700] = "large_1_1";
+            ImageCardSize[ImageCardSize["large_4_3"] = 701] = "large_4_3";
+            ImageCardSize[ImageCardSize["large_3_4"] = 702] = "large_3_4";
+            ImageCardSize[ImageCardSize["large_9_16"] = 703] = "large_9_16";
         })(ImageCardSize = UI.ImageCardSize || (UI.ImageCardSize = {}));
         let ImageCardStyle;
         (function (ImageCardStyle) {
-            ImageCardStyle[ImageCardStyle["fullImageLightBordered"] = 0] = "fullImageLightBordered";
-            ImageCardStyle[ImageCardStyle["fullImageShadowedBorderRadius"] = 1] = "fullImageShadowedBorderRadius";
-            ImageCardStyle[ImageCardStyle["fullImageShadowedBorderRadiusB"] = 2] = "fullImageShadowedBorderRadiusB";
+            ImageCardStyle[ImageCardStyle["imageNoBorderTextCenter"] = 0] = "imageNoBorderTextCenter";
+            ImageCardStyle[ImageCardStyle["imageLightBorderedTextLeft"] = 10] = "imageLightBorderedTextLeft";
+            ImageCardStyle[ImageCardStyle["imageLightBorderedTextCenter"] = 11] = "imageLightBorderedTextCenter";
+            ImageCardStyle[ImageCardStyle["imageShadowedBorderRadiusTextLeft"] = 20] = "imageShadowedBorderRadiusTextLeft";
+            ImageCardStyle[ImageCardStyle["imageShadowedBorderRadiusTextCenter"] = 21] = "imageShadowedBorderRadiusTextCenter";
+            ImageCardStyle[ImageCardStyle["imageShadowedBorderRadiusBTextLeft"] = 30] = "imageShadowedBorderRadiusBTextLeft";
+            ImageCardStyle[ImageCardStyle["imageShadowedBorderRadiusBTextCenter"] = 31] = "imageShadowedBorderRadiusBTextCenter";
         })(ImageCardStyle = UI.ImageCardStyle || (UI.ImageCardStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
@@ -1231,7 +1670,7 @@ var NextAdmin;
         class ImageViewerModal extends UI.NoUiModal {
             constructor(options) {
                 super({
-                    size: NextAdmin.UI.ModalSize.large,
+                    size: NextAdmin.UI.ModalSize.ultraLarge,
                     ...options,
                 });
                 this.body.appendControl(new UI.Slider({
@@ -1664,7 +2103,7 @@ var NextAdmin;
                 switch (this.options.style) {
                     default:
                     case NavigationTopBarStyle.white:
-                        return UI.LinkStyle.blue;
+                        return UI.LinkStyle.dark;
                     case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
                         return UI.LinkStyle.white;
                 }
@@ -1689,14 +2128,21 @@ var NextAdmin;
                 text-decoration:none;
                 font-size:30px;
                 font-weight:bold;
+                transition: transform 0.1s;
+                border-radius:10px;
+                margin-right:10px;
+            }
+            .top-bar-logo-link:hover{
+                box-shadow:inset 0px 0px 2px #444;
+                transform: scale(0.99);
             }
 
             .top-bar-logo{
-                margin-right:20px;
-                max-height:100%;
+                margin-left:5px;
+                margin-right:5px;
+                max-height:80%;
                 @media (max-width: 512px) {
-                    margin-right:5px;
-                    max-width:120px;
+                    max-height:50%;
                 }
             }
             
@@ -1759,7 +2205,7 @@ var NextAdmin;
         }
 
         .next-admin-navigation-link-active.dark{
-            color:` + UI.FrontDefaultStyle.PrimaryColor + `;
+            color:` + UI.DefaultStyle.BlueOne + `;
         }
 
         .next-admin-navigation-link-active.blue{
@@ -2267,7 +2713,7 @@ var NextAdmin;
                             if (this.options.afterOAuthUrlCookieName) {
                                 NextAdmin.Cookies.set(this.options.afterOAuthUrlCookieName, window.location.href);
                             }
-                            window.location.href = ThirdPartyOauthPanel.getOAuthUrl(this.options.googleOauthOptions);
+                            window.location.href = ThirdPartyOauthPanel.getOAuthUrl(this.options.googleOauthOptions, this.options.emailAddress);
                         }
                     }), (btn) => {
                         btn.element.style.width = '100%';
@@ -2416,7 +2862,7 @@ var NextAdmin;
                         css: { cssFloat: 'right' },
                         action: async () => {
                             this.startSpin();
-                            let response = await this.options.commonServicesClient.sendSupportMessage(this.textArea.getValue(), this.emailInput.getValue());
+                            let response = await this.options.commonServicesClient.sendContactMessage(this.textArea.getValue(), this.emailInput.getValue());
                             if (response?.isSuccess) {
                                 this.close();
                                 NextAdmin.UI.MessageBox.createOk(NextAdmin.FrontEndResources.messageSentTitle, NextAdmin.FrontEndResources.messageSentText);
@@ -2715,10 +3161,13 @@ var NextAdmin;
                 let container = this.element.appendHTML('div', configAction);
                 container.classList.add('next-admin-front-page-container');
                 if (options?.hasPadding) {
-                    container.style.padding = '10px';
+                    container.classList.add('padding');
                 }
                 if (options?.maxWidth) {
                     container.style.maxWidth = options.maxWidth;
+                }
+                if (options?.minHeight) {
+                    container.style.minHeight = options.minHeight;
                 }
                 return container;
             }
@@ -2732,6 +3181,18 @@ var NextAdmin;
 
         .next-admin-front-page-container{
             margin: 0 auto;
+        }
+        .next-admin-front-page-container.padding{
+            padding:20px;
+            @media (max-width: 1024px) {
+                padding:16px;
+            }
+            @media (max-width: 768px) {
+                padding:8px;
+            }
+            @media (max-width: 512px) {
+                padding:4px;
+            }
         }
 
         `;
