@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace NextAdmin.Core
+﻿namespace NextAdmin.Core
 {
     public static class DictionaryExtension
     {
@@ -19,13 +16,23 @@ namespace NextAdmin.Core
             return dictionary;
         }
 
-        public static TValue? Get<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key)
+        public static TValue? Get<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue))
         {
             if (dictionary.TryGetValue(key, out TValue value))
             {
                 return value;
             }
-            return default(TValue);
+            return defaultValue;
+        }
+
+        public static TOut? GetAs<TKey, TValue, TOut>(this Dictionary<TKey, TValue> dictionary, TKey key, TOut defaultValue = default(TOut))
+        {
+            TValue outValue;
+            if (dictionary.TryGetValue(key, out outValue))
+            {
+                return outValue.To<TOut>();
+            }
+            return defaultValue;
         }
 
 

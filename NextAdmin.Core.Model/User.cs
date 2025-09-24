@@ -52,7 +52,7 @@ namespace NextAdmin.Core.Model
                 new Claim("userId", Id.ToString()),
                 new Claim("userType", this.GetType().Name)
             };
-            return tokenSerilizer.CreateTokenString(this.GetType().ToString().ToString(), DateTime.UtcNow.AddDays(duration), issuer, claims);
+            return tokenSerilizer.CreateTokenString(this.GetType().ToString().ToString(), DateTime.Now.AddDays(duration), issuer, claims);
         }
 
         public virtual object GetId()

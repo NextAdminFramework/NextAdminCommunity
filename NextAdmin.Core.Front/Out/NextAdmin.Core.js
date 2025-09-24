@@ -504,7 +504,12 @@ try {
     };
     Date.prototype.addHours = function (hours) {
         let _this = this;
-        _this.setHours(_this.getHours() + hours);
+        let integer = Math.trunc(hours);
+        _this.setHours(_this.getHours() + integer);
+        let decimal = hours - Math.trunc(hours);
+        if (decimal) {
+            _this.addMinutes(decimal * 60);
+        }
         return this;
     };
     Date.prototype.addDays = function (days) {
@@ -1951,7 +1956,9 @@ var NextAdmin;
 try {
     HTMLElement.prototype.startSpin = function (background = 'rgba(255,255,255,0.2)', size = 50, animation = null) {
         let element = this;
-        element.style.position = 'relative';
+        if (element.style.position != 'relative' && element.style.position != 'absolute' && element.style.position != 'fixed') {
+            element.style.position = 'relative';
+        }
         let spinnerContainer = element['_spinnerContainer'];
         if (spinnerContainer != null) {
             return;
@@ -5575,7 +5582,7 @@ var NextAdmin;
             }
             setTooltip(value) {
                 if (value != null) {
-                    this.element.setPopover(value, this.element);
+                    this.element.setPopover(value);
                 }
                 else {
                     this.element.removePopover();
@@ -7271,7 +7278,7 @@ var NextAdmin;
                 if (message != null) {
                     this.label.classList.add('next-admin-control-label-info');
                     this.element.classList.add('next-admin-control-label-info');
-                    this.element.setPopover(message, this.controlContainer);
+                    this.element.setPopover(message);
                 }
                 else {
                     this.label.classList.remove('next-admin-control-label-info');
@@ -12900,7 +12907,7 @@ var NextAdmin;
                 });
                 this.onOpen = new NextAdmin.EventHandler();
                 this.onClose = new NextAdmin.EventHandler();
-                this.items = Array();
+                this.items = new Array();
                 this.closeOnClickOutside = true;
                 this._hasRegisteredEventOnClickOutside = false;
                 NextAdmin.Style.append("DropDownButton", DropDownMenu.style);
@@ -15126,27 +15133,27 @@ var NextAdmin;
     (function (UI) {
         class Popover extends UI.Control {
             constructor(options) {
-                super('div', options);
+                super('div', {
+                    removeOnClose: true,
+                    popOnHover: true,
+                    maxWidth: '250px',
+                    minHeight: '25px',
+                    ...options
+                });
                 this.onClose = new NextAdmin.EventHandler();
                 this._pointerEnter = null;
                 this._pointerLeave = null;
                 this._isOpen = false;
-                if (this.options.removeOnClose == null) {
-                    this.options.removeOnClose = true;
-                }
-                if (this.options.popOnHover === undefined) {
-                    this.options.popOnHover = true;
-                }
                 if (this.options.parentElement == null) {
                     this.options.parentElement = document.body;
                 }
                 this.element.style.pointerEvents = 'none';
                 NextAdmin.Style.append('Popover', Popover.style);
                 this.element.classList.add('next-admin-popover');
-                this.element.style.maxWidth = this.options.maxWidth != null ? this.options.maxWidth : '250px;';
-                this.element.style.minHeight = this.options.minHeight != null ? this.options.minHeight : '25px;';
-                if (this.options.innerHTML != null) {
-                    this.element.innerHTML = this.options.innerHTML;
+                this.element.style.maxWidth = this.options.maxWidth;
+                this.element.style.minHeight = this.options.minHeight;
+                if (this.options.content != null) {
+                    this.element.innerHTML = this.options.content;
                 }
                 if (this.options.popOnHover && this.options.popElement != null) {
                     this.startPopOnHover();
@@ -15228,17 +15235,48 @@ var NextAdmin;
                 }
             }
         }
-        Popover.style = '.next-admin-popover { padding:5px;border-radius:5px;background:#fff;position:fixed;z-index:9999;border:1px solid #ccc;font-size:12px }'
-            + '.next-admin-popover::before {content:" ";position:absolute;top: 50%; right: 100%;margin-top:-11px;border-width:11px;border-style:solid;border-color: transparent #ccc transparent transparent;}'
-            + '.next-admin-popover::after {content:" ";position:absolute;top: 50%; right: 100%;margin-top:-10px;border-width:10px;border-style:solid;border-color: transparent #fff transparent transparent;}';
+        Popover.style = `
+        .next-admin-popover {
+            padding:5px;
+            border-radius:5px;
+            background:#fff;
+            position:fixed;
+            z-index:999999;
+            border:1px solid #ccc;font-size:12px
+        }
+        .next-admin-popover::before {
+            content:" ";
+            position:absolute;
+            top: 50%;
+            right: 100%;
+            margin-top:-11px;
+            border-width:11px;
+            border-style:solid;
+            border-color: transparent #ccc transparent transparent;
+        }
+        .next-admin-popover::after {
+            content:" ";
+            position:absolute;
+            top: 50%;
+            right: 100%;
+            margin-top:-10px;
+            border-width:10px;
+            border-style:solid;
+            border-color: transparent #fff transparent transparent;
+        }
+        `;
         Popover.onCreated = new NextAdmin.EventHandler();
         UI.Popover = Popover;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 try {
-    HTMLElement.prototype.setPopover = function (innerHTML, parentElement) {
+    HTMLElement.prototype.setPopover = function (content, parentElement) {
         this.removePopover();
-        this['_popover'] = new NextAdmin.UI.Popover({ innerHTML: innerHTML, popElement: this, parentElement: parentElement });
+        this['_popover'] = new NextAdmin.UI.Popover({
+            content: content,
+            popElement: this,
+            parentElement: parentElement
+        });
         return this['_popover'];
     };
     HTMLElement.prototype.removePopover = function () {

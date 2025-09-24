@@ -66,7 +66,7 @@ namespace NextAdmin.UI {
         private _tooltipValue = null;
         setTooltip(value?: string) {
             if (value != null) {
-                this.element.setPopover(value, this.element);
+                this.element.setPopover(value);
             }
             else {
                 this.element.removePopover();

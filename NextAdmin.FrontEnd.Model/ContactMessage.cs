@@ -44,7 +44,7 @@ namespace NextAdmin.FrontEnd.Model
         {
             if (date == null)
             {
-                date = DateTime.UtcNow;
+                date = DateTime.Now;
             }
             if (Responses == null)
             {
@@ -61,7 +61,7 @@ namespace NextAdmin.FrontEnd.Model
             base.OnInsert(dbContext, args);
             if (!Date.HasValue)
             {
-                Date = DateTime.UtcNow;
+                Date = DateTime.Now;
             }
         }
 
@@ -70,7 +70,7 @@ namespace NextAdmin.FrontEnd.Model
             base.OnSave(dbContext, args);
             if (Responses != null && Responses.Count > 0 && !ResponseDate.HasValue)
             {
-                ResponseDate = Responses.FirstOrDefault()?.Date ?? DateTime.UtcNow;
+                ResponseDate = Responses.FirstOrDefault()?.Date ?? DateTime.Now;
             }
         }
 

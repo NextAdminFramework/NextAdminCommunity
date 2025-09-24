@@ -217,10 +217,8 @@ namespace NextAdmin.Core
             }
             return targetDataset;
         }
-
         /*Convert using json*/
         public static TTarget To<TTarget>(this object _this)
-            where TTarget : class
         {
             string objectAsJson = JsonConvert.SerializeObject(_this, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
             return JsonConvert.DeserializeObject<TTarget>(objectAsJson);

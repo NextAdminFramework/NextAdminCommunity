@@ -76,7 +76,7 @@ namespace NextAdmin.FrontEnd.Model
             base.OnInsert(dbContext, args);
             if (!CreationDate.HasValue)
             {
-                CreationDate = DateTime.UtcNow;
+                CreationDate = DateTime.Now;
             }
         }
 

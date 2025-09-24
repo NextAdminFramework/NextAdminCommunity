@@ -89,7 +89,12 @@ try {
 
     Date.prototype.addHours = function (hours: number): Date {
         let _this = this as Date;
-        _this.setHours(_this.getHours() + hours);
+        let integer = Math.trunc(hours);
+        _this.setHours(_this.getHours() + integer);
+        let decimal = hours - Math.trunc(hours);
+        if (decimal) {
+            _this.addMinutes(decimal * 60)
+        }
         return this;
     };
 

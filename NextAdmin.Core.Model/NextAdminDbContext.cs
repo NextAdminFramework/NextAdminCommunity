@@ -36,7 +36,7 @@ namespace NextAdmin.Core.Model
 
         public Random Randomiser { get; set; }
 
-        public Dictionary<string, object> Paramters { get; set; }
+        public Dictionary<string, object> Parameters { get; set; }
 
         public NextAdminDbContext()
         {
@@ -44,7 +44,7 @@ namespace NextAdmin.Core.Model
             Options = new NextAdminDbContextOptions();
             InitializeResources();
             ChangeTracker.Tracked += OnEntityTracked;
-            Paramters = new Dictionary<string, object>();
+            Parameters = new Dictionary<string, object>();
         }
 
 
@@ -55,7 +55,7 @@ namespace NextAdmin.Core.Model
             Options = new NextAdminDbContextOptions();
             InitializeResources();
             ChangeTracker.Tracked += OnEntityTracked;
-            Paramters = new Dictionary<string, object>();
+            Parameters = new Dictionary<string, object>();
         }
 
         public void Initialize(NextAdminDbContextOptions nextDbContextOptions)
@@ -109,7 +109,7 @@ namespace NextAdmin.Core.Model
                 {
                     return false;
                 }
-                if (_lock.ExpirationDate < DateTime.UtcNow)
+                if (_lock.ExpirationDate < DateTime.Now)
                 {
                     locks.Remove(lockId);
                     return false;
@@ -126,7 +126,7 @@ namespace NextAdmin.Core.Model
                 Lock _lock;
                 if (locks.TryGetValue(lockId, out _lock))
                 {
-                    if (_lock.ExpirationDate < DateTime.UtcNow)
+                    if (_lock.ExpirationDate < DateTime.Now)
                     {
                         locks.Remove(lockId);
                         _lock = null;
@@ -816,16 +816,21 @@ namespace NextAdmin.Core.Model
             ChangeTracker.Clear();
         }
 
+        private bool _isDisposed = false;
         public override void Dispose()
         {
-            try
+            if (!_isDisposed)
             {
-                ChangeTracker.Tracked -= OnEntityTracked;
-            }
-            catch
-            {
+                try
+                {
+                    ChangeTracker.Tracked -= OnEntityTracked;
+                }
+                catch
+                {
 
+                }
             }
+            _isDisposed = true;
             base.Dispose();
         }
 

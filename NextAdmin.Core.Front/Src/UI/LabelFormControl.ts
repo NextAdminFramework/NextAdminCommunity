@@ -232,7 +232,7 @@ namespace NextAdmin.UI {
             if (message != null) {
                 this.label.classList.add('next-admin-control-label-info');
                 this.element.classList.add('next-admin-control-label-info');
-                this.element.setPopover(message, this.controlContainer);
+                this.element.setPopover(message);
             }
             else {
                 this.label.classList.remove('next-admin-control-label-info');

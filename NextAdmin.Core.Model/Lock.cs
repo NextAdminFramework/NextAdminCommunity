@@ -18,13 +18,13 @@ namespace NextAdmin.Core.Model
         public Lock(string key, DateTime expirationDate, string ownerName = null)
         {
             Key = key;
-            CreationDate = DateTime.UtcNow;
+            CreationDate = DateTime.Now;
             ExpirationDate = expirationDate;
             OwnerName = ownerName;
         }
 
         public Lock(string key, int? durationSeconde = null, string ownerName = null)
-            : this(key, DateTime.UtcNow.AddSeconds(durationSeconde ?? DefaultLockDuration), ownerName)
+            : this(key, DateTime.Now.AddSeconds(durationSeconde ?? DefaultLockDuration), ownerName)
         {
 
         }
@@ -32,7 +32,7 @@ namespace NextAdmin.Core.Model
         public void Update(string key, int? durationSeconde = null, string ownerName = null)
         {
             Key = key;
-            ExpirationDate = DateTime.UtcNow.AddSeconds(durationSeconde ?? DefaultLockDuration);
+            ExpirationDate = DateTime.Now.AddSeconds(durationSeconde ?? DefaultLockDuration);
             OwnerName = ownerName;
         }
 

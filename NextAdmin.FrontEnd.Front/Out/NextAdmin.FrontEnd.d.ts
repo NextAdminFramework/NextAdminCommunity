@@ -519,6 +519,8 @@ declare namespace NextAdmin.UI {
     interface ThirdPartyOauthPanelOptions extends ControlOptions {
         googleOauthOptions?: GoogleOauthOptions;
         afterOAuthUrlCookieName?: string;
+        afterOAuthUrl?: string;
+        afterOAuthPageName?: string;
         emailAddress?: string;
     }
     interface GoogleOauthOptions {
@@ -603,9 +605,15 @@ declare namespace NextAdmin.UI {
         options: FrontPageOptions;
         static style: string;
         constructor(options?: FrontPageOptions);
+        navigateTo(args: NextAdmin.UI.NavigateToArgs): Promise<void>;
+        navigateFrom(args: NextAdmin.UI.NavigateFromArgs): Promise<void>;
         appendContainer(options?: FrontPageContaineOptions, configAction?: (container: HTMLDivElement) => void): HTMLDivElement;
     }
     interface FrontPageOptions extends PageOptions {
+        navigateFromAnimation?: string;
+        navigateFromAnimationSpeed?: NextAdmin.AnimationSpeed;
+        navigateToAnimation?: string;
+        navigateToAnimationSpeed?: NextAdmin.AnimationSpeed;
     }
     interface FrontPageContaineOptions {
         hasPadding?: boolean;

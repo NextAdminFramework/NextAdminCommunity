@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using static NextAdmin.Core.Email;
 
 namespace NextAdmin.Core.API
 {
@@ -10,6 +9,10 @@ namespace NextAdmin.Core.API
         public static IConfiguration? Configuration { get; set; }
 
         public static SmtpServerAccount? AppSmtpServerAccount { get; set; }
+
+        public static FtpServerAccount? AppFtpServerAccount { get; set; }
+
+        public static string? AppFtpServerRootFolderPath { get; set; }
 
         public static string? AdminEmailAddress => Configuration?["AdminEmailAddress"];
 
@@ -38,6 +41,17 @@ namespace NextAdmin.Core.API
                 SmtpServerAddress = Configuration["AppEmailSmtpServerAddress"],
                 SmtpServerPort = int.Parse(Configuration["AppEmailSmtpServerPort"]),
             };
+
+            if (!string.IsNullOrEmpty(Configuration["AppFtpServerHostName"]))
+            {
+                AppFtpServerAccount = new FtpServerAccount
+                {
+                    ServerAddress = Configuration["AppFtpServerHostName"],
+                    UserName = Configuration["AppFtpServerUserName"],
+                    Password = Configuration["AppFtpServerUserPassword"],
+                };
+                AppFtpServerRootFolderPath = Configuration["AppFtpServerRootFolderPath"];
+            }
         }
     }
 }

@@ -2685,6 +2685,7 @@ var NextAdmin;
             constructor(options) {
                 super('div', {
                     afterOAuthUrlCookieName: 'AFTER_OAUTH_URL',
+                    afterOAuthUrl: options.afterOAuthPageName ? (window.location.origin + '/' + options.afterOAuthPageName) : window.location.href,
                     ...options
                 });
                 this.element.appendControl(new NextAdmin.UI.HorizontalFlexLayout({ css: { marginBottom: '20px', marginTop: '20px' } }), (flexLayout) => {
@@ -2711,7 +2712,7 @@ var NextAdmin;
                         text: NextAdmin.FrontEndResources.googleIcon + ' ' + NextAdmin.FrontEndResources.signInWithGoogle,
                         action: () => {
                             if (this.options.afterOAuthUrlCookieName) {
-                                NextAdmin.Cookies.set(this.options.afterOAuthUrlCookieName, window.location.href);
+                                NextAdmin.Cookies.set(this.options.afterOAuthUrlCookieName, this.options.afterOAuthUrl);
                             }
                             window.location.href = ThirdPartyOauthPanel.getOAuthUrl(this.options.googleOauthOptions, this.options.emailAddress);
                         }
@@ -3148,9 +3149,28 @@ var NextAdmin;
     (function (UI) {
         class FrontPage extends UI.Page {
             constructor(options) {
-                super(options);
+                super({
+                    navigateToAnimation: 'fadeIn',
+                    navigateToAnimationSpeed: NextAdmin.AnimationSpeed.faster,
+                    navigateFromAnimation: null,
+                    navigateFromAnimationSpeed: NextAdmin.AnimationSpeed.faster,
+                    ...options
+                });
                 NextAdmin.Style.append('NextAdmin.UI.FrontPage', FrontPage.style);
                 this.element.classList.add('next-admin-front-page');
+            }
+            async navigateTo(args) {
+                await super.navigateTo(args);
+                if (!NextAdmin.String.isNullOrEmpty(this.options.navigateToAnimation)) {
+                    this.element.anim(this.options.navigateToAnimation, { animationSpeed: this.options.navigateToAnimationSpeed });
+                }
+            }
+            async navigateFrom(args) {
+                await super.navigateFrom(args);
+                if (!NextAdmin.String.isNullOrEmpty(this.options.navigateFromAnimation)) {
+                    this.element.anim(this.options.navigateFromAnimation, { animationSpeed: this.options.navigateFromAnimationSpeed });
+                    await NextAdmin.Timer.sleep(250);
+                }
             }
             appendContainer(options, configAction) {
                 options = {

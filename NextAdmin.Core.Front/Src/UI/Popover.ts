@@ -8,33 +8,60 @@
 
         public onClose = new EventHandler<any, CloseModalArgs>();
 
-        public static style = '.next-admin-popover { padding:5px;border-radius:5px;background:#fff;position:fixed;z-index:9999;border:1px solid #ccc;font-size:12px }'
-            + '.next-admin-popover::before {content:" ";position:absolute;top: 50%; right: 100%;margin-top:-11px;border-width:11px;border-style:solid;border-color: transparent #ccc transparent transparent;}'
-            + '.next-admin-popover::after {content:" ";position:absolute;top: 50%; right: 100%;margin-top:-10px;border-width:10px;border-style:solid;border-color: transparent #fff transparent transparent;}';
+        public static style = `
+        .next-admin-popover {
+            padding:5px;
+            border-radius:5px;
+            background:#fff;
+            position:fixed;
+            z-index:999999;
+            border:1px solid #ccc;font-size:12px
+        }
+        .next-admin-popover::before {
+            content:" ";
+            position:absolute;
+            top: 50%;
+            right: 100%;
+            margin-top:-11px;
+            border-width:11px;
+            border-style:solid;
+            border-color: transparent #ccc transparent transparent;
+        }
+        .next-admin-popover::after {
+            content:" ";
+            position:absolute;
+            top: 50%;
+            right: 100%;
+            margin-top:-10px;
+            border-width:10px;
+            border-style:solid;
+            border-color: transparent #fff transparent transparent;
+        }
+        `;
 
         public static onCreated = new EventHandler<Popover, PopoverOptions>();
 
         public constructor(options?: PopoverOptions) {
-            super('div', options);
-            if (this.options.removeOnClose == null) {
-                this.options.removeOnClose = true;
-            }
-            if (this.options.popOnHover === undefined) {
-                this.options.popOnHover = true;
-            }
-
+            super('div', {
+                removeOnClose: true,
+                popOnHover: true,
+                maxWidth: '250px',
+                minHeight: '25px',
+                ...options
+            } as PopoverOptions);
             if (this.options.parentElement == null) {
                 this.options.parentElement = document.body;
             }
+
             this.element.style.pointerEvents = 'none';
             Style.append('Popover', Popover.style);
             this.element.classList.add('next-admin-popover');
 
-            this.element.style.maxWidth = this.options.maxWidth != null ? this.options.maxWidth : '250px;'
-            this.element.style.minHeight = this.options.minHeight != null ? this.options.minHeight : '25px;'
+            this.element.style.maxWidth = this.options.maxWidth;
+            this.element.style.minHeight = this.options.minHeight;
 
-            if (this.options.innerHTML != null) {
-                this.element.innerHTML = this.options.innerHTML;
+            if (this.options.content != null) {
+                this.element.innerHTML = this.options.content;
             }
             if (this.options.popOnHover && this.options.popElement != null) {
                 this.startPopOnHover();
@@ -148,7 +175,7 @@
 
         closeAnimation?: string;
 
-        innerHTML: string;
+        content: string;
 
         maxWidth?: string;
 
@@ -164,7 +191,7 @@
 interface HTMLElement {
 
 
-    setPopover(innerHTML: string, parentElement?: HTMLElement): NextAdmin.UI.Popover;
+    setPopover(content: string, parentElement?: HTMLElement): NextAdmin.UI.Popover;
 
     removePopover();
 
@@ -174,9 +201,13 @@ interface HTMLElement {
 try {
 
 
-    HTMLElement.prototype.setPopover = function (innerHTML: string, parentElement?: HTMLElement): NextAdmin.UI.Popover {
+    HTMLElement.prototype.setPopover = function (content: string, parentElement?: HTMLElement): NextAdmin.UI.Popover {
         (this as HTMLElement).removePopover();
-        this['_popover'] = new NextAdmin.UI.Popover({ innerHTML: innerHTML, popElement: this, parentElement: parentElement });
+        this['_popover'] = new NextAdmin.UI.Popover({
+            content: content,
+            popElement: this,
+            parentElement: parentElement
+        });
         return this['_popover'];
     };
 

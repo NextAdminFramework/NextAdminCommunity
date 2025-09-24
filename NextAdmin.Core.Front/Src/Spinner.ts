@@ -33,7 +33,9 @@ try {
 
     HTMLElement.prototype.startSpin = function (background = 'rgba(255,255,255,0.2)', size = 50, animation: string = null): { spinnerContainer: HTMLDivElement, spinner: HTMLImageElement } {
         let element = this as HTMLElement;
-        element.style.position = 'relative';
+        if (element.style.position != 'relative' && element.style.position != 'absolute' && element.style.position != 'fixed') {
+            element.style.position = 'relative';
+        }
         let spinnerContainer = element['_spinnerContainer'];
         if (spinnerContainer != null) {
             return;

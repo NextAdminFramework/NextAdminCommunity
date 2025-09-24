@@ -43,7 +43,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                     user.AuthProviderName = null;
                     user.Disabled = false;
                     user.EmailVerificationCode = null;
-                    user.EmailVerificationDate = DateTime.UtcNow;
+                    user.EmailVerificationDate = DateTime.Now;
                 }
                 else if (user != null && !user.EmailVerificationDate.HasValue && user.Disabled)
                 {
@@ -114,7 +114,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 user.UserName = userEmail;
                 user.Disabled = false;
                 user.EncryptPassword(Guid.NewGuid().ToString());
-                user.EmailVerificationDate = DateTime.UtcNow;
+                user.EmailVerificationDate = DateTime.Now;
                 user.AuthProviderName = GoogleOAuthV2ProviderName;
                 DbContext.Add(user);
             }
@@ -366,7 +366,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 {
                     return ApiResponse.Error("INVALID_CODE");
                 }
-                user.EmailVerificationDate = DateTime.UtcNow;
+                user.EmailVerificationDate = DateTime.Now;
                 user.EmailVerificationCode = null;
                 user.Disabled = false;
                 var result = DbContext.ValidateAndSave();

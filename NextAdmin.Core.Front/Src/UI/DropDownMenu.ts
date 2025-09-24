@@ -18,7 +18,7 @@ namespace NextAdmin.UI {
 
         onClose = new EventHandler<DropDownMenu, HTMLElement>();
 
-        protected items = Array<Control | HTMLElement>();
+        protected items = new Array<Control | HTMLElement>();
 
         public constructor(options?: DropDownMenuOptions) {
             super('div', {

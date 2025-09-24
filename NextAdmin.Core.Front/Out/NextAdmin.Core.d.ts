@@ -5794,13 +5794,13 @@ declare namespace NextAdmin.UI {
         removeOnClose?: boolean;
         openAnimation?: string;
         closeAnimation?: string;
-        innerHTML: string;
+        content: string;
         maxWidth?: string;
         minHeight?: string;
     }
 }
 interface HTMLElement {
-    setPopover(innerHTML: string, parentElement?: HTMLElement): NextAdmin.UI.Popover;
+    setPopover(content: string, parentElement?: HTMLElement): NextAdmin.UI.Popover;
     removePopover(): any;
 }
 declare namespace NextAdmin.UI {

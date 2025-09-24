@@ -13,6 +13,8 @@ namespace NextAdmin.Core.API.Controllers
     {
         public NextAdminDbContext DbContext { get; protected set; }
 
+        public Logger Logger { get; set; }
+
         public new TUser User { get; set; }
 
         public IConfiguration AppConfiguration { get; set; }
@@ -37,6 +39,7 @@ namespace NextAdmin.Core.API.Controllers
 
         public Controller(NextAdminDbContext? dbContext = null, IConfiguration? configuration = null)
         {
+            Logger = new Logger();
             if (dbContext != null)
             {
                 DbContext = dbContext;

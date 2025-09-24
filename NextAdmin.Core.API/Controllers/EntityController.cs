@@ -201,7 +201,7 @@ namespace NextAdmin.Core.API.Controllers
                     response.Code = ApiResponseCode.PermissionLevelError.ToString();
                     return response;
                 }
-                DbContext.Paramters = args.Parameters;
+                DbContext.Parameters = args.Parameters;
                 if (args.CustomActionName != null)
                 {
                     var customAction = GetType().GetMethod(args.CustomActionName);
@@ -466,7 +466,7 @@ namespace NextAdmin.Core.API.Controllers
                 {
                     throw new Exception("Entity id can't be null");
                 }
-                DbContext.Paramters = args.Parameters;
+                DbContext.Parameters = args.Parameters;
                 if (args.CustomActionName != null)
                 {
                     var customAction = GetType().GetMethod(args.CustomActionName);
@@ -523,7 +523,7 @@ namespace NextAdmin.Core.API.Controllers
                     response.Code = ApiResponseCode.PermissionLevelError.ToString();
                     return response;
                 }
-                DbContext.Paramters = args.Parameters;
+                DbContext.Parameters = args.Parameters;
                 if (args.CustomActionName != null)
                 {
                     var customAction = GetType().GetMethod(args.CustomActionName);
@@ -597,7 +597,7 @@ namespace NextAdmin.Core.API.Controllers
                     response.Code = ApiResponseCode.PermissionLevelError.ToString(); ;
                     return response;
                 }
-                DbContext.Paramters = args.Parameters;
+                DbContext.Parameters = args.Parameters;
                 object entityToDelete = null;
                 if (args.CustomActionName != null)
                 {
@@ -658,7 +658,7 @@ namespace NextAdmin.Core.API.Controllers
                     response.Code = ApiResponseCode.PermissionLevelError.ToString();
                     return response;
                 }
-                DbContext.Paramters = args.Parameters;
+                DbContext.Parameters = args.Parameters;
                 var entityType = DbContext.Set(args.EntityName).ElementType;
                 object entityToAddOrUpdate = args.Entity.ToObject(entityType);
                 var entityId = EntityExtension.GetEntityPrimaryKeyValue(entityToAddOrUpdate);
@@ -760,7 +760,7 @@ namespace NextAdmin.Core.API.Controllers
                     response.Code = ApiResponseCode.PermissionLevelError.ToString(); ;
                     return response;
                 }
-                DbContext.Paramters = args.Parameters;
+                DbContext.Parameters = args.Parameters;
                 var entityType = DbContext.Set(args.EntityName).ElementType;
                 if (args.EntitiesToAddOrUpdate != null && args.EntitiesToAddOrUpdate.Count() > 0)
                 {

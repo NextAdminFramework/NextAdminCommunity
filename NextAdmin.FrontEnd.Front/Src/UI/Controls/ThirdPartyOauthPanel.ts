@@ -7,6 +7,7 @@ namespace NextAdmin.UI {
         constructor(options?: ThirdPartyOauthPanelOptions) {
             super('div', {
                 afterOAuthUrlCookieName: 'AFTER_OAUTH_URL',
+                afterOAuthUrl: options.afterOAuthPageName ? (window.location.origin + '/' + options.afterOAuthPageName) : window.location.href,
                 ...options
             } as ThirdPartyOauthPanelOptions)
 
@@ -36,7 +37,7 @@ namespace NextAdmin.UI {
                     text: FrontEndResources.googleIcon + ' ' + FrontEndResources.signInWithGoogle,
                     action: () => {
                         if (this.options.afterOAuthUrlCookieName) {
-                            NextAdmin.Cookies.set(this.options.afterOAuthUrlCookieName, window.location.href);
+                            NextAdmin.Cookies.set(this.options.afterOAuthUrlCookieName, this.options.afterOAuthUrl);
                         }
                         window.location.href = ThirdPartyOauthPanel.getOAuthUrl(this.options.googleOauthOptions, this.options.emailAddress);
                     }
@@ -69,6 +70,10 @@ namespace NextAdmin.UI {
         googleOauthOptions?: GoogleOauthOptions;
 
         afterOAuthUrlCookieName?: string;
+
+        afterOAuthUrl?: string;
+
+        afterOAuthPageName?: string;
 
         emailAddress?: string;
 

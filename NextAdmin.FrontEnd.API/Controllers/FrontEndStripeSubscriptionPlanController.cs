@@ -116,7 +116,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 }
 
                 transaction = DbContext.Database.BeginTransaction();
-                userSubscription.CancellationDate = DateTime.UtcNow;
+                userSubscription.CancellationDate = DateTime.Now;
                 var dbsetSaveResult = DbContext.ValidateAndSave();
                 if (!dbsetSaveResult.Success)
                 {

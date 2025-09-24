@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
+﻿using FluentFTP;
 
 namespace NextAdmin.Core
 {
@@ -10,126 +6,77 @@ namespace NextAdmin.Core
     {
 
 
-        public static bool UploadFile(Logger logger, FtpInfo ftpInfo, string ftpDirectory, string targetFileName, string fileToUploadPath)
+        public static bool UploadFile(FtpServerAccount ftpInfo, string ftpDirectory, string fileToUploadPath, string? targetFileName = null, Logger? logger = null)
         {
-            using (FileStream fileStream = File.OpenRead(fileToUploadPath))
+            if (targetFileName == null)
             {
-                return UploadFile(logger, ftpInfo, ftpDirectory, targetFileName, fileStream);
+                targetFileName = Path.GetFileName(fileToUploadPath);
             }
-        }
-
-
-        public static bool UploadFile(Logger logger, FtpInfo ftpInfo, string ftpDirectory, string targetFileName, byte[] fileData)
-        {
-            using (MemoryStream memoryStream = new MemoryStream(fileData))
+            var client = new FtpClient(ftpInfo.ServerAddress, ftpInfo.UserName, ftpInfo.Password);
+            var connectionResult = client.AutoConnect();
+            if (connectionResult == null)
             {
-                return UploadFile(logger, ftpInfo, ftpDirectory, targetFileName, memoryStream);
-            }
-        }
-
-
-        public static bool UploadFile(Logger logger, FtpInfo ftpInfo, string ftpDirectory, string targetFileName, Stream fileStream)
-        {
-            ftpDirectory = PreparFtpPath(ftpDirectory);
-            string ftpRequest = (string.IsNullOrEmpty(ftpInfo.Protocol) ? (ftpInfo.EnableSsl ? "sftp" : "ftp") : ftpInfo.Protocol) + "://" + ftpInfo.ServerAddress + ftpDirectory + targetFileName;
-            try
-            {
-                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(ftpRequest);
-                request.Method = WebRequestMethods.Ftp.UploadFile;
-                request.Credentials = new NetworkCredential(ftpInfo.UserName, ftpInfo.Password);
-                request.EnableSsl = ftpInfo.EnableSsl;
-                ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
-                {
-                    return true;
-                };
-                using (Stream ftpStream = request.GetRequestStream())
-                {
-                    fileStream.Seek(0, SeekOrigin.Begin);
-                    fileStream.CopyTo(ftpStream);
-                    //System.Threading.Thread.Sleep(100);
-                }
-                logger.LogInfo("Ftp.UploadFile:Filte transfered to ftp " + ftpRequest);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Ftp.UploadFile:Unable to transfer file to ftp " + ftpRequest + "<br />Message : " + ex.Message);
+                logger?.LogError($"{nameof(UploadFile)}.{System.Reflection.MethodBase.GetCurrentMethod()?.Name}:Unable to connect to server");
                 return false;
             }
-
-            return true;
+            var result = client.UploadFile(fileToUploadPath, Path.Combine(ftpDirectory, targetFileName), createRemoteDir: true);
+            if (result != FtpStatus.Success)
+            {
+                logger?.LogError($"{nameof(UploadFile)}.{System.Reflection.MethodBase.GetCurrentMethod()?.Name}:Unable to upload file, result:{result}");
+            }
+            return result == FtpStatus.Success;
         }
 
 
-        public static bool CreateDirectory(Logger logger, FtpInfo ftpInfo, string ftpDirectory)
+        public static bool UploadFile(FtpServerAccount ftpInfo, string ftpDirectory, byte[] fileData, string targetFileName, Logger? logger = null)
         {
-            ftpDirectory = PreparFtpPath(ftpDirectory);
-            string ftpRequest = (string.IsNullOrEmpty(ftpInfo.Protocol) ? (ftpInfo.EnableSsl ? "sftp" : "ftp") : ftpInfo.Protocol) + "://" + ftpInfo.ServerAddress + ftpDirectory;
-            try
+            var client = new FtpClient(ftpInfo.ServerAddress, ftpInfo.UserName, ftpInfo.Password);
+            var connectionResult = client.AutoConnect();
+            if (connectionResult == null)
             {
-                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(ftpRequest);
-                request.Method = WebRequestMethods.Ftp.MakeDirectory;
-                request.Credentials = new NetworkCredential(ftpInfo.UserName, ftpInfo.Password);
-                request.EnableSsl = ftpInfo.EnableSsl;
-                ServicePointManager.ServerCertificateValidationCallback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
-                {
-                    return true;
-                };
-                using (var resp = (FtpWebResponse)request.GetResponse())
-                {
-                    logger.LogInfo("Ftp.CreateDirectory:Command executed with status code : " + resp.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Ftp.CreateDirectory:Unable to create file on directory, exception:" + ex.Message);
+                logger?.LogError($"{nameof(UploadFile)}.{System.Reflection.MethodBase.GetCurrentMethod()?.Name}:Unable to connect to server");
                 return false;
             }
-            return true;
+            var result = client.UploadBytes(fileData, Path.Combine(ftpDirectory, targetFileName), createRemoteDir: true);
+            return result == FtpStatus.Success;
         }
 
 
-        private static string PreparFtpPath(string ftpDirectory)
+        public static bool UploadFile(FtpServerAccount ftpInfo, string ftpDirectory, Stream fileStream, string targetFileName, Logger? logger = null)
         {
-
-            if (!string.IsNullOrWhiteSpace(ftpDirectory))
+            var client = new FtpClient(ftpInfo.ServerAddress, ftpInfo.UserName, ftpInfo.Password);
+            var connectionResult = client.AutoConnect();
+            if (connectionResult == null)
             {
-                if (!ftpDirectory.StartsWith("//"))
-                {
-                    if (ftpDirectory.StartsWith("/"))
-                    {
-                        ftpDirectory = "/" + ftpDirectory;
-                    }
-                    else
-                    {
-                        ftpDirectory = "//" + ftpDirectory;
-                    }
-                }
-                if (!ftpDirectory.EndsWith("/"))
-                {
-                    ftpDirectory = ftpDirectory + "/";
-                }
+                logger?.LogError($"{nameof(UploadFile)}.{System.Reflection.MethodBase.GetCurrentMethod()?.Name}:Unable to connect to server");
+                return false;
             }
-            else
-            {
-                ftpDirectory = "/";
-            }
-            return ftpDirectory;
+            var result = client.UploadStream(fileStream, Path.Combine(ftpDirectory, targetFileName), createRemoteDir: true);
+            return result == FtpStatus.Success;
         }
 
+
+        public static bool CreateDirectory(FtpServerAccount ftpInfo, string ftpDirectory, Logger? logger = null)
+        {
+            var client = new FtpClient(ftpInfo.ServerAddress, ftpInfo.UserName, ftpInfo.Password);
+            var connectionResult = client.AutoConnect();
+            if (connectionResult == null)
+            {
+                logger?.LogError($"{nameof(UploadFile)}.{System.Reflection.MethodBase.GetCurrentMethod()?.Name}:Unable to connect to server");
+                return false;
+            }
+            return client.CreateDirectory(ftpDirectory);
+        }
 
     }
 
-    public class FtpInfo
+    public class FtpServerAccount
     {
-        public string ServerAddress { get; set; }
+        public string? ServerAddress { get; set; }
 
-        public string UserName { get; set; }
+        public string? UserName { get; set; }
 
-        public string Password { get; set; }
-
-        public string Protocol { get; set; } //ftp or sftp
-
-        public bool EnableSsl { get; set; }
+        public string? Password { get; set; }
 
     }
 

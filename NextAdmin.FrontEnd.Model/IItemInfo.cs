@@ -1,16 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using NextAdmin.Core.Model;
 
 namespace NextAdmin.FrontEnd.Model
 {
     public interface IItemInfo
     {
-        decimal GetUnitSalePrice(DbContext dbContext);
+        decimal GetUnitSalePrice(NextAdminDbContext dbContext);
 
-        string GetItemName(DbContext dbContext);
+        string GetItemName(NextAdminDbContext dbContext);
 
-        string GetItemType(DbContext dbContext);
+        string GetItemType(NextAdminDbContext dbContext);
 
-        string GetItemId(DbContext dbContext);
+        string GetItemId(NextAdminDbContext dbContext);
 
 
     }
