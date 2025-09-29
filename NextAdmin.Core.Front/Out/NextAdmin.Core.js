@@ -538,6 +538,10 @@ try {
         let _this = this;
         return _this.getHours() + timeSeparator + NextAdmin.Numeric.pad(_this.getMinutes(), 2);
     };
+    Date.prototype.toLocalDateTimeString = function () {
+        let _this = this;
+        return _this.toLocaleString().substring(0, 16);
+    };
     Date.prototype.toISODateString = function () {
         let _this = this;
         return _this.toISOString().substring(0, 10);
@@ -2648,7 +2652,7 @@ var NextAdmin;
             askUserToSaveDataIfNeededAndExecuteAction(continueAction, cancelAction) {
                 if (!this.isDataUpToDate()) {
                     let messageBox = new NextAdmin.UI.MessageBox({
-                        title: NextAdmin.Resources.warning,
+                        title: NextAdmin.Resources.saveLastModification,
                         text: NextAdmin.Resources.lostDataNotSavedMessage,
                         buttons: [new NextAdmin.UI.Button({
                                 text: NextAdmin.Resources.saveIcon + ' ' + NextAdmin.Resources.saveAndContinue,
@@ -2904,6 +2908,7 @@ var NextAdmin;
             save(args) {
                 args = {
                     displayErrors: true,
+                    preCheckRequiredFields: false,
                     ...args
                 };
                 return new Promise(async (resolve) => {
@@ -2911,18 +2916,9 @@ var NextAdmin;
                     let saveDataEventArgs = {
                         data: dataToSave,
                         dataState: this.getDataState(),
-                        errors: [],
+                        errors: this.getValidationErrors(args.preCheckRequiredFields),
                         warnings: [],
                     };
-                    if (this.getDataPrimaryKeyValue() == null && this.getControl(this.options.dataPrimaryKeyName) != null) {
-                        saveDataEventArgs.errors.add({
-                            dataName: this.getDataInfo().name,
-                            propertyName: this.options.dataPrimaryKeyName,
-                            propertyDisplayName: this.getDataPropertyInfo_(this.options.dataName, this.options.dataPrimaryKeyName).displayName,
-                            errorCode: 'PRIMARY_KEY_REQUIRED',
-                            message: NextAdmin.Resources.requiredField
-                        });
-                    }
                     await this.onStartSaveData.dispatch(this, saveDataEventArgs);
                     if (saveDataEventArgs.errors?.length || saveDataEventArgs.warnings?.length || saveDataEventArgs.message) {
                         this.displayDataErrors(Business.DataControllerActionType.save, {
@@ -2974,6 +2970,33 @@ var NextAdmin;
                         resolve(null);
                     }
                 });
+            }
+            getValidationErrors(checkRequiredFields = true) {
+                let errors = new Array();
+                if (checkRequiredFields) {
+                    let propertiInfos = this.getDataPropertyInfos();
+                    for (let propertyInfo of propertiInfos) {
+                        if (propertyInfo.isRequired && this.getControl(propertyInfo.name) && (this.data[propertyInfo.name] === null || this.data[propertyInfo.name] === undefined || (propertyInfo.type == 'string' && this.data[propertyInfo.name] == ''))) {
+                            errors.add({
+                                dataName: this.getDataInfo().name,
+                                propertyName: propertyInfo.name,
+                                propertyDisplayName: propertyInfo.displayName,
+                                errorCode: 'REQUIRED_FIELD',
+                                message: NextAdmin.Resources.requiredField
+                            });
+                        }
+                    }
+                }
+                if (this.getDataPrimaryKeyValue() == null && this.getControl(this.options.dataPrimaryKeyName) != null) {
+                    errors.add({
+                        dataName: this.getDataInfo().name,
+                        propertyName: this.options.dataPrimaryKeyName,
+                        propertyDisplayName: this.getDataPropertyInfo_(this.options.dataName, this.options.dataPrimaryKeyName).displayName,
+                        errorCode: 'PRIMARY_KEY_REQUIRED',
+                        message: NextAdmin.Resources.requiredField
+                    });
+                }
+                return errors;
             }
             delete(args) {
                 args = {
@@ -3051,6 +3074,9 @@ var NextAdmin;
                 }
             }
             async load(dataId, args) {
+                if (dataId == null) {
+                    dataId = this.getDataPrimaryKeyValue();
+                }
                 args = {
                     displayErrors: true,
                     ...args
@@ -3288,9 +3314,12 @@ var NextAdmin;
                     action(this.data);
                 }
             }
-            ensureUpToDate(action) {
+            ensureUpToDate(action, cancelAction) {
                 if (this._isReadOnlyEnabled) {
                     NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.readOnlyMode, this._readOnlyMessage ?? NextAdmin.Resources.readOnlyDefaultMessage);
+                    if (cancelAction) {
+                        cancelAction();
+                    }
                     return;
                 }
                 if (Business.DataStateHelper.getDataState(this.data) != Business.DataState.serialized) {
@@ -3299,7 +3328,7 @@ var NextAdmin;
                         if (result.success) {
                             action(this.data);
                         }
-                    });
+                    }, cancelAction);
                 }
                 else {
                     action(this.data);
@@ -3566,7 +3595,7 @@ var NextAdmin;
             }
             displayLostDataMessageIfNeededAndExecuteAction(actionToExecute) {
                 if (this.dataset.firstOrDefault(e => Business.DataStateHelper.getDataState(e) != Business.DataState.serialized) != null) {
-                    NextAdmin.UI.MessageBox.createYesCancel(NextAdmin.Resources.warning, NextAdmin.Resources.lostDataNotSavedMessage, actionToExecute);
+                    NextAdmin.UI.MessageBox.createYesCancel(NextAdmin.Resources.saveLastModification, NextAdmin.Resources.lostDataNotSavedMessage, actionToExecute);
                 }
                 else {
                     actionToExecute();
@@ -3636,7 +3665,7 @@ var NextAdmin;
                 super({
                     ...options
                 });
-                this.onLoadingEntity = new NextAdmin.EventHandler();
+                this.onStartLoadEntity = new NextAdmin.EventHandler();
                 this.entityLockKey = this.options.entityLockKey;
                 this.loadAction = (dataId, actionResult) => {
                     let detailsToLoad = [];
@@ -3649,9 +3678,9 @@ var NextAdmin;
                         entityId: dataId,
                         entityName: this.options.dataName,
                         lockKey: this.entityLockKey,
-                        detailToLoadNames: detailsToLoad
+                        detailToLoadNames: detailsToLoad,
                     };
-                    this.onLoadingEntity.dispatch(this, args);
+                    this.onStartLoadEntity.dispatch(this, args);
                     this.options.entityClient.getEntity(args, (response) => {
                         let loadResult = {
                             success: response.code == NextAdmin.Models.ApiResponseCode.Success,
@@ -3860,12 +3889,14 @@ var NextAdmin;
         class EntityDatasetController extends Business.DatasetController_ {
             constructor(options) {
                 super(options);
+                this.onStartLoadEntities = new NextAdmin.EventHandler();
                 this._where = null;
                 this._whereValues = [];
                 this._searchWhere = null;
                 this._searchValues = [];
                 this.loadAction = (actionResult) => {
-                    let args = this.buildQuery();
+                    let args = this.buildSelectQuery();
+                    this.onStartLoadEntities.dispatch(this, args);
                     this.options.entityClient.getEntities(args, (response) => {
                         let loadResult = {
                             success: response.code == NextAdmin.Models.ApiResponseCode.Success,
@@ -3959,7 +3990,7 @@ var NextAdmin;
                 alert('HTTP Error : code : ' + response.status + ', message : ' + response.text);
                 endDisplayFunc();
             }
-            buildQuery() {
+            buildSelectQuery() {
                 let where = '';
                 if (!NextAdmin.String.isNullOrEmpty(this._where)) {
                     where = this._where;
@@ -4200,6 +4231,14 @@ var NextAdmin;
                 }
                 else {
                     return this.where(clumn + ' LIKE ?', search + '%');
+                }
+            }
+            whereStartsNotWith(clumn, search, invariantCase) {
+                if (invariantCase) {
+                    return this.where('LOWER(' + clumn + ')' + ' NOT LIKE LOWER(?)', search + '%');
+                }
+                else {
+                    return this.where(clumn + ' NOT LIKE ?', search + '%');
                 }
             }
             whereEndsWith(clumn, search, invariantCase) {
@@ -4716,6 +4755,7 @@ var NextAdmin;
             this.unknownError = "An unknown error has occurred.";
             this.success = "Success";
             this.search = "Search";
+            this.saveLastModification = 'Save last modifications';
             this.lostDataNotSavedMessage = 'If you validate, not saved data will be lost, what do you want to do ?';
             this.formDeleteMessageTitle = 'Delete data';
             this.formDeleteMessage = 'If you validate, data will be permanently deleted, do you want to tontinue ?';
@@ -4875,11 +4915,12 @@ var NextAdmin;
             this.unknownError = "Une erreur inconnue s'est produite.";
             this.success = "Succès";
             this.search = "Recherche";
-            this.lostDataNotSavedMessage = 'Si vous continuez, les données non sauvegardées pourraient être perdues, que voulez-vous faire?';
+            this.saveLastModification = 'Enregistrement des dernières modifications';
+            this.lostDataNotSavedMessage = 'Vous avez apporté des modifications non sauvegardées. Souhaitez-vous les enregistrer avant de quitter ?';
             this.formDeleteMessageTitle = 'Suppression définitive';
             this.formDeleteMessage = 'Si vous validez, cet élément sera supprimé de manière permanente, voulez-vous continuer ?';
             this.formSaveRequiredTitle = "Enregistrement requis";
-            this.formSaveRequiredMessage = "Vous devez enregistrer l'élément courant pour pouvoir effectuer cette action, voulez-vous enregistrer maintenant ?";
+            this.formSaveRequiredMessage = "Afin d’effectuer cette opération, la fiche en cours d’édition doit être enregistrée. Souhaitez-vous continuer ?";
             this.requiredField = "Le champ est requis";
             this.saveAndContinue = "Enregistrer et continuer";
             this.discardAndContinue = "Continuer sans enregistrer";
@@ -5679,8 +5720,13 @@ var NextAdmin;
         DefaultStyle.RedOne = '#c81c4d';
         DefaultStyle.BlueOne = '#105ABE';
         DefaultStyle.BlueTwo = '#12101d';
+        DefaultStyle.BlueGreenOne = '#367588';
         DefaultStyle.GreenOne = '#586e53';
         DefaultStyle.GreenTwo = '#629965';
+        DefaultStyle.OrangeOne = '#F28C28';
+        DefaultStyle.YellowOne = '#FFEA00';
+        DefaultStyle.LightGrey = '#999';
+        DefaultStyle.Grey = '#444';
         DefaultStyle.DarkModalBackdrop = 'rgba(0,0,0,0.5)';
         UI.DefaultStyle = DefaultStyle;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
@@ -5706,7 +5752,7 @@ var NextAdmin;
                 this.action = this.options.action;
                 this.element.classList.add('next-admin-btn');
                 if (this.options.text != null) {
-                    this.element.innerHTML = this.options.text;
+                    this.setText(this.options.text);
                 }
                 if (this.options.popover) {
                     this.element.setPopover(this.options.popover);
@@ -7466,42 +7512,24 @@ var NextAdmin;
                     this.input.value = '';
                 }
                 else {
-                    if (this.input.type == 'date') {
-                        if (value instanceof Date) {
-                            this.input.value = value.toISOString().split('T')[0];
-                        }
-                        else {
-                            let stringDate = value + '';
-                            if (stringDate != '' && stringDate.indexOf('T') != -1) {
-                                this.input.value = stringDate.split('T')[0];
-                            }
-                            else {
-                                this.input.value = stringDate;
-                            }
-                        }
+                    if (this.input.type == InputType.date) {
+                        this.input.value = ((value instanceof Date ? value.toISOString() : (value ?? '')) + '').replace('T', ' ').substring(0, 10);
                     }
-                    else if (this.input.type == 'time') {
-                        if (value instanceof Date) {
-                            this.input.value = value.toISOString().split('T')[1];
+                    else if (this.input.type == InputType.time) {
+                        let stringDate = ((value instanceof Date ? value.toISOString() : (value ?? '')) + '').replace('T', ' ').substring(0, 19);
+                        if (stringDate.contains(' ')) {
+                            stringDate = stringDate.split(' ')[1];
                         }
-                        else {
-                            let stringDate = value + '';
-                            if (!NextAdmin.String.isNullOrEmpty(stringDate) && stringDate.indexOf('T') != -1) {
-                                this.input.value = stringDate.split('T')[1];
-                            }
-                            else if (!NextAdmin.String.isNullOrEmpty(stringDate) && stringDate.indexOf(' ') != -1) {
-                                this.input.value = stringDate.split(' ')[1];
-                            }
-                            else {
-                                this.input.value = stringDate;
-                            }
-                        }
+                        this.input.value = stringDate;
                     }
-                    else if (value && this.input.type == 'number') {
+                    else if (this.input.type == InputType.datetimeLocal) {
+                        this.input.value = ((value instanceof Date ? value.toISOString() : (value ?? '')) + '').replace('T', ' ').substring(0, 19);
+                    }
+                    else if (value && this.input.type == InputType.number) {
                         let numberValue = Number(value);
                         this.input.value = Number.isInteger(numberValue) ? value : numberValue.toFixed(UI.UserInterfaceHelper.DefaultNumberDecimalCount);
                     }
-                    else if (this.input.type == 'checkbox') {
+                    else if (this.input.type == InputType.checkbox) {
                         if (value == 'true' || value == '1' || value == 'True' || value == true) {
                             this.input.checked = true;
                         }
@@ -8015,6 +8043,7 @@ var NextAdmin;
                 }
                 if (this.options.isDetailFormModal) {
                     this.options.hasValidateButton = true;
+                    this.options.isRequiredFieldPreCheckEnabled = true;
                 }
                 this.dataController.onStartChangeData.subscribe(async (sender, args) => {
                     await this.initialize(args.newData, args.newDataState);
@@ -8101,16 +8130,34 @@ var NextAdmin;
                     this.saveButton.element.remove();
                     this.deleteButton.element.remove();
                     //this.cancelButton.element.remove();
+                    /*
                     if (this.footerCloseButton) {
                         this.footerCloseButton.element.remove();
                     }
+                    */
                     this.validateButton = this.rightFooterToolBar.appendControl(new NextAdmin.UI.Button({
                         text: NextAdmin.Resources.checkIcon + ' ' + NextAdmin.Resources.validate,
+                        style: NextAdmin.UI.ButtonStyle.green,
                         css: { cssFloat: 'right' },
                         action: () => {
                             this.validate();
                         }
-                    }));
+                    }), (btn) => {
+                        if (this.options.isRequiredFieldPreCheckEnabled) {
+                            setTimeout(() => {
+                                let requiredControls = [];
+                                for (let propertyInfo of this.dataController.getDataPropertyInfos()) {
+                                    if (propertyInfo.isRequired) {
+                                        let control = this.dataController.getControl(propertyInfo.name);
+                                        if (control) {
+                                            requiredControls.add(control);
+                                        }
+                                    }
+                                }
+                                btn.changeEnableStateOnControlsRequiredValueChanged(() => !this.dataController.getValidationErrors()?.length, ...requiredControls);
+                            }, 10);
+                        }
+                    });
                     this.dataController.onDataStateChanged.subscribe((sender, args) => {
                         if (args.newState == NextAdmin.Business.DataState.append || args.newState == NextAdmin.Business.DataState.edited) {
                             this.validateButton.enable();
@@ -8126,7 +8173,7 @@ var NextAdmin;
                 this.onValidate.dispatch(this, this.dataController.data);
                 if (!this.options.isDetailFormModal) {
                     this.startSpin();
-                    let result = await this.dataController.save();
+                    let result = await this.dataController.save({ preCheckRequiredFields: this.options.isRequiredFieldPreCheckEnabled });
                     this.stopSpin();
                     if (result.success) {
                         this.close();
@@ -8782,8 +8829,8 @@ var NextAdmin;
                 this.actionColumn = null;
                 this.rows = new Array();
                 this.rowDictionary = {};
-                this.onDrawCell = new NextAdmin.EventHandler();
-                this.onDrawRow = new NextAdmin.EventHandler();
+                this.onRenderCell = new NextAdmin.EventHandler();
+                this.onRenderRow = new NextAdmin.EventHandler();
                 this.onSelectedRowsChanged = new NextAdmin.EventHandler();
                 this.onRowSelected = new NextAdmin.EventHandler();
                 this.onRowUnselected = new NextAdmin.EventHandler();
@@ -9286,52 +9333,68 @@ var NextAdmin;
                 }
             }
             appendData() {
-                if (this.options.openFormModalWithRowData && this.options.formModalFactory != null) {
-                    let modal = this.createModal();
-                    modal.open({ appendNewData: true });
-                }
-                else if (this.datasetController == null) {
-                    this.addDataItem({}, NextAdmin.Business.DataState.append, true);
-                    return;
-                }
-                else if (this._masterFormController != null && this.options.formModalFactory != null) {
-                    this._masterFormController.ensureUpToDate(async () => {
+                return new Promise(async (resolve) => {
+                    if (this.options.openFormModalWithRowData && this.options.formModalFactory != null) {
+                        let modal = this.createModal();
+                        modal.open({
+                            appendNewData: true,
+                            onDataLoaded: (data) => {
+                                resolve(data);
+                            }
+                        });
+                    }
+                    else if (this.datasetController == null) {
+                        let data = {};
+                        this.addDataItem(data, NextAdmin.Business.DataState.append, true);
+                        return;
+                    }
+                    else if (this._masterFormController != null && this.options.formModalFactory != null) {
+                        this._masterFormController.ensureUpToDate(async () => {
+                            let result = await this.datasetController.append();
+                            if (result.success) {
+                                let detailProperties = this.datasetController.getDataInfo().propertyInfos;
+                                for (let propertyName in detailProperties) {
+                                    let property = detailProperties[propertyName];
+                                    if (property.foreignDataName == this._masterFormController.options.dataName) {
+                                        result.data[property.name] = this._masterFormController.getDataPrimaryKeyValue();
+                                        break;
+                                    }
+                                }
+                                resolve(result.data);
+                            }
+                        });
+                    }
+                    else if (this._dataController != null && this.options.formModalFactory != null) {
+                        this._dataController.ensureUpToDate(async () => {
+                            let result = await this.datasetController.append();
+                            if (result.success) {
+                                let detailProperties = this.datasetController.getDataInfo().propertyInfos;
+                                for (let propertyName in detailProperties) {
+                                    let property = detailProperties[propertyName];
+                                    if (property.foreignDataName == this._dataController.options.dataName) {
+                                        result.data[property.name] = this._dataController.getDataPrimaryKeyValue();
+                                        break;
+                                    }
+                                }
+                                resolve(result.data);
+                            }
+                        });
+                    }
+                    else if (this.options.canSave && this.options.formModalFactory != null) {
+                        this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(async () => {
+                            let result = await this.datasetController.append();
+                            if (result.success) {
+                                resolve(result.data);
+                            }
+                        });
+                    }
+                    else {
                         let result = await this.datasetController.append();
                         if (result.success) {
-                            let detailProperties = this.datasetController.getDataInfo().propertyInfos;
-                            for (let propertyName in detailProperties) {
-                                let property = detailProperties[propertyName];
-                                if (property.foreignDataName == this._masterFormController.options.dataName) {
-                                    result.data[property.name] = this._masterFormController.getDataPrimaryKeyValue();
-                                    break;
-                                }
-                            }
+                            resolve(result.data);
                         }
-                    });
-                }
-                else if (this._dataController != null && this.options.formModalFactory != null) {
-                    this._dataController.ensureUpToDate(async () => {
-                        let result = await this.datasetController.append();
-                        if (result.success) {
-                            let detailProperties = this.datasetController.getDataInfo().propertyInfos;
-                            for (let propertyName in detailProperties) {
-                                let property = detailProperties[propertyName];
-                                if (property.foreignDataName == this._dataController.options.dataName) {
-                                    result.data[property.name] = this._dataController.getDataPrimaryKeyValue();
-                                    break;
-                                }
-                            }
-                        }
-                    });
-                }
-                else if (this.options.canSave && this.options.formModalFactory != null) {
-                    this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(() => {
-                        this.datasetController.append();
-                    });
-                }
-                else {
-                    this.datasetController.append();
-                }
+                    }
+                });
             }
             async load(options) {
                 options = {
@@ -9362,6 +9425,9 @@ var NextAdmin;
                     if (JSON.stringify(previousDataset) == JSON.stringify(result.dataset)) {
                         return null;
                     }
+                }
+                if (options.onPreparDataset) {
+                    result.dataset = options.onPreparDataset(result.dataset);
                 }
                 this.setDataset(result.dataset, NextAdmin.Business.DataState.serialized, options?.tryPreserveSelectionAndScroll, options?.fireChange);
                 return result.dataset;
@@ -9849,7 +9915,9 @@ var NextAdmin;
             bindToMasterController(masterController, detailForeignKey, masterPrimaryKey) {
                 this._masterFormController = masterController;
                 this.buttonSave.element.style.display = 'none';
-                this.buttonRefresh.element.style.display = 'none';
+                if (this.options.canRefresh !== true) {
+                    this.buttonRefresh.element.style.display = 'none';
+                }
                 if (masterPrimaryKey == null) {
                     masterPrimaryKey = masterController.options.dataPrimaryKeyName;
                 }
@@ -10007,7 +10075,7 @@ var NextAdmin;
                     this.buttonSave.enable();
                 }
                 this.onRowAdded.dispatch(this, row);
-                this.onDrawRow.dispatch(this, row);
+                this.onRenderRow.dispatch(this, row);
                 if (fireChange) {
                     this.fireChange();
                 }
@@ -10027,7 +10095,7 @@ var NextAdmin;
                     i++;
                 }
                 this.onRowAdded.dispatch(this, row);
-                this.onDrawRow.dispatch(this, row);
+                this.onRenderRow.dispatch(this, row);
                 if (fireChange) {
                     this.fireChange();
                 }
@@ -10368,7 +10436,7 @@ var NextAdmin;
                         this.options.onSelectedRowsChanged(this, selectedRows);
                     }
                 }
-                this.onDrawRow.dispatch(this, row);
+                this.onRenderRow.dispatch(this, row);
             }
             rowDoubleClicked(row, e) {
                 if (this.options.enableDoubleClickOpenModal && this.options.openAction != null) {
@@ -10488,7 +10556,7 @@ var NextAdmin;
                         this.options.onSelectedRowsChanged(this, selectedRows);
                     }
                 }
-                this.onDrawRow.dispatch(this, row);
+                this.onRenderRow.dispatch(this, row);
             }
             unselectRows(dispatch = true, rows) {
                 if (rows == null) {
@@ -11565,7 +11633,7 @@ var NextAdmin;
                         }
                     }
                 }
-                this.grid.onDrawCell.dispatch(this, value);
+                this.grid.onRenderCell.dispatch(this, value);
                 if (updateData) {
                     this.setData(value);
                 }
@@ -12572,7 +12640,7 @@ var NextAdmin;
                 let deleteButton = args.dropDown.appendControl(new UI.Button({
                     text: NextAdmin.Resources.clearIcon + ' ' + NextAdmin.Resources.stopUseEntry,
                     action: async () => {
-                        this.setValue(null);
+                        this.setValue(null, true);
                     }
                 }));
                 if (dataPrimaryKey == null) {
@@ -12799,6 +12867,9 @@ var NextAdmin;
             }
             appendHTML(html, setControlPropertiesAction) {
                 return this.appendControl(document.createElement(html), setControlPropertiesAction);
+            }
+            getItems() {
+                return this.dropDown.getItems();
             }
             clearItems() {
                 this.dropDown.clearItems();
@@ -13037,6 +13108,7 @@ var NextAdmin;
                 });
             }
             clearItems() {
+                this.items = [];
                 this.element.innerHTML = '';
             }
             addItems(itms) {
@@ -16130,11 +16202,15 @@ var NextAdmin;
         class SelectDropDownButton extends UI.FormControl {
             constructor(options) {
                 super('div', {
-                    autoFill: true,
+                    dropDownWidth: '250px',
                     style: UI.ButtonStyle.default,
                     ...options
                 });
-                this.dropDownButton = this.element.appendControl(new UI.DropDownButton({ text: this.options.label, style: this.options.style }), (dropDownButton) => {
+                this.dropDownButton = this.element.appendControl(new UI.DropDownButton({
+                    text: this.options.label,
+                    style: this.options.style,
+                    dropDownWidth: this.options.dropDownWidth,
+                }), (dropDownButton) => {
                     dropDownButton.dropDown.onOpen.subscribe((dropDown) => {
                         let value = this.getValue();
                         for (let button of dropDown.getItems()) {
@@ -16185,8 +16261,20 @@ var NextAdmin;
                 }
             }
             setItems(selectItems) {
+                let value = this.getValue();
                 this.clearItems();
-                return this.addItems(selectItems);
+                let items = this.addItems(selectItems);
+                if (selectItems.firstOrDefault(a => a.value == value)) {
+                    let btn = this.getItemButton(value);
+                    this.setLabel(this.getLabel());
+                }
+                else {
+                    this.setValue(null);
+                }
+                return items;
+            }
+            getItems() {
+                return this.dropDownButton.getItems();
             }
             addItems(selectItems) {
                 let buttons = [];
@@ -16232,7 +16320,7 @@ var NextAdmin;
                 if (!NextAdmin.String.isNullOrEmpty(propertyInfo?.displayName) && NextAdmin.String.isNullOrEmpty(this.getLabel())) {
                     this.setLabel(propertyInfo.displayName);
                 }
-                if (this.options.autoFill && propertyInfo?.values?.length) {
+                if (propertyInfo?.values?.length && !this.getItems()?.length) {
                     this.setItems(propertyInfo.values);
                 }
             }

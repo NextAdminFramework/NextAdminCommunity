@@ -19,9 +19,9 @@ namespace NextAdmin.UI {
 
         rowDictionary = {};
 
-        onDrawCell = new EventHandler<DataGridCell_, any>();
+        onRenderCell = new EventHandler<DataGridCell<T>, any>();
 
-        onDrawRow = new EventHandler<DataGrid_, DataGridRow<T>>();
+        onRenderRow = new EventHandler<DataGrid_, DataGridRow<T>>();
 
         onSelectedRowsChanged = new EventHandler<DataGrid_, DataGridRow<T>[]>();
 
@@ -776,53 +776,70 @@ namespace NextAdmin.UI {
             }
         }
 
-        appendData(): any {
-            if (this.options.openFormModalWithRowData && this.options.formModalFactory != null) {
-                let modal = this.createModal();
-                modal.open({ appendNewData: true });
-            }
-            else if (this.datasetController == null) {
-                this.addDataItem({}, NextAdmin.Business.DataState.append, true);
-                return;
-            }
-            else if (this._masterFormController != null && this.options.formModalFactory != null) {
-                this._masterFormController.ensureUpToDate(async () => {
+        appendData(): Promise<T> {
+            return new Promise(async (resolve) => {
+
+                if (this.options.openFormModalWithRowData && this.options.formModalFactory != null) {
+                    let modal = this.createModal();
+                    modal.open({
+                        appendNewData: true,
+                        onDataLoaded: (data) => {
+                            resolve(data);
+                        }
+                    });
+                }
+                else if (this.datasetController == null) {
+                    let data = {};
+                    this.addDataItem(data, NextAdmin.Business.DataState.append, true);
+                    return;
+                }
+                else if (this._masterFormController != null && this.options.formModalFactory != null) {
+                    this._masterFormController.ensureUpToDate(async () => {
+                        let result = await this.datasetController.append();
+                        if (result.success) {
+                            let detailProperties = this.datasetController.getDataInfo().propertyInfos;
+                            for (let propertyName in detailProperties) {
+                                let property = detailProperties[propertyName] as NextAdmin.Business.DataPropertyInfo;
+                                if (property.foreignDataName == this._masterFormController.options.dataName) {
+                                    result.data[property.name] = this._masterFormController.getDataPrimaryKeyValue();
+                                    break;
+                                }
+                            }
+                            resolve(result.data);
+                        }
+                    });
+                }
+                else if (this._dataController != null && this.options.formModalFactory != null) {
+                    this._dataController.ensureUpToDate(async () => {
+                        let result = await this.datasetController.append();
+                        if (result.success) {
+                            let detailProperties = this.datasetController.getDataInfo().propertyInfos;
+                            for (let propertyName in detailProperties) {
+                                let property = detailProperties[propertyName] as NextAdmin.Business.DataPropertyInfo;
+                                if (property.foreignDataName == this._dataController.options.dataName) {
+                                    result.data[property.name] = this._dataController.getDataPrimaryKeyValue();
+                                    break;
+                                }
+                            }
+                            resolve(result.data);
+                        }
+                    });
+                }
+                else if (this.options.canSave && this.options.formModalFactory != null) {
+                    this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(async () => {
+                        let result = await this.datasetController.append();
+                        if (result.success) {
+                            resolve(result.data);
+                        }
+                    });
+                }
+                else {
                     let result = await this.datasetController.append();
                     if (result.success) {
-                        let detailProperties = this.datasetController.getDataInfo().propertyInfos;
-                        for (let propertyName in detailProperties) {
-                            let property = detailProperties[propertyName] as NextAdmin.Business.DataPropertyInfo;
-                            if (property.foreignDataName == this._masterFormController.options.dataName) {
-                                result.data[property.name] = this._masterFormController.getDataPrimaryKeyValue();
-                                break;
-                            }
-                        }
+                        resolve(result.data);
                     }
-                });
-            }
-            else if (this._dataController != null && this.options.formModalFactory != null) {
-                this._dataController.ensureUpToDate(async () => {
-                    let result = await this.datasetController.append();
-                    if (result.success) {
-                        let detailProperties = this.datasetController.getDataInfo().propertyInfos;
-                        for (let propertyName in detailProperties) {
-                            let property = detailProperties[propertyName] as NextAdmin.Business.DataPropertyInfo;
-                            if (property.foreignDataName == this._dataController.options.dataName) {
-                                result.data[property.name] = this._dataController.getDataPrimaryKeyValue();
-                                break;
-                            }
-                        }
-                    }
-                });
-            }
-            else if (this.options.canSave && this.options.formModalFactory != null) {
-                this.datasetController.askUserToSaveDataIfNeededAndExecuteAction(() => {
-                    this.datasetController.append();
-                });
-            }
-            else {
-                this.datasetController.append();
-            }
+                }
+            });
         }
 
 
@@ -856,6 +873,9 @@ namespace NextAdmin.UI {
                 if (JSON.stringify(previousDataset) == JSON.stringify(result.dataset)) {
                     return null;
                 }
+            }
+            if (options.onPreparDataset) {
+                result.dataset = options.onPreparDataset(result.dataset);
             }
             this.setDataset(result.dataset, NextAdmin.Business.DataState.serialized, options?.tryPreserveSelectionAndScroll, options?.fireChange);
             return result.dataset;
@@ -1398,7 +1418,9 @@ namespace NextAdmin.UI {
         public bindToMasterController(masterController: NextAdmin.Business.DataController_, detailForeignKey: string, masterPrimaryKey?: string) {
             this._masterFormController = masterController;
             this.buttonSave.element.style.display = 'none';
-            this.buttonRefresh.element.style.display = 'none';
+            if (this.options.canRefresh !== true) {
+                this.buttonRefresh.element.style.display = 'none';
+            }
             if (masterPrimaryKey == null) {
                 masterPrimaryKey = masterController.options.dataPrimaryKeyName;
             }
@@ -1579,7 +1601,7 @@ namespace NextAdmin.UI {
                 this.buttonSave.enable();
             }
             this.onRowAdded.dispatch(this, row);
-            this.onDrawRow.dispatch(this, row);
+            this.onRenderRow.dispatch(this, row);
             if (fireChange) {
                 this.fireChange();
             }
@@ -1604,7 +1626,7 @@ namespace NextAdmin.UI {
             }
 
             this.onRowAdded.dispatch(this, row);
-            this.onDrawRow.dispatch(this, row);
+            this.onRenderRow.dispatch(this, row);
             if (fireChange) {
                 this.fireChange();
             }
@@ -1988,7 +2010,7 @@ namespace NextAdmin.UI {
                     this.options.onSelectedRowsChanged(this, selectedRows)
                 }
             }
-            this.onDrawRow.dispatch(this, row);
+            this.onRenderRow.dispatch(this, row);
         }
 
         public rowDoubleClicked(row: DataGridRow_, e: MouseEvent) {
@@ -2123,7 +2145,7 @@ namespace NextAdmin.UI {
                     this.options.onSelectedRowsChanged(this, selectedRows)
                 }
             }
-            this.onDrawRow.dispatch(this, row);
+            this.onRenderRow.dispatch(this, row);
         }
 
         public unselectRows(dispatch = true, rows?: Array<DataGridRow_>) {
@@ -3341,7 +3363,7 @@ namespace NextAdmin.UI {
                     }
                 }
             }
-            this.grid.onDrawCell.dispatch(this, value);
+            this.grid.onRenderCell.dispatch(this, value);
             if (updateData) {
                 this.setData(value);
             }
@@ -3967,6 +3989,8 @@ namespace NextAdmin.UI {
         updateQuery?: boolean;
 
         fireChange?: boolean;
+
+        onPreparDataset?: (dataset?: Array<any>) => Array<any>;
     }
 
 }

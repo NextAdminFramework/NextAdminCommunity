@@ -14,9 +14,19 @@ namespace NextAdmin.UI {
 
         public static BlueTwo = '#12101d';
 
+        public static BlueGreenOne = '#367588';
+
         public static GreenOne = '#586e53';
 
         public static GreenTwo = '#629965';
+
+        public static OrangeOne = '#F28C28';
+
+        public static YellowOne = '#FFEA00';
+
+        public static LightGrey = '#999';
+
+        public static Grey = '#444';
 
         public static DarkModalBackdrop = 'rgba(0,0,0,0.5)';
 

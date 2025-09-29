@@ -16,7 +16,7 @@
             return dictionary;
         }
 
-        public static TValue? Get<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue))
+        public static TValue? GetOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue))
         {
             if (dictionary.TryGetValue(key, out TValue value))
             {
@@ -25,7 +25,7 @@
             return defaultValue;
         }
 
-        public static TOut? GetAs<TKey, TValue, TOut>(this Dictionary<TKey, TValue> dictionary, TKey key, TOut defaultValue = default(TOut))
+        public static TOut? GetOrDefaultAs<TKey, TValue, TOut>(this Dictionary<TKey, TValue> dictionary, TKey key, TOut defaultValue = default(TOut))
         {
             TValue outValue;
             if (dictionary.TryGetValue(key, out outValue))
@@ -35,6 +35,23 @@
             return defaultValue;
         }
 
+        public static TValue? GetOrDefault<TValue>(this System.Collections.IDictionary dictionary, string key, TValue defaultValue = default(TValue))
+        {
+            if (dictionary.Contains(key))
+            {
+                return (TValue)dictionary[key];
+            }
+            return defaultValue;
+        }
+
+        public static TValue? GetOrDefaultAs<TValue>(this System.Collections.IDictionary dictionary, string key, TValue defaultValue = default(TValue))
+        {
+            if (dictionary.Contains(key))
+            {
+                return dictionary[key].To<TValue>();
+            }
+            return defaultValue;
+        }
 
         public static int GetDataHashCode<TKey, TValue>(this Dictionary<TKey, TValue> dictionary)
         {

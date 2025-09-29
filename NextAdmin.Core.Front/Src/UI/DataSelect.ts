@@ -17,7 +17,7 @@ namespace NextAdmin.UI {
             super({
                 canAddData: true,
                 canEditData: true,
-                hasDropDownMenu:true,
+                hasDropDownMenu: true,
                 resetSearchAtOpen: false,
                 canAddCustomValue: false,
                 searchItemsCount: 100,
@@ -233,7 +233,7 @@ namespace NextAdmin.UI {
             let deleteButton = args.dropDown.appendControl(new Button({
                 text: Resources.clearIcon + ' ' + Resources.stopUseEntry,
                 action: async () => {
-                    this.setValue(null);
+                    this.setValue(null, true);
                 }
             }));
             if (dataPrimaryKey == null) {
@@ -291,8 +291,7 @@ namespace NextAdmin.UI {
                     if (this.options.previewValueFunc != null) {
                         displayValue = this.options.previewValueFunc(value);
                     }
-                    if (!String.isNullOrEmpty(displayValue))
-                    {
+                    if (!String.isNullOrEmpty(displayValue)) {
                         this.addItem(value, displayValue);
                     }
                     else if (this.options.datasetController != null) {

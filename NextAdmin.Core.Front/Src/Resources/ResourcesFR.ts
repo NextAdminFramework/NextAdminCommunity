@@ -46,7 +46,9 @@ namespace NextAdmin {
 
         search = "Recherche";
 
-        lostDataNotSavedMessage = 'Si vous continuez, les données non sauvegardées pourraient être perdues, que voulez-vous faire?';
+        saveLastModification = 'Enregistrement des dernières modifications';
+
+        lostDataNotSavedMessage = 'Vous avez apporté des modifications non sauvegardées. Souhaitez-vous les enregistrer avant de quitter ?';
 
         formDeleteMessageTitle = 'Suppression définitive';
 
@@ -54,7 +56,7 @@ namespace NextAdmin {
 
         formSaveRequiredTitle = "Enregistrement requis";
 
-        formSaveRequiredMessage = "Vous devez enregistrer l'élément courant pour pouvoir effectuer cette action, voulez-vous enregistrer maintenant ?";
+        formSaveRequiredMessage = "Afin d’effectuer cette opération, la fiche en cours d’édition doit être enregistrée. Souhaitez-vous continuer ?";
 
         requiredField = "Le champ est requis";
 

@@ -144,6 +144,15 @@ namespace NextAdmin.Business {
             }
         }
 
+        whereStartsNotWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder {
+            if (invariantCase) {
+                return this.where('LOWER(' + clumn + ')' + ' NOT LIKE LOWER(?)', search + '%');
+            }
+            else {
+                return this.where(clumn + ' NOT LIKE ?', search + '%');
+            }
+        }
+
         whereEndsWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder {
             if (invariantCase) {
                 return this.where('LOWER(' + clumn + ')' + ' LIKE LOWER(?)', '%' + search);

@@ -8,12 +8,16 @@ namespace NextAdmin.UI {
 
         public constructor(options?: SelectDropDownButtonOptions) {
             super('div', {
-                autoFill: true,
+                dropDownWidth: '250px',
                 style: ButtonStyle.default,
                 ...options
             } as SelectDropDownButtonOptions);
 
-            this.dropDownButton = this.element.appendControl(new DropDownButton({ text: this.options.label, style: this.options.style }), (dropDownButton) => {
+            this.dropDownButton = this.element.appendControl(new DropDownButton({
+                text: this.options.label,
+                style: this.options.style,
+                dropDownWidth: this.options.dropDownWidth,
+            }), (dropDownButton) => {
                 dropDownButton.dropDown.onOpen.subscribe((dropDown) => {
                     let value = this.getValue();
                     for (let button of dropDown.getItems() as Array<Button>) {
@@ -72,8 +76,21 @@ namespace NextAdmin.UI {
         }
 
         setItems(selectItems: Array<SelectItem>): Array<Button> {
+            let value = this.getValue();
             this.clearItems();
-            return this.addItems(selectItems);
+            let items = this.addItems(selectItems);
+            if (selectItems.firstOrDefault(a => a.value == value)) {
+                let btn = this.getItemButton(value);
+                this.setLabel(this.getLabel());
+            } else {
+                this.setValue(null);
+            }
+            return items;
+        }
+
+        getItems() {
+            return this.dropDownButton.getItems();
+
         }
 
         addItems(selectItems: Array<SelectItem>): Array<Button> {
@@ -126,7 +143,7 @@ namespace NextAdmin.UI {
             if (!NextAdmin.String.isNullOrEmpty(propertyInfo?.displayName) && NextAdmin.String.isNullOrEmpty(this.getLabel())) {
                 this.setLabel(propertyInfo.displayName);
             }
-            if (this.options.autoFill && propertyInfo?.values?.length) {
+            if (propertyInfo?.values?.length && !this.getItems()?.length) {
                 this.setItems(propertyInfo.values);
             }
         }
@@ -152,7 +169,7 @@ namespace NextAdmin.UI {
 
         style?: ButtonStyle;
 
-        autoFill?: boolean;
+        dropDownWidth?: string;
 
         onAddButton?: (sender: SelectDropDownButton, args: AddButtonArgs) => void;
 

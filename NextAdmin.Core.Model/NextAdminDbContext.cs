@@ -551,16 +551,19 @@ namespace NextAdmin.Core.Model
                 //execute EF validation
                 var entityFrameworkValidationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
                 var vc = new ValidationContext(entry.Entity, null, null);
-                if (!Validator.TryValidateObject(entry.Entity, vc, entityFrameworkValidationResults, true))
+                if (entry.State != EntityState.Deleted)
                 {
-                    List<EntityMemberValidationInfo> entityMembersValidationErrors = new List<EntityMemberValidationInfo>();
-                    foreach (var validationResult in entityFrameworkValidationResults)
+                    if (!Validator.TryValidateObject(entry.Entity, vc, entityFrameworkValidationResults, true))
                     {
-                        entityMembersValidationErrors.AddRange(GetValidationErrorsFromEFValidationError(validationResult));
+                        List<EntityMemberValidationInfo> entityMembersValidationErrors = new List<EntityMemberValidationInfo>();
+                        foreach (var validationResult in entityFrameworkValidationResults)
+                        {
+                            entityMembersValidationErrors.AddRange(GetValidationErrorsFromEFValidationError(validationResult));
+                        }
+                        var entityId = EntityExtension.GetEntityPrimaryKeyValue(entry.Entity);
+                        preparSaveResult.EntityValidationInfos.Add(new EntityValidationInfo(entityId, entry.Entity.GetType().Name, entityMembersValidationErrors));
+                        preparSaveResult.Message = "Entity Framework validation errors";
                     }
-                    var entityId = EntityExtension.GetEntityPrimaryKeyValue(entry.Entity);
-                    preparSaveResult.EntityValidationInfos.Add(new EntityValidationInfo(entityId, entry.Entity.GetType().Name, entityMembersValidationErrors));
-                    preparSaveResult.Message = "Entity Framework validation errors";
                 }
             }
             return preparSaveResult;

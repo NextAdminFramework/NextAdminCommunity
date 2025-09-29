@@ -64,7 +64,7 @@ namespace NextAdmin.UI {
             this.element.classList.add('next-admin-btn');
 
             if (this.options.text != null) {
-                this.element.innerHTML = this.options.text;
+                this.setText(this.options.text);
             }
             if (this.options.popover) {
                 this.element.setPopover(this.options.popover);

@@ -288,7 +288,7 @@ namespace NextAdmin.Business {
 
         public displayLostDataMessageIfNeededAndExecuteAction(actionToExecute: () => void) {
             if (this.dataset.firstOrDefault(e => DataStateHelper.getDataState(e) != DataState.serialized) != null) {
-                UI.MessageBox.createYesCancel(Resources.warning, Resources.lostDataNotSavedMessage, actionToExecute);
+                UI.MessageBox.createYesCancel(Resources.saveLastModification, Resources.lostDataNotSavedMessage, actionToExecute);
             }
             else {
                 actionToExecute();

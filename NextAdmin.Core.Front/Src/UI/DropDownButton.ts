@@ -105,6 +105,10 @@ namespace NextAdmin.UI {
             return this.appendControl(document.createElement(html), setControlPropertiesAction);
         }
 
+        getItems() {
+            return this.dropDown.getItems();
+        }
+
         clearItems() {
             this.dropDown.clearItems();
         }

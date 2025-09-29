@@ -491,7 +491,7 @@ namespace NextAdmin.Core.Model
                 var detailToAttachPrimaryKey = detailToAttach.GetPrimaryKeyValue();
                 if (detailToAttachPrimaryKey == null)
                 {
-                    throw new Exception("Promary key value required");
+                    throw new Exception("Primary key value required");
                 }
                 toAttachDetailsDictionary.Add(detailToAttachPrimaryKey, detailToAttach);
             }
@@ -499,21 +499,21 @@ namespace NextAdmin.Core.Model
             var serializedDetails = entity.GetDetails<IEntity>(dbContext, detailCollectionInfo);
             foreach (var serializedDetail in serializedDetails)
             {
-                var serilizedDetailPrimaryKey = serializedDetail.GetPrimaryKeyValue();
-                if (serilizedDetailPrimaryKey == null)
+                var serializedDetailPrimaryKey = serializedDetail.GetPrimaryKeyValue();
+                if (serializedDetailPrimaryKey == null)
                 {
-                    throw new Exception("Promary key value required");
+                    throw new Exception("Primary key value required");
                 }
-                if (toAttachDetailsDictionary.ContainsKey(serilizedDetailPrimaryKey))//Update serialized detail 
+                if (toAttachDetailsDictionary.ContainsKey(serializedDetailPrimaryKey))//Update serialized detail 
                 {
-                    var detailToAttach = toAttachDetailsDictionary[serilizedDetailPrimaryKey];
+                    var detailToAttach = toAttachDetailsDictionary[serializedDetailPrimaryKey];
                     Copy.CopyTo(detailToAttach, serializedDetail);
-                    toAttachDetailsDictionary.Remove(serilizedDetailPrimaryKey);
+                    toAttachDetailsDictionary.Remove(serializedDetailPrimaryKey);
                     detailCollectionInfo.Collection.Remove(detailToAttach);
                     detailCollectionInfo.Collection.Add(serializedDetail);
                     dbContext.Attach(serializedDetail);
                 }
-                else//delete not axisting serlized detail
+                else//delete not existing serialized detail
                 {
                     dbContext.DeleteEntity(serializedDetail);
                 }

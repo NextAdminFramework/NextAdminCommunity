@@ -231,42 +231,24 @@ namespace NextAdmin.UI {
                 this.input.value = '';
             }
             else {
-                if (this.input.type == 'date') {
-                    if (value instanceof Date) {
-                        this.input.value = value.toISOString().split('T')[0];
-                    }
-                    else {
-                        let stringDate = value + '';
-                        if (stringDate != '' && stringDate.indexOf('T') != -1) {
-                            this.input.value = stringDate.split('T')[0];
-                        }
-                        else {
-                            this.input.value = stringDate;
-                        }
-                    }
+                if (this.input.type == InputType.date) {
+                    this.input.value = ((value instanceof Date ? value.toISOString() : (value ?? '')) + '').replace('T', ' ').substring(0, 10);
                 }
-                else if (this.input.type == 'time') {
-                    if (value instanceof Date) {
-                        this.input.value = value.toISOString().split('T')[1];
+                else if (this.input.type == InputType.time) {
+                    let stringDate = ((value instanceof Date ? value.toISOString() : (value ?? '')) + '').replace('T', ' ').substring(0, 19);
+                    if (stringDate.contains(' ')) {
+                        stringDate = stringDate.split(' ')[1];
                     }
-                    else {
-                        let stringDate = value + '';
-                        if (!NextAdmin.String.isNullOrEmpty(stringDate) && stringDate.indexOf('T') != -1) {
-                            this.input.value = stringDate.split('T')[1];
-                        }
-                        else if (!NextAdmin.String.isNullOrEmpty(stringDate) && stringDate.indexOf(' ') != -1) {
-                            this.input.value = stringDate.split(' ')[1];
-                        }
-                        else {
-                            this.input.value = stringDate;
-                        }
-                    }
+                    this.input.value = stringDate;
                 }
-                else if (value && this.input.type == 'number') {
+                else if (this.input.type == InputType.datetimeLocal) {
+                    this.input.value = ((value instanceof Date ? value.toISOString() : (value ?? '')) + '').replace('T', ' ').substring(0, 19);
+                }
+                else if (value && this.input.type == InputType.number) {
                     let numberValue = Number(value);
                     this.input.value = Number.isInteger(numberValue) ? value : numberValue.toFixed(UserInterfaceHelper.DefaultNumberDecimalCount);
                 }
-                else if (this.input.type == 'checkbox') {
+                else if (this.input.type == InputType.checkbox) {
                     if (value == 'true' || value == '1' || value == 'True' || value == true) {
                         this.input.checked = true;
                     }

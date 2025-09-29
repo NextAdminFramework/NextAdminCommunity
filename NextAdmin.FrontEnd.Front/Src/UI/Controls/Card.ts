@@ -14,7 +14,7 @@ namespace NextAdmin.UI {
 
             .card-image{
                 height:100%;
-                min-height:200px;
+                min-height:100px;
                 width:200px;
                 min-width:200px;
                 max-width:200px;
@@ -69,6 +69,7 @@ namespace NextAdmin.UI {
                     layout.appendHTML('div', (imageContainer) => {
                         imageContainer.classList.add('card-image');
                         imageContainer.style.background = 'url("' + this.options.imageUrl + '")';
+                        imageContainer.style.backgroundColor = '#f5f5f5';
                         imageContainer.style.backgroundSize = this.options.imageSize;
                         imageContainer.style.backgroundRepeat = 'no-repeat';
                         imageContainer.style.backgroundPosition = this.options.imagePosition;

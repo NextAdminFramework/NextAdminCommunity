@@ -8,7 +8,7 @@ namespace NextAdmin.Business {
 
         public static onEntityChanged = new NextAdmin.EventHandler<EntityDataController_, EntityChangedArgs>();
 
-        public onLoadingEntity = new NextAdmin.EventHandler<EntityDataController_, NextAdmin.Models.GetEntityArgs>();
+        public onStartLoadEntity = new NextAdmin.EventHandler<EntityDataController_, NextAdmin.Models.GetEntityArgs>();
 
         public options: EntityDataControllerOptions;
 
@@ -34,10 +34,10 @@ namespace NextAdmin.Business {
                     entityId: dataId,
                     entityName: this.options.dataName,
                     lockKey: this.entityLockKey,
-                    detailToLoadNames: detailsToLoad
+                    detailToLoadNames: detailsToLoad,
                 } as NextAdmin.Models.GetEntityArgs;
 
-                this.onLoadingEntity.dispatch(this, args);
+                this.onStartLoadEntity.dispatch(this, args);
 
                 this.options.entityClient.getEntity(args, (response) => {
                     let loadResult = {

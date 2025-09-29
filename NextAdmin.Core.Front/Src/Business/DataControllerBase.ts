@@ -209,7 +209,7 @@ namespace NextAdmin.Business {
         public askUserToSaveDataIfNeededAndExecuteAction(continueAction: (dataSaved: boolean) => void, cancelAction?: () => void) {
             if (!this.isDataUpToDate()) {
                 let messageBox = new UI.MessageBox({
-                    title: Resources.warning,
+                    title: Resources.saveLastModification,
                     text: Resources.lostDataNotSavedMessage,
                     buttons: [new UI.Button({
                         text: Resources.saveIcon + ' ' + Resources.saveAndContinue,

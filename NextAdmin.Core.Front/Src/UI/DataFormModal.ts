@@ -88,6 +88,7 @@ namespace NextAdmin.UI {
             }
             if (this.options.isDetailFormModal) {
                 this.options.hasValidateButton = true;
+                this.options.isRequiredFieldPreCheckEnabled = true;
             }
 
             this.dataController.onStartChangeData.subscribe(async (sender, args) => {
@@ -188,18 +189,35 @@ namespace NextAdmin.UI {
                 this.saveButton.element.remove();
                 this.deleteButton.element.remove();
                 //this.cancelButton.element.remove();
+                /*
                 if (this.footerCloseButton) {
                     this.footerCloseButton.element.remove();
                 }
-
+                */
 
                 this.validateButton = this.rightFooterToolBar.appendControl(new NextAdmin.UI.Button({
                     text: NextAdmin.Resources.checkIcon + ' ' + NextAdmin.Resources.validate,
+                    style: NextAdmin.UI.ButtonStyle.green,
                     css: { cssFloat: 'right' },
                     action: () => {
                         this.validate();
                     }
-                }));
+                }), (btn) => {
+                    if (this.options.isRequiredFieldPreCheckEnabled) {
+                        setTimeout(() => {
+                            let requiredControls = [];
+                            for (let propertyInfo of this.dataController.getDataPropertyInfos()) {
+                                if (propertyInfo.isRequired) {
+                                    let control = this.dataController.getControl(propertyInfo.name);
+                                    if (control) {
+                                        requiredControls.add(control);
+                                    }
+                                }
+                            }
+                            btn.changeEnableStateOnControlsRequiredValueChanged(() => !this.dataController.getValidationErrors()?.length, ...requiredControls)
+                        },10);
+                    }
+                });
 
                 this.dataController.onDataStateChanged.subscribe((sender, args) => {
                     if (args.newState == NextAdmin.Business.DataState.append || args.newState == NextAdmin.Business.DataState.edited) {
@@ -219,7 +237,7 @@ namespace NextAdmin.UI {
             this.onValidate.dispatch(this, this.dataController.data);
             if (!this.options.isDetailFormModal) {
                 this.startSpin();
-                let result = await this.dataController.save();
+                let result = await this.dataController.save({ preCheckRequiredFields: this.options.isRequiredFieldPreCheckEnabled });
                 this.stopSpin();
                 if (result.success) {
                     this.close();
@@ -344,6 +362,8 @@ namespace NextAdmin.UI {
         dataPrimaryKey?: any;
 
         isDetailFormModal?: boolean;
+
+        isRequiredFieldPreCheckEnabled?: boolean;
 
         hasValidateButton?: boolean;
 

@@ -6,11 +6,15 @@ namespace NextAdmin.Business {
 
         public options: EntityDatasetControllerOptions;
 
+        public onStartLoadEntities = new NextAdmin.EventHandler<EntityDatasetController, NextAdmin.Models.GetEntityArgs>();
+
         constructor(options: EntityDatasetControllerOptions) {
             super(options);
 
             this.loadAction = (actionResult) => {
-                let args = this.buildQuery();
+                let args = this.buildSelectQuery();
+                this.onStartLoadEntities.dispatch(this, args);
+
                 this.options.entityClient.getEntities(args, (response) => {
                     let loadResult = {
                         success: response.code == NextAdmin.Models.ApiResponseCode.Success,
@@ -119,7 +123,7 @@ namespace NextAdmin.Business {
         }
 
 
-        public buildQuery(): NextAdmin.Models.GetEntitiesArgs {
+        public buildSelectQuery(): NextAdmin.Models.GetEntitiesArgs {
 
             let where = '';
             if (!String.isNullOrEmpty(this._where)) {
@@ -135,7 +139,6 @@ namespace NextAdmin.Business {
             }
             let whereValues = this._whereValues.clone();
             whereValues.addRange(this._searchValues);
-
             return {
                 entityName: this.options.dataName,
                 whereQuery: where,

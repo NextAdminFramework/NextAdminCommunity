@@ -29,6 +29,8 @@ interface Date {
 
     toLocalShortTimeString(timeSeparator?: string): string;
 
+    toLocalDateTimeString(): string;
+
     toISODateString(): string;
 
     isToday(): boolean;
@@ -129,6 +131,11 @@ try {
     Date.prototype.toLocalShortTimeString = function (timeSeparator = ':'): string {
         let _this = this as Date;
         return _this.getHours() + timeSeparator + NextAdmin.Numeric.pad(_this.getMinutes(), 2);
+    };
+
+    Date.prototype.toLocalDateTimeString = function (): string {
+        let _this = this as Date;
+        return _this.toLocaleString().substring(0, 16);
     };
 
     Date.prototype.toISODateString = function (): string {

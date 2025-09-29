@@ -172,6 +172,7 @@ namespace NextAdmin.UI {
         }
 
         clearItems() {
+            this.items = [];
             this.element.innerHTML = '';
         }
 

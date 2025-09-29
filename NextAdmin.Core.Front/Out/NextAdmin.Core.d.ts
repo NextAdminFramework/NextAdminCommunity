@@ -116,6 +116,7 @@ interface Date {
     addYears(years: number): Date;
     clone(): Date;
     toLocalShortTimeString(timeSeparator?: string): string;
+    toLocalDateTimeString(): string;
     toISODateString(): string;
     isToday(): boolean;
 }
@@ -706,6 +707,7 @@ declare namespace NextAdmin.Business {
         clearErrors(): void;
         bindToForm(form: NextAdmin.UI.IForm, autoExecuteAction?: boolean): void;
         save(args?: SaveDataArgs): Promise<SaveDataResult>;
+        getValidationErrors(checkRequiredFields?: boolean): Array<DataError>;
         delete(args?: DeleteDataArgs): Promise<DeleteDataResult>;
         cancel(): void;
         private _bindControl;
@@ -730,7 +732,7 @@ declare namespace NextAdmin.Business {
         clear(): void;
         isDataUpToDate(): boolean;
         ensureSerilized(action: (data: any) => void): void;
-        ensureUpToDate(action: (data: any) => void): void;
+        ensureUpToDate(action: (data: any) => void, cancelAction?: () => void): void;
     }
     class DataController_ extends DataController<any> {
     }
@@ -739,6 +741,7 @@ declare namespace NextAdmin.Business {
     }
     interface SaveDataArgs extends DataControllerActionArgs {
         onGetResponse?: (result: SaveDataResult) => void;
+        preCheckRequiredFields?: boolean;
     }
     interface LoadDataArgs extends DataControllerActionArgs {
         onGetResponse?: (result: LoadDataResult) => void;
@@ -821,7 +824,7 @@ declare namespace NextAdmin.Business {
 declare namespace NextAdmin.Business {
     class EntityDataController<T> extends DataController<T> {
         static onEntityChanged: EventHandler<EntityDataController_, EntityChangedArgs>;
-        onLoadingEntity: EventHandler<EntityDataController_, Models.GetEntityArgs>;
+        onStartLoadEntity: EventHandler<EntityDataController_, Models.GetEntityArgs>;
         options: EntityDataControllerOptions;
         entityLockKey?: string;
         private _entityLockInfo?;
@@ -853,10 +856,11 @@ declare namespace NextAdmin.Business {
 declare namespace NextAdmin.Business {
     class EntityDatasetController extends DatasetController_ {
         options: EntityDatasetControllerOptions;
+        onStartLoadEntities: EventHandler<EntityDatasetController, Models.GetEntityArgs>;
         constructor(options: EntityDatasetControllerOptions);
         displayDataErrors(dataset: Array<any>, action: DataControllerActionType, resultError: ResultErrors, defaultErrorMessage?: string, okAction?: () => void): UI.MessageBox;
         displayHTTPError(response: Services.HttpResponse, endDisplayFunc: () => void): void;
-        buildQuery(): NextAdmin.Models.GetEntitiesArgs;
+        buildSelectQuery(): NextAdmin.Models.GetEntitiesArgs;
         private _take?;
         take(count?: number): void;
         private _skip?;
@@ -904,6 +908,7 @@ declare namespace NextAdmin.Business {
         whereContains(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
         whereNotContains(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
         whereStartsWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
+        whereStartsNotWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
         whereEndsWith(clumn: string, search: string, invariantCase?: boolean): QueryBuilder;
         whereIsNullOrEmpty(clumn: string): QueryBuilder;
         whereIsNotNullOrEmpty(clumn: string): QueryBuilder;
@@ -1265,6 +1270,7 @@ declare namespace NextAdmin {
         unknownError: string;
         success: string;
         search: string;
+        saveLastModification: string;
         lostDataNotSavedMessage: string;
         formDeleteMessageTitle: string;
         formDeleteMessage: string;
@@ -1418,6 +1424,7 @@ declare namespace NextAdmin {
         unknownError: string;
         success: string;
         search: string;
+        saveLastModification: string;
         lostDataNotSavedMessage: string;
         formDeleteMessageTitle: string;
         formDeleteMessage: string;
@@ -2005,8 +2012,13 @@ declare namespace NextAdmin.UI {
         static RedOne: string;
         static BlueOne: string;
         static BlueTwo: string;
+        static BlueGreenOne: string;
         static GreenOne: string;
         static GreenTwo: string;
+        static OrangeOne: string;
+        static YellowOne: string;
+        static LightGrey: string;
+        static Grey: string;
         static DarkModalBackdrop: string;
     }
 }
@@ -2507,6 +2519,7 @@ declare namespace NextAdmin.UI {
         dataName?: string;
         dataPrimaryKey?: any;
         isDetailFormModal?: boolean;
+        isRequiredFieldPreCheckEnabled?: boolean;
         hasValidateButton?: boolean;
         hasFooterCloseButton?: boolean;
         canSave?: boolean;
@@ -2639,8 +2652,8 @@ declare namespace NextAdmin.UI {
         actionColumn: DataGridColumn;
         rows: DataGridRow<T>[];
         rowDictionary: {};
-        onDrawCell: EventHandler<DataGridCell_, any>;
-        onDrawRow: EventHandler<DataGrid_, DataGridRow<T>>;
+        onRenderCell: EventHandler<DataGridCell<T>, any>;
+        onRenderRow: EventHandler<DataGrid_, DataGridRow<T>>;
         onSelectedRowsChanged: EventHandler<DataGrid_, DataGridRow<T>[]>;
         onRowSelected: EventHandler<DataGrid_, DataGridRow<T>>;
         onRowUnselected: EventHandler<DataGrid_, DataGridRow<T>>;
@@ -2712,7 +2725,7 @@ declare namespace NextAdmin.UI {
         static style: string;
         constructor(options?: DataGridOptions<T>);
         openData(row: DataGridRow<T>): void;
-        appendData(): any;
+        appendData(): Promise<T>;
         load(options?: DataGridLoadOptions): Promise<Array<T>>;
         isMultiDeleteEnabled(): boolean;
         isMultiSelectEnabled(): boolean;
@@ -3055,6 +3068,7 @@ declare namespace NextAdmin.UI {
         tryPreserveSelectionAndScroll?: boolean;
         updateQuery?: boolean;
         fireChange?: boolean;
+        onPreparDataset?: (dataset?: Array<any>) => Array<any>;
     }
     export {};
 }
@@ -3175,6 +3189,7 @@ declare namespace NextAdmin.UI {
         appendControl<TElement extends Control | HTMLElement>(elementOrControl: TElement, configAction?: (control: TElement) => void): TElement;
         prependControl<TElement extends Control | HTMLElement>(elementOrControl: TElement, configAction?: (control: TElement) => void): TElement;
         appendHTML<K extends keyof HTMLElementTagNameMap>(html: K, setControlPropertiesAction?: (control: HTMLElementTagNameMap[K]) => void): HTMLElementTagNameMap[K];
+        getItems(): (HTMLElement | Control)[];
         clearItems(): void;
         addItems(itms: MenuItem[]): DropDownButton;
         toggleDropDown(): void;
@@ -6156,6 +6171,7 @@ declare namespace NextAdmin.UI {
         private _value?;
         setValue(value: any, fireChange?: boolean): void;
         setItems(selectItems: Array<SelectItem>): Array<Button>;
+        getItems(): (HTMLElement | Control)[];
         addItems(selectItems: Array<SelectItem>): Array<Button>;
         addItem(selectItem: SelectItem): Button;
         removeItem(value?: any): void;
@@ -6173,7 +6189,7 @@ declare namespace NextAdmin.UI {
         value?: any;
         items?: Array<SelectItem>;
         style?: ButtonStyle;
-        autoFill?: boolean;
+        dropDownWidth?: string;
         onAddButton?: (sender: SelectDropDownButton, args: AddButtonArgs) => void;
     }
 }

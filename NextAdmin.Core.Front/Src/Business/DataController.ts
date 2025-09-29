@@ -210,6 +210,7 @@ namespace NextAdmin.Business {
         public save(args?: SaveDataArgs): Promise<SaveDataResult> {
             args = {
                 displayErrors: true,
+                preCheckRequiredFields: false,
                 ...args
             };
             return new Promise(async (resolve) => {
@@ -219,18 +220,10 @@ namespace NextAdmin.Business {
                 let saveDataEventArgs = {
                     data: dataToSave,
                     dataState: this.getDataState(),
-                    errors: [],
-                    warnings:[],
+                    errors: this.getValidationErrors(args.preCheckRequiredFields),
+                    warnings: [],
                 } as SaveDataEventArgs;
-                if (this.getDataPrimaryKeyValue() == null && this.getControl(this.options.dataPrimaryKeyName) != null) {
-                    saveDataEventArgs.errors.add({
-                        dataName: this.getDataInfo().name,
-                        propertyName: this.options.dataPrimaryKeyName,
-                        propertyDisplayName: this.getDataPropertyInfo_(this.options.dataName, this.options.dataPrimaryKeyName).displayName,
-                        errorCode: 'PRIMARY_KEY_REQUIRED',
-                        message: Resources.requiredField
-                    });
-                }
+
 
                 await this.onStartSaveData.dispatch(this, saveDataEventArgs);
 
@@ -243,8 +236,8 @@ namespace NextAdmin.Business {
                     });
                 }
 
-                if (saveDataEventArgs.cancel || saveDataEventArgs.errors?.length) {    
-                    
+                if (saveDataEventArgs.cancel || saveDataEventArgs.errors?.length) {
+
                     return;
                 }
                 if (this.form != null) {
@@ -288,6 +281,37 @@ namespace NextAdmin.Business {
                 }
             });
         }
+
+        public getValidationErrors(checkRequiredFields = true): Array<DataError> {
+
+            let errors = new Array<DataError>();
+            if (checkRequiredFields) {
+                let propertiInfos = this.getDataPropertyInfos();
+                for (let propertyInfo of propertiInfos) {
+                    if (propertyInfo.isRequired && this.getControl(propertyInfo.name) && (this.data[propertyInfo.name] === null || this.data[propertyInfo.name] === undefined || (propertyInfo.type == 'string' && this.data[propertyInfo.name] == ''))){
+                        errors.add({
+                            dataName: this.getDataInfo().name,
+                            propertyName: propertyInfo.name,
+                            propertyDisplayName: propertyInfo.displayName,
+                            errorCode: 'REQUIRED_FIELD',
+                            message: Resources.requiredField
+                        });
+                    }
+                }
+            }
+            if (this.getDataPrimaryKeyValue() == null && this.getControl(this.options.dataPrimaryKeyName) != null) {
+                errors.add({
+                    dataName: this.getDataInfo().name,
+                    propertyName: this.options.dataPrimaryKeyName,
+                    propertyDisplayName: this.getDataPropertyInfo_(this.options.dataName, this.options.dataPrimaryKeyName).displayName,
+                    errorCode: 'PRIMARY_KEY_REQUIRED',
+                    message: Resources.requiredField
+                });
+            }
+            return errors;
+        }
+
+
 
         public delete(args?: DeleteDataArgs): Promise<DeleteDataResult> {
             args = {
@@ -375,6 +399,9 @@ namespace NextAdmin.Business {
 
 
         public async load(dataId?: any, args?: LoadDataArgs): Promise<LoadDataResult> {
+            if (dataId == null) {
+                dataId = this.getDataPrimaryKeyValue();
+            }
             args = {
                 displayErrors: true,
                 ...args
@@ -640,9 +667,12 @@ namespace NextAdmin.Business {
             }
         }
 
-        public ensureUpToDate(action: (data: any) => void) {
+        public ensureUpToDate(action: (data: any) => void, cancelAction?: () => void) {
             if (this._isReadOnlyEnabled) {
                 UI.MessageBox.createOk(Resources.readOnlyMode, this._readOnlyMessage ?? Resources.readOnlyDefaultMessage);
+                if (cancelAction) {
+                    cancelAction();
+                }
                 return;
             }
             if (DataStateHelper.getDataState(this.data) != DataState.serialized) {
@@ -651,7 +681,7 @@ namespace NextAdmin.Business {
                     if (result.success) {
                         action(this.data);
                     }
-                });
+                }, cancelAction);
             }
             else {
                 action(this.data);
@@ -685,6 +715,8 @@ namespace NextAdmin.Business {
     export interface SaveDataArgs extends DataControllerActionArgs {
 
         onGetResponse?: (result: SaveDataResult) => void;
+
+        preCheckRequiredFields?: boolean;
 
     }
 
