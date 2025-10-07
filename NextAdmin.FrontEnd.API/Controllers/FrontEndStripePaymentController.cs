@@ -9,10 +9,10 @@ using NextAdmin.FrontEnd.Model;
 namespace NextAdmin.FrontEnd.API.Controllers
 {
     [ApiController, Route("/api/stripe/payment/{action}/{id?}")]
-    public abstract class FrontEndStripePaymentController<TUser, TStripeUserPaymentSession, TStripeUserPaymentEvent> : Controller<TUser>
-        where TUser : class, IFrontEndUser
-        where TStripeUserPaymentSession : StripeUserPaymentSession<TUser>
-        where TStripeUserPaymentEvent : StripeUserPaymentEvent<TUser>
+    public abstract class FrontEndStripePaymentController<TUser, TStripePaymentSession, TStripePaymentEvent> : Controller<TUser>
+        where TUser : class, IUser
+        where TStripePaymentSession : StripePaymentSession
+        where TStripePaymentEvent : StripeEvent
     {
 
         public FrontEndStripePaymentController(NextAdminDbContext dbContext = null, IConfiguration configuration = null)
@@ -35,9 +35,9 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 {
                     return ApiResponse<string>.Error("INVALID_ITEM");
                 }
-                var stripeService = new StripeService<TUser, TStripeUserPaymentSession>(DbContext, GetStripeSecretApiKey());
+                var stripeService = new StripeService<TUser, TStripePaymentSession>(DbContext, GetStripeSecretApiKey());
                 var paymentSession = stripeService.CreatePaymentSession(item, User, GetSuccessPaymentUrl(itemId), GetCancelPaymentUrl(itemId));
-                if (string.IsNullOrEmpty(paymentSession.StripeSession.Url))
+                if (string.IsNullOrEmpty(paymentSession.StripeSessionData.Url))
                 {
                     return ApiResponse<string>.Error(ApiResponseCode.UnknownError, "Unable to get Stripe payment url");
                 }
@@ -47,7 +47,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 {
                     return ApiResponse<string>.Error(ApiResponseCode.DbError);
                 }
-                return ApiResponse<string>.Success(paymentSession.StripeSession.Url);
+                return ApiResponse<string>.Success(paymentSession.StripeSessionData.Url);
             }
             catch (Exception ex)
             {

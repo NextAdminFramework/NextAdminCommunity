@@ -81,7 +81,7 @@ namespace NextAdmin {
                 this.setCulture(this.user.culture);
             }
             else {
-                await this.refresh();
+                await this.refreshPage();
             }
             this.onUserLogged.dispatch(this, this.user);
         }
@@ -154,7 +154,7 @@ namespace NextAdmin {
             this.initializeResources(culture.substring(0, 2));
             NextAdmin.Cookies.set('culture', culture);
             this.onCultureChanged.dispatch(this, culture);
-            await this.refresh();
+            await this.refreshPage();
             if (updateUserCulture && this.user) {
                 await this.userClient.setUserCulture(culture);
             }

@@ -120,6 +120,7 @@
     <TypeScriptCompile Include="Src\UI\SelectDropDownButton.ts" />
     <TypeScriptCompile Include="Src\UI\Text.ts" />
     <TypeScriptCompile Include="Src\UI\Title.ts" />
+    <TypeScriptCompile Include="Src\UI\Toast.ts" />
     <TypeScriptCompile Include="Src\UI\UserInterfaceHelper.ts" />
     <TypeScriptCompile Include="Src\UI\Progress.ts" />
     <TypeScriptCompile Include="Src\UI\Collapsible.ts" />

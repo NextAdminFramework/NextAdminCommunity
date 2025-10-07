@@ -14,6 +14,8 @@ namespace NextAdmin.Business {
 
         public entityLockKey?: string;
 
+        public isDataMostRecentOverwritingAllowed = true;
+
         private _entityLockInfo?: Models.LockInfo;
 
         constructor(options: EntityDataControllerOptions) {
@@ -88,29 +90,34 @@ namespace NextAdmin.Business {
                     } as SaveDataResult;
 
                     if (response.code == 'VERSION_CONFLICT') {
-                        let msgBox = new NextAdmin.UI.MessageBox({
-                            title: Resources.overwriteDataTitle,
-                            text: Resources.overwriteDataMessage,
-                            buttons: [
-                                new NextAdmin.UI.Button({
-                                    text: Resources.overwriteData,
-                                    action: () => {
-                                        conflictAction = NextAdmin.Models.ConflictAction.overwrite;
-                                        this.saveAction(data, actionResult);
-                                        conflictAction = NextAdmin.Models.ConflictAction.cancel;
-                                        msgBox.close();
-                                    }
-                                }),
-                                new NextAdmin.UI.Button({
-                                    text: Resources.cancel,
-                                    action: () => {
-                                        actionResult(saveResult);
-                                        msgBox.close();
-                                    }
-                                }),
-                            ]
-                        })
-                        msgBox.open();
+                        if (this.isDataMostRecentOverwritingAllowed) {
+                            let msgBox = new NextAdmin.UI.MessageBox({
+                                title: Resources.overwriteDataTitle,
+                                text: Resources.overwriteDataMessage,
+                                buttons: [
+                                    new NextAdmin.UI.Button({
+                                        text: Resources.overwriteData,
+                                        action: () => {
+                                            conflictAction = NextAdmin.Models.ConflictAction.overwrite;
+                                            this.saveAction(data, actionResult);
+                                            conflictAction = NextAdmin.Models.ConflictAction.cancel;
+                                            msgBox.close();
+                                        }
+                                    }),
+                                    new NextAdmin.UI.Button({
+                                        text: Resources.cancel,
+                                        action: () => {
+                                            actionResult(saveResult);
+                                            msgBox.close();
+                                        }
+                                    }),
+                                ]
+                            })
+                            msgBox.open();
+                        } else {
+                            NextAdmin.UI.MessageBox.createOk(Resources.saveNotAllowed, Resources.overwriteDataNotAllowedMessage);
+                            actionResult(saveResult);
+                        }
                         return;
                     }
 

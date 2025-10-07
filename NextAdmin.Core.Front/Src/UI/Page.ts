@@ -33,6 +33,17 @@ namespace NextAdmin.UI {
             Page.onCreated.dispatch(this, this.options);
         }
 
+        public setParameters(parameters?: any, updateNavigatorState = UpdateNavigatorState.replaceState) {
+            this.parameters = parameters;
+            if (updateNavigatorState) {
+                this.navigationController.updateNavigatorHistory(this.options.name, parameters, updateNavigatorState == UpdateNavigatorState.pushState);
+            }
+        }
+
+        public getParameters(): any {
+            return this.parameters;
+        }
+
         public async navigateTo(args: NavigateToArgs): Promise<void> {
             this.options.container.appendChild(this.element);
             this.parameters = args?.parameters;

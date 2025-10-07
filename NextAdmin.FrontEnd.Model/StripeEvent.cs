@@ -5,17 +5,27 @@ using System.ComponentModel.DataAnnotations;
 
 namespace NextAdmin.FrontEnd.Model
 {
-    [Label]
-    public class StripePaymentEvent : Entity, IBlobEntity
+    public class StripeEvent : Entity, IBlobEntity
     {
         [Key, Required, Label]
         public string? Id { get; set; }
+
+        [Label]
+        public string? UserId { get; set; }
+
+        public string? UserType { get; set; }
+
+        public string? PaymentSessionId { get; set; }
+
+        public string? SubscriptionId { get; set; }
+
+        public string? InvoiceId { get; set; }
 
         [Label, JsonIgnore]
         public string? Blob { get; set; }
 
         [Blob]
-        public Event? StripeEvent { get; set; }
+        public Event? StripeEventData { get; set; }
 
         [Label, Required]
         public string? EventType { get; set; }
@@ -23,11 +33,9 @@ namespace NextAdmin.FrontEnd.Model
         [Label]
         public DateTime? CreationDate { get; set; }
 
-        public bool IsHandeled { get; set; }
-
         public string? ErrorMessage { get; set; }
 
-        public StripePaymentEvent()
+        public StripeEvent()
         {
             BlobEntity.ExtendBlobEntity(this);
         }
@@ -40,9 +48,9 @@ namespace NextAdmin.FrontEnd.Model
             {
                 CreationDate = DateTime.Now;
             }
-            if (EventType == null && StripeEvent != null)
+            if (EventType == null && StripeEventData != null)
             {
-                EventType = StripeEvent.Type;
+                EventType = StripeEventData.Type;
             }
         }
 

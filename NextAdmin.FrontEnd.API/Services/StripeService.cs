@@ -6,9 +6,9 @@ using Stripe.Checkout;
 
 namespace NextAdmin.FrontEnd.API.Services
 {
-    public class StripeService<TUser, TStripeUserPaymentSession>
-        where TUser : class, IFrontEndUser
-        where TStripeUserPaymentSession : StripeUserPaymentSession<TUser>
+    public class StripeService<TUser, TStripePaymentSession>
+        where TUser : class, IUser
+        where TStripePaymentSession : StripePaymentSession
     {
         public NextAdminDbContext DbContext { get; protected set; }
 
@@ -21,7 +21,7 @@ namespace NextAdmin.FrontEnd.API.Services
             StripeSecretApiKey = stripeSecretApiKey ?? NextAdminFrontEndHelper.StripeSecretApiKey;
         }
 
-        public TStripeUserPaymentSession CreatePaymentSession(IItemInfo item, TUser user, string? successPaymentUrl = null, string? cancelPaymentUrl = null)
+        public TStripePaymentSession CreatePaymentSession(IItemInfo item, TUser user, string? successPaymentUrl = null, string? cancelPaymentUrl = null)
         {
             var unitSalePrice = item.GetUnitSalePrice(DbContext);
             var elementName = item.GetItemName(DbContext);
@@ -57,10 +57,11 @@ namespace NextAdmin.FrontEnd.API.Services
                         }
                     }
             });
-            var paymentSession = DbContext.CreateEntity<TStripeUserPaymentSession>();
+            var paymentSession = DbContext.CreateEntity<TStripePaymentSession>();
             paymentSession.Id = stripeSession.Id;
-            paymentSession.UserId = user.Id;
-            paymentSession.StripeSession = stripeSession;
+            paymentSession.UserId = user.GetId().ToString();
+            paymentSession.UserType = user.GetType().Name;
+            paymentSession.StripeSessionData = stripeSession;
             paymentSession.PurchasedElementId = item.GetItemId(DbContext);
             paymentSession.PurchasedElementType = item.GetItemType(DbContext);
             paymentSession.PurchasedElementAmountExcludingTax = (double)unitSalePrice;

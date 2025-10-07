@@ -7,8 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NextAdmin.FrontEnd.Model
 {
     [Label]
-    public class StripeUserInvoice<TUser> : Entity, IBlobEntity, ILinkedUserEntity<TUser>
-        where TUser : IFrontEndUser
+    public class StripeInvoice : Entity, IBlobEntity
     {
         [Key, Required, Label]
         public string? Id { get; set; }
@@ -16,23 +15,23 @@ namespace NextAdmin.FrontEnd.Model
         [Label]
         public string? UserId { get; set; }
 
-        [JsonIgnore, ForeignKey(nameof(UserId))]
-        public TUser? User { get; set; }
+        public string? UserType { get; set; }
+
 
         [JsonIgnore, Blob]
-        public Invoice? StripeInvoice { get; set; }
+        public Invoice? StripeInvoiceData { get; set; }
 
         public string? SubscriptionId { get; set; }
 
         [JsonIgnore, ForeignKey(nameof(SubscriptionId))]
-        public StripeUserSubscription<TUser> Subscription { get; set; }
+        public StripeSubscription Subscription { get; set; }
 
         [Required]
         public DateTime? CreationDate { get; set; }
 
         public string? Blob { get; set; }
 
-        public StripeUserInvoice()
+        public StripeInvoice()
         {
             BlobEntity.ExtendBlobEntity(this);
         }

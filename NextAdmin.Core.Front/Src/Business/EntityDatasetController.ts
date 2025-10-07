@@ -2,11 +2,12 @@
 /// <reference path="DatasetController.ts"/>
 
 namespace NextAdmin.Business {
-    export class EntityDatasetController extends DatasetController_ {
+
+    export class EntityDatasetController<T> extends DatasetController<T>{
 
         public options: EntityDatasetControllerOptions;
 
-        public onStartLoadEntities = new NextAdmin.EventHandler<EntityDatasetController, NextAdmin.Models.GetEntityArgs>();
+        public onStartLoadEntities = new NextAdmin.EventHandler<EntityDatasetController_, NextAdmin.Models.GetEntityArgs>();
 
         constructor(options: EntityDatasetControllerOptions) {
             super(options);
@@ -114,6 +115,10 @@ namespace NextAdmin.Business {
 
             }
             return messageBox;
+        }
+
+        public getEntityInfo(): Business.EntityInfo<T> {
+            return this.options.dataInfos.get(this.options.dataName);
         }
 
 
@@ -249,8 +254,8 @@ namespace NextAdmin.Business {
             };
         }
 
-        public clone(): EntityDatasetController {
-            let clone = new EntityDatasetController(this.options);
+        public clone(): EntityDatasetController<T> {
+            let clone = new EntityDatasetController_(this.options);
             clone._take = this._take;
             clone._skip = this._skip;
             clone._orderBy = this._orderBy;
@@ -261,6 +266,11 @@ namespace NextAdmin.Business {
             clone._searchValues = this._searchValues;
             return clone;
         }
+    }
+
+
+    export class EntityDatasetController_ extends EntityDatasetController<any> {
+
 
 
     }

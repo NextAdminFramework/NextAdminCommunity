@@ -11,6 +11,8 @@ namespace NextAdmin.UI {
 
         public progressLabelContainer: HTMLElement;
 
+        private _maxValue?: number;
+
         public static style = `
 
             .next-admin-progress { 
@@ -26,12 +28,15 @@ namespace NextAdmin.UI {
         constructor(options?: ProgressOptions) {
             super({
                 style: Input.defaultStyle,
-                max:100,
+                max: 100,
+                unit: '%',
+                decimalCount:0,
                 progressLabelValueFunc: () => {
-                    return (this.getValue() + ' / ' + this.options.max).toString();
+                    return (this.getValue().toFixed(this.options.decimalCount) + ' / ' + this._maxValue.toFixed(this.options.decimalCount)).toString() + ' ' + this.options.unit;
                 },
                 ...options
             } as ProgressOptions);
+           
 
             Style.append("Progress", Progress.style);
             this.controlContainer.style.display = 'flex';
@@ -39,12 +44,6 @@ namespace NextAdmin.UI {
             this.controlContainer.style.position = 'relative';
             this.progress = this.controlContainer.appendHTML('progress');
             this.progress.classList.add('next-admin-progress');
-            if (this.options.min) {
-                this.progress.setAttribute('min', this.options.min.toString());
-            }
-            if (this.options.max) {
-                this.progress.setAttribute('max', this.options.max.toString());
-            }
             this.progressLabelContainer = this.controlContainer.appendHTML('div', (progressLabelContainer) => {
                 progressLabelContainer.style.position = 'absolute';
                 progressLabelContainer.style.left = '0px';
@@ -59,6 +58,13 @@ namespace NextAdmin.UI {
                 progressLabelContainer.style.paddingTop = '4px';
                 progressLabelContainer.style.textShadow = '0px 0px 2px rgba(0,0,0,1)';
             });
+
+            if (this.options.min) {
+                this.progress.setAttribute('min', this.options.min.toString());
+            }
+            if (this.options.max) {
+                this.setMaxValue(this.options.max);
+            }
         }
 
 
@@ -84,6 +90,12 @@ namespace NextAdmin.UI {
             this.updateValueLabel();
         }
 
+        setMaxValue(value?: number) {
+            this._maxValue = value;
+            this.progress.setAttribute('max', this._maxValue.toString());
+            this.updateValueLabel();
+        }
+
         updateValueLabel() {
             this.progressLabelContainer.innerHTML = this.options.progressLabelValueFunc(this);
         }
@@ -101,6 +113,12 @@ namespace NextAdmin.UI {
         min?: number;
 
         max?: number;
+
+        value?: number;
+
+        unit?: string;
+
+        decimalCount?: number;
 
         progressLabelValueFunc?: (progress: Progress) => string;
     }

@@ -172,14 +172,14 @@
             }
         }
 
-        async refresh(reload?: boolean) {
+        async refreshPage(reload?: boolean) {
             if (reload) {
                 location.reload();
             }
             if (this._currentPage?.options?.name == null) {
                 return;
             }
-            await this.navigateTo(this._currentPage.options.name, this._currentPage.getData(), UpdateNavigatorState.none, true);
+            await this.navigateTo(this._currentPage.options.name, this._currentPage.parameters, UpdateNavigatorState.none, true);
         }
 
         async navigateBack(): Promise<NextAdmin.UI.Page> {
@@ -254,32 +254,40 @@
             await nextPage.navigateTo(nextPageNavigationArgs);
 
             if (updateNavigatorState && window.history && window.history.pushState) {
-                let url = this._currentPage.options.name;
-                if (!String.isNullOrEmpty(document.location.pathname)) {
-                    let currentLocationArrayPath = document.location.pathname.split('/');
-                    currentLocationArrayPath.pop();
-                    currentLocationArrayPath.push(url);
-                    url = currentLocationArrayPath.join('/').replaceAll('//', '/');
-                }
-                if (!url.startsWith('/')) {
-                    url = '/' + url;
-                }
-                if (parameters != null) {
-                    let params = NextAdmin.QueryString.encodeQuery(parameters);
-                    if (!String.isNullOrEmpty(params)) {
-                        url += '?' + params;
-                    }
-                }
-                if (updateNavigatorState == UpdateNavigatorState.pushState) {
-                    window.history.pushState('', this._currentPage.options.name, url);
-                } else if (updateNavigatorState == UpdateNavigatorState.replaceState) {
-                    window.history.replaceState('', this._currentPage.options.name, url);
-                }
+                this.updateNavigatorHistory(this._currentPage.options.name, parameters, updateNavigatorState == UpdateNavigatorState.pushState);
             }
             this.onPageChanged.dispatch(this, nextPage);
             return nextPage;
-
         }
+
+        public updateNavigatorHistory(pageName: string, parameters?: {}, psuhState = true) {
+            if (!window?.history?.pushState) {
+                return;
+            }
+
+            let url = pageName;
+            if (!String.isNullOrEmpty(document.location.pathname)) {
+                let currentLocationArrayPath = document.location.pathname.split('/');
+                currentLocationArrayPath.pop();
+                currentLocationArrayPath.push(url);
+                url = currentLocationArrayPath.join('/').replaceAll('//', '/');
+            }
+            if (!url.startsWith('/')) {
+                url = '/' + url;
+            }
+            if (parameters != null) {
+                let params = NextAdmin.QueryString.encodeQuery(parameters);
+                if (!String.isNullOrEmpty(params)) {
+                    url += '?' + params;
+                }
+            }
+            if (psuhState) {
+                window.history.pushState('', this._currentPage.options.name, url);
+            } else {
+                window.history.replaceState('', this._currentPage.options.name, url);
+            }
+        }
+
 
         protected displayMode?: DisplayMode;
         public getDisplayMode(): DisplayMode {

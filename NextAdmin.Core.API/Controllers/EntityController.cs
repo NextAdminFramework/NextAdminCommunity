@@ -329,8 +329,12 @@ namespace NextAdmin.Core.API.Controllers
 
             var query = DbContext.SQLQuery(args.EntityName).SelectCount(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
             query = BuildSelectQuery(query, args);
-            var count = (long)query.Execute().FirstOrDefault().FirstOrDefault().Value;
-            return ApiResponse<long>.Success(count);
+            var value = query.Execute().FirstOrDefault().FirstOrDefault().Value;
+            if (value == null || value.Equals(DBNull.Value))
+            {
+                return ApiResponse<long>.Success(0);
+            }
+            return ApiResponse<long>.Success((long)value);
         }
 
         [HttpGet, HttpPost]
@@ -347,8 +351,13 @@ namespace NextAdmin.Core.API.Controllers
 
             var query = DbContext.SQLQuery(args.EntityName).SelectSum(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
             query = BuildSelectQuery(query, args);
-            var sum = (double)query.Execute().FirstOrDefault().FirstOrDefault().Value;
-            return ApiResponse<double>.Success(sum);
+            var value = query.Execute().FirstOrDefault().FirstOrDefault().Value;
+            if (value == null || value.Equals(DBNull.Value))
+            {
+                return ApiResponse<double>.Success(0);
+            }
+
+            return ApiResponse<double>.Success(System.Convert.ToDouble(value));
         }
 
         [HttpGet, HttpPost]
@@ -365,8 +374,12 @@ namespace NextAdmin.Core.API.Controllers
 
             var query = DbContext.SQLQuery(args.EntityName).SelectMin(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
             query = BuildSelectQuery(query, args);
-            var min = (double)query.Execute().FirstOrDefault().FirstOrDefault().Value;
-            return ApiResponse<double>.Success(min);
+            var value = query.Execute().FirstOrDefault().FirstOrDefault().Value;
+            if (value == null || value.Equals(DBNull.Value))
+            {
+                return ApiResponse<double>.Success(0);
+            }
+            return ApiResponse<double>.Success(System.Convert.ToDouble(value));
         }
 
         [HttpGet, HttpPost]
@@ -383,8 +396,12 @@ namespace NextAdmin.Core.API.Controllers
 
             var query = DbContext.SQLQuery(args.EntityName).SelectMax(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
             query = BuildSelectQuery(query, args);
-            var max = (double)query.Execute().FirstOrDefault().FirstOrDefault().Value;
-            return ApiResponse<double>.Success(max);
+            var value = query.Execute().FirstOrDefault().FirstOrDefault().Value;
+            if (value == null || value.Equals(DBNull.Value))
+            {
+                return ApiResponse<double>.Success(0);
+            }
+            return ApiResponse<double>.Success(System.Convert.ToDouble(value));
         }
 
 

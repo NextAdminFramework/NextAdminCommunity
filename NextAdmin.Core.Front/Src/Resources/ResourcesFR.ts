@@ -30,6 +30,10 @@ namespace NextAdmin {
 
         overwriteDataMessage = "Les données actuellement en cours d'enregistrement ont été mises à jour. En poursuivant, vous courez le risque d'effacer une partie des modifications précédentes. Que souhaitez-vous faire ?";
 
+        saveNotAllowed = "Enregistrement non autorisé";
+
+        overwriteDataNotAllowedMessage = "Les données actuellement en cours d'enregistrement ont été mises à jour par un autre utilisateur. Veuillez recharger la fiche avant de procéder à l'enregistrement.";
+
         overwriteData = "Écraser les données";
 
         a = "un";
@@ -48,7 +52,7 @@ namespace NextAdmin {
 
         saveLastModification = 'Enregistrement des dernières modifications';
 
-        lostDataNotSavedMessage = 'Vous avez apporté des modifications non sauvegardées. Souhaitez-vous les enregistrer avant de quitter ?';
+        lostDataNotSavedMessage = 'Vous avez apporté des modifications non sauvegardées. Souhaitez-vous les enregistrer ?';
 
         formDeleteMessageTitle = 'Suppression définitive';
 

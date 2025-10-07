@@ -61,6 +61,7 @@ namespace NextAdmin.UI {
                 this.element.appendHTML('tr', tr => {
                     this.labelContainer = tr.appendHTML('td');
                     this.labelContainer.classList.add('next-admin-layout-form-control-cell');
+                    this.labelContainer.classList.add('left-label');
                     this.setLabelWidth(this.options.labelWidth);
                     this.label = this.labelContainer.appendHTML('label');
                     this.asterisk = this.labelContainer.appendHTML('label');

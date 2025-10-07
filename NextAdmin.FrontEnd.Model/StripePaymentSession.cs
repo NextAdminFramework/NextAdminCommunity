@@ -6,8 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NextAdmin.FrontEnd.Model
 {
-    public abstract class StripeUserPaymentSession<TUser> : Entity, IBlobEntity
-        where TUser : IFrontEndUser
+    public class StripePaymentSession : Entity, IBlobEntity
     {
         [Key, Required, Label]
         public string? Id { get; set; }
@@ -18,26 +17,27 @@ namespace NextAdmin.FrontEnd.Model
         [Label]
         public string? UserId { get; set; }
 
-        [JsonIgnore, ForeignKey(nameof(UserId))]
-        public TUser? User { get; set; }
+        public string? UserType { get; set; }
+
 
         [JsonIgnore, Blob]
-        public Session? StripeSession { get; set; }
+        public Session? StripeSessionData { get; set; }
 
         [Label]
         public string? PaymentCompletedEventId { get; set; }
 
         [JsonIgnore, ForeignKey(nameof(PaymentCompletedEventId))]
-        public StripeUserPaymentEvent<TUser>? PaymentCompletedEvent { get; set; }
+        public StripeEvent? PaymentCompletedEvent { get; set; }
+
+        public DateTime? PaymentCompletedDate { get; set; }
 
         public bool IsPaid { get; set; }
-
 
         [Label]
         public string? PaymentFailedEventId { get; set; }
 
         [JsonIgnore, ForeignKey(nameof(PaymentFailedEventId))]
-        public StripeUserPaymentEvent<TUser>? PaymentFailedEvent { get; set; }
+        public StripeEvent? PaymentFailedEvent { get; set; }
 
         [Required]
         public string? PurchasedElementId { get; set; }//order id, plan id...
@@ -55,9 +55,18 @@ namespace NextAdmin.FrontEnd.Model
         public string? Blob { get; set; }
 
 
-        public StripeUserPaymentSession()
+        public StripePaymentSession()
         {
             BlobEntity.ExtendBlobEntity(this);
+        }
+
+        public override void OnSave(NextAdminDbContext dbContext, SavingArgs args)
+        {
+            base.OnSave(dbContext, args);
+            if (!string.IsNullOrEmpty(PaymentCompletedEventId) && IsPaid && !PaymentCompletedDate.HasValue)
+            {
+                PaymentCompletedDate = DateTime.Now;
+            }
         }
 
         public bool IsCanceled(NextAdminDbContext dbContext)

@@ -14,10 +14,10 @@ namespace NextAdmin.FrontEnd.API.Controllers
     [ApiController, Route("/api/stripe/subscription/{action}/{id?}")]
     public abstract class FrontEndStripeSubscriptionPlanController<TUser, TStripeUserInvoice, TStripeUserSubscription, TStripeUserPaymentSession, TStripeUserPaymentEvent> : Controller<TUser>
         where TUser : class, IFrontEndUser
-        where TStripeUserInvoice : StripeUserInvoice<TUser>
-        where TStripeUserSubscription : StripeUserSubscription<TUser>
-        where TStripeUserPaymentSession : StripeUserPaymentSession<TUser>
-        where TStripeUserPaymentEvent : StripeUserPaymentEvent<TUser>
+        where TStripeUserInvoice : StripeInvoice
+        where TStripeUserSubscription : StripeSubscription
+        where TStripeUserPaymentSession : StripePaymentSession
+        where TStripeUserPaymentEvent : StripeEvent
     {
         public FrontEndStripeSubscriptionPlanController(NextAdminDbContext dbContext = null, IConfiguration configuration = null)
             : base(dbContext, configuration)
@@ -71,7 +71,8 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 var paymentSession = DbContext.CreateEntity<TStripeUserPaymentSession>();
                 paymentSession.Id = stripeSession.Id;
                 paymentSession.UserId = User.Id;
-                paymentSession.StripeSession = stripeSession;
+                paymentSession.UserType = User.GetType().Name;
+                paymentSession.StripeSessionData = stripeSession;
                 paymentSession.PurchasedElementId = planId;
                 paymentSession.PurchasedElementType = plan.GetItemType(DbContext);
                 paymentSession.PurchasedElementAmountExcludingTax = (double)monthPrice;
@@ -208,9 +209,9 @@ namespace NextAdmin.FrontEnd.API.Controllers
                     .Select(a => new UserInvoiceDto
                     {
                         Date = a.CreationDate,
-                        Code = a.StripeInvoice.Number,
-                        Amount = a.StripeInvoice.AmountPaid / 100,
-                        StripeInvoiceLink = a.StripeInvoice.InvoicePdf,
+                        Code = a.StripeInvoiceData.Number,
+                        Amount = a.StripeInvoiceData.AmountPaid / 100,
+                        StripeInvoiceLink = a.StripeInvoiceData.InvoicePdf,
                     }).ToList());
             }
             catch (Exception ex)

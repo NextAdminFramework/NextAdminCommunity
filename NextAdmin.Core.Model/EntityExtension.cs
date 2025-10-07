@@ -485,6 +485,8 @@ namespace NextAdmin.Core.Model
                 return null;
             }
 
+            var entityRelationMemberNames = dbContext.GetEntityInfo(detailCollectionInfo.DetailEntityName).MembersInfos.Values.Select(a => a.ForeignEntityRelationName).Where(a => !string.IsNullOrEmpty(a)).Distinct().ToList();
+
             var toAttachDetailsDictionary = new Dictionary<object, IEntity>();
             foreach (IEntity detailToAttach in detailCollectionInfo.Collection)
             {
@@ -507,7 +509,7 @@ namespace NextAdmin.Core.Model
                 if (toAttachDetailsDictionary.ContainsKey(serializedDetailPrimaryKey))//Update serialized detail 
                 {
                     var detailToAttach = toAttachDetailsDictionary[serializedDetailPrimaryKey];
-                    Copy.CopyTo(detailToAttach, serializedDetail);
+                    Copy.CopyTo(detailToAttach, serializedDetail, copyInvariantName: false, memberNamesToExclude: entityRelationMemberNames);
                     toAttachDetailsDictionary.Remove(serializedDetailPrimaryKey);
                     detailCollectionInfo.Collection.Remove(detailToAttach);
                     detailCollectionInfo.Collection.Add(serializedDetail);

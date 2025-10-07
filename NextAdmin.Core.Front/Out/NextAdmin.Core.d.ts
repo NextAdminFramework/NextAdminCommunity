@@ -10,7 +10,7 @@ declare namespace NextAdmin {
         static playingAnimationElements: Array<HTMLElement>;
         static animateStyle: string;
         static registerStyle(): void;
-        static animate(element: HTMLElement, animation: string, options?: AnimationOptions): void;
+        static animate(element: HTMLElement, animation: string, options?: AnimationOptions): Promise<void>;
     }
     interface AnimationOptions {
         onEndAnimation?: () => void;
@@ -24,7 +24,7 @@ declare namespace NextAdmin {
     }
 }
 interface HTMLElement {
-    anim(animation: string, options?: NextAdmin.AnimationOptions): any;
+    anim(animation: string, options?: NextAdmin.AnimationOptions): Promise<void>;
 }
 interface Array<T> {
     clear(): void;
@@ -327,10 +327,11 @@ declare namespace NextAdmin {
             pageName?: string;
             pageData?: any;
         };
-        refresh(reload?: boolean): Promise<void>;
+        refreshPage(reload?: boolean): Promise<void>;
         navigateBack(): Promise<NextAdmin.UI.Page>;
         navigateBackOrDefault(defaultPageName?: string): Promise<NextAdmin.UI.Page>;
         navigateTo(pageName: string, parameters?: any, updateNavigatorState?: UpdateNavigatorState, force?: boolean): Promise<NextAdmin.UI.Page>;
+        updateNavigatorHistory(pageName: string, parameters?: {}, psuhState?: boolean): void;
         protected displayMode?: DisplayMode;
         getDisplayMode(): DisplayMode;
         setDisplayMode(displayMode?: DisplayMode): Promise<void>;
@@ -767,7 +768,7 @@ declare namespace NextAdmin.Business {
         appendAction: (resultDataset?: (result: LoadDataResult) => void) => void;
         onStartRequest: EventHandler<DatasetController_, any[]>;
         onEndRequest: EventHandler<DatasetController_, any[]>;
-        onStartLoadData: EventHandler<DatasetController_, any[]>;
+        onStartLoadData: AsyncEventHandler<DatasetController_, any[]>;
         onDataLoaded: EventHandler<DatasetController_, LoadDatasetResult>;
         onDataAdded: EventHandler<DatasetController_, LoadDatasetResult>;
         onStartSaveData: EventHandler<DatasetController_, any[]>;
@@ -827,6 +828,7 @@ declare namespace NextAdmin.Business {
         onStartLoadEntity: EventHandler<EntityDataController_, Models.GetEntityArgs>;
         options: EntityDataControllerOptions;
         entityLockKey?: string;
+        isDataMostRecentOverwritingAllowed: boolean;
         private _entityLockInfo?;
         constructor(options: EntityDataControllerOptions);
         displayDataErrors(action: DataControllerActionType, resultError: ResultErrors, defaultErrorMessage?: string, okAction?: () => void): UI.MessageBox;
@@ -854,11 +856,12 @@ declare namespace NextAdmin.Business {
     }
 }
 declare namespace NextAdmin.Business {
-    class EntityDatasetController extends DatasetController_ {
+    class EntityDatasetController<T> extends DatasetController<T> {
         options: EntityDatasetControllerOptions;
-        onStartLoadEntities: EventHandler<EntityDatasetController, Models.GetEntityArgs>;
+        onStartLoadEntities: EventHandler<EntityDatasetController_, Models.GetEntityArgs>;
         constructor(options: EntityDatasetControllerOptions);
         displayDataErrors(dataset: Array<any>, action: DataControllerActionType, resultError: ResultErrors, defaultErrorMessage?: string, okAction?: () => void): UI.MessageBox;
+        getEntityInfo(): Business.EntityInfo<T>;
         displayHTTPError(response: Services.HttpResponse, endDisplayFunc: () => void): void;
         buildSelectQuery(): NextAdmin.Models.GetEntitiesArgs;
         private _take?;
@@ -882,7 +885,9 @@ declare namespace NextAdmin.Business {
         search(searchPropertyNames: string[], seacrhValue?: string): void;
         setQuery(queryData: Models.Query): void;
         getQuery(): Models.Query;
-        clone(): EntityDatasetController;
+        clone(): EntityDatasetController<T>;
+    }
+    class EntityDatasetController_ extends EntityDatasetController<any> {
     }
     interface EntityDatasetControllerOptions extends DataControllerOptions {
         entityClient: Services.EntityClient;
@@ -1263,6 +1268,8 @@ declare namespace NextAdmin {
         overwriteDataTitle: string;
         overwriteDataMessage: string;
         overwriteData: string;
+        saveNotAllowed: string;
+        overwriteDataNotAllowedMessage: string;
         a: string;
         back: string;
         warning: string;
@@ -1416,6 +1423,8 @@ declare namespace NextAdmin {
         add: string;
         overwriteDataTitle: string;
         overwriteDataMessage: string;
+        saveNotAllowed: string;
+        overwriteDataNotAllowedMessage: string;
         overwriteData: string;
         a: string;
         back: string;
@@ -2615,6 +2624,7 @@ declare namespace NextAdmin.UI {
         items?: FormLayoutItem[];
         dataController?: NextAdmin.Business.DataController_;
         style?: FormLayoutStyle;
+        isResponsive?: boolean;
     }
     enum FormLayoutStyle {
         thinLabels = 0
@@ -2773,6 +2783,7 @@ declare namespace NextAdmin.UI {
          * @param masterPrimaryKey
          */
         bindToMasterController(masterController: NextAdmin.Business.DataController_, detailForeignKey: string, masterPrimaryKey?: string): void;
+        bindToTab(tab: Tab, masterController: NextAdmin.Business.DataController_, detailForeignKey: string, masterPrimaryKey?: string): void;
         private _createdModals;
         createModal(data?: any): DataFormModal_;
         addColumn(options: DataGridColumnOptions_): DataGridColumn;
@@ -5755,6 +5766,8 @@ declare namespace NextAdmin.UI {
         parameters?: any;
         static onCreated: EventHandler<Page, PageOptions>;
         constructor(options?: PageOptions);
+        setParameters(parameters?: any, updateNavigatorState?: UpdateNavigatorState): void;
+        getParameters(): any;
         navigateTo(args: NavigateToArgs): Promise<void>;
         navigateFrom(args: NavigateFromArgs): Promise<void>;
         endNavigateFrom(): void;
@@ -5824,17 +5837,22 @@ declare namespace NextAdmin.UI {
         progress: HTMLProgressElement;
         options: ProgressOptions;
         progressLabelContainer: HTMLElement;
+        private _maxValue?;
         static style: string;
         static onCreated: EventHandler<Input, InputOptions>;
         constructor(options?: ProgressOptions);
         setLabel(text: string): Progress;
         setValue(value?: number, fireChange?: boolean): void;
+        setMaxValue(value?: number): void;
         updateValueLabel(): void;
         getValue(): number;
     }
     interface ProgressOptions extends LabelFormControlOptions {
         min?: number;
         max?: number;
+        value?: number;
+        unit?: string;
+        decimalCount?: number;
         progressLabelValueFunc?: (progress: Progress) => string;
     }
 }
@@ -6450,6 +6468,36 @@ declare namespace NextAdmin.UI {
         dark = 7,
         darkThin = 8,
         black = 9
+    }
+}
+declare namespace NextAdmin.UI {
+    class Toast extends NextAdmin.UI.Control {
+        options: ToastOptions;
+        toast: HTMLDivElement;
+        static style: string;
+        constructor(options?: ToastOptions);
+        setText(text?: string): void;
+        setStyle(style?: ToastStyle): void;
+        show(options?: ToastShowOptions): Promise<void>;
+        static createSuccess(text?: string): Toast;
+        static createError(text?: string): Toast;
+    }
+    enum ToastStyle {
+        green = 0,
+        blue = 1,
+        red = 2
+    }
+    interface ToastOptions extends ControlOptions {
+        text?: string;
+        style?: ToastStyle;
+    }
+    interface ToastShowOptions {
+        duration?: number;
+        container?: HTMLElement;
+        openAnimation?: string;
+        openAnimationOptions: NextAdmin.AnimationOptions;
+        closeAnimation?: string;
+        closeAnimationOptions?: NextAdmin.AnimationOptions;
     }
 }
 declare namespace NextAdmin.UI {

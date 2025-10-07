@@ -20,7 +20,7 @@ namespace NextAdmin.Business {
 
         onEndRequest = new EventHandler<DatasetController_, Array<any>>();
 
-        onStartLoadData = new EventHandler<DatasetController_, Array<any>>();
+        onStartLoadData = new AsyncEventHandler<DatasetController_, Array<any>>();
 
         onDataLoaded = new EventHandler<DatasetController_, LoadDatasetResult>();
 
@@ -106,8 +106,9 @@ namespace NextAdmin.Business {
                 dataState: Business.DataState.serialized,
                 ...args
             };
+            await this.onStartLoadData.dispatch(this, this.dataset);
             return new Promise<LoadDatasetResult>((resolve) => {
-                this.onStartLoadData.dispatch(this, this.dataset);
+
                 this.onStartRequest.dispatch(this, this.dataset);
                 this.loadAction((result) => {
                     if (args.onGetResponse) {
@@ -141,8 +142,8 @@ namespace NextAdmin.Business {
                 dataState: Business.DataState.serialized,
                 ...args
             };
+            await this.onStartLoadData.dispatch(this, this.dataset);
             return new Promise<LoadDatasetResult>((resolve) => {
-                this.onStartLoadData.dispatch(this, this.dataset);
                 this.onStartRequest.dispatch(this, this.dataset);
                 this.loadAction((result) => {
                     if (args.onGetResponse) {

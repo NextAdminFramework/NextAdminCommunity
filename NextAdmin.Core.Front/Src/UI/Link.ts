@@ -16,7 +16,7 @@ namespace NextAdmin.UI {
         public static style = `
         .next-admin-link{
             cursor:pointer;
-            text-shadow: 0px 0px 2px rgba(0,0,0,0.40);
+            /*text-shadow: 0px 0px 2px rgba(0,0,0,0.40);*/
             text-decoration:none;
         }
         .next-admin-link.blue{

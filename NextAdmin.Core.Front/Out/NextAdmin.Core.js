@@ -89,41 +89,44 @@ var NextAdmin;
                 NextAdmin.Style.append('Animate', NextAdmin.Animation.animateStyle);
             }
         }
-        static animate(element, animation, options) {
-            if (options == null) {
-                options = {};
-            }
-            this.registerStyle();
-            if (!element.classList.contains('animated')) {
-                element.classList.add('animated');
-            }
-            if (element['previousAnim'] != undefined) {
-                element.classList.remove(element['previousAnim']);
-            }
-            element['previousAnim'] = animation;
-            element.classList.add(animation);
-            if (options.animationSpeed != null) {
-                element.classList.add(options.animationSpeed);
-            }
-            this.playingAnimationElements.push(element);
-            let animationEnded = false;
-            setTimeout(() => {
-                if (!animationEnded) {
-                    element.trigger('animationend');
+        static async animate(element, animation, options) {
+            return new Promise((resolve) => {
+                if (options == null) {
+                    options = {};
                 }
-            }, 1000);
-            element.addEventsListener('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', () => {
-                if (animationEnded)
-                    return;
-                this.playingAnimationElements.splice(this.playingAnimationElements.indexOf(element), 1);
-                animationEnded = true;
-                if (!NextAdmin.String.isNullOrEmpty(element['previousAnim'])) {
+                this.registerStyle();
+                if (!element.classList.contains('animated')) {
+                    element.classList.add('animated');
+                }
+                if (element['previousAnim'] != undefined) {
                     element.classList.remove(element['previousAnim']);
-                    delete element['previousAnim'];
-                } //-webkit-animation-duration
-                if (options.onEndAnimation != undefined && options.onEndAnimation != null) {
-                    options.onEndAnimation();
                 }
+                element['previousAnim'] = animation;
+                element.classList.add(animation);
+                if (options.animationSpeed != null) {
+                    element.classList.add(options.animationSpeed);
+                }
+                this.playingAnimationElements.push(element);
+                let animationEnded = false;
+                setTimeout(() => {
+                    if (!animationEnded) {
+                        element.trigger('animationend');
+                    }
+                }, 1000);
+                element.addEventsListener('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', () => {
+                    if (animationEnded)
+                        return;
+                    this.playingAnimationElements.splice(this.playingAnimationElements.indexOf(element), 1);
+                    animationEnded = true;
+                    if (!NextAdmin.String.isNullOrEmpty(element['previousAnim'])) {
+                        element.classList.remove(element['previousAnim']);
+                        delete element['previousAnim'];
+                    } //-webkit-animation-duration
+                    if (options.onEndAnimation != undefined && options.onEndAnimation != null) {
+                        options.onEndAnimation();
+                    }
+                    resolve();
+                });
             });
         }
     }
@@ -139,8 +142,8 @@ var NextAdmin;
     })(AnimationSpeed = NextAdmin.AnimationSpeed || (NextAdmin.AnimationSpeed = {}));
 })(NextAdmin || (NextAdmin = {}));
 try {
-    HTMLElement.prototype.anim = function (animation, options) {
-        NextAdmin.Animation.animate(this, animation, options);
+    HTMLElement.prototype.anim = async function (animation, options) {
+        await NextAdmin.Animation.animate(this, animation, options);
     };
 }
 catch {
@@ -1570,14 +1573,14 @@ var NextAdmin;
                 pageData: data
             };
         }
-        async refresh(reload) {
+        async refreshPage(reload) {
             if (reload) {
                 location.reload();
             }
             if (this._currentPage?.options?.name == null) {
                 return;
             }
-            await this.navigateTo(this._currentPage.options.name, this._currentPage.getData(), UpdateNavigatorState.none, true);
+            await this.navigateTo(this._currentPage.options.name, this._currentPage.parameters, UpdateNavigatorState.none, true);
         }
         async navigateBack() {
             return new Promise((result) => {
@@ -1644,31 +1647,37 @@ var NextAdmin;
             }
             await nextPage.navigateTo(nextPageNavigationArgs);
             if (updateNavigatorState && window.history && window.history.pushState) {
-                let url = this._currentPage.options.name;
-                if (!NextAdmin.String.isNullOrEmpty(document.location.pathname)) {
-                    let currentLocationArrayPath = document.location.pathname.split('/');
-                    currentLocationArrayPath.pop();
-                    currentLocationArrayPath.push(url);
-                    url = currentLocationArrayPath.join('/').replaceAll('//', '/');
-                }
-                if (!url.startsWith('/')) {
-                    url = '/' + url;
-                }
-                if (parameters != null) {
-                    let params = NextAdmin.QueryString.encodeQuery(parameters);
-                    if (!NextAdmin.String.isNullOrEmpty(params)) {
-                        url += '?' + params;
-                    }
-                }
-                if (updateNavigatorState == UpdateNavigatorState.pushState) {
-                    window.history.pushState('', this._currentPage.options.name, url);
-                }
-                else if (updateNavigatorState == UpdateNavigatorState.replaceState) {
-                    window.history.replaceState('', this._currentPage.options.name, url);
-                }
+                this.updateNavigatorHistory(this._currentPage.options.name, parameters, updateNavigatorState == UpdateNavigatorState.pushState);
             }
             this.onPageChanged.dispatch(this, nextPage);
             return nextPage;
+        }
+        updateNavigatorHistory(pageName, parameters, psuhState = true) {
+            if (!window?.history?.pushState) {
+                return;
+            }
+            let url = pageName;
+            if (!NextAdmin.String.isNullOrEmpty(document.location.pathname)) {
+                let currentLocationArrayPath = document.location.pathname.split('/');
+                currentLocationArrayPath.pop();
+                currentLocationArrayPath.push(url);
+                url = currentLocationArrayPath.join('/').replaceAll('//', '/');
+            }
+            if (!url.startsWith('/')) {
+                url = '/' + url;
+            }
+            if (parameters != null) {
+                let params = NextAdmin.QueryString.encodeQuery(parameters);
+                if (!NextAdmin.String.isNullOrEmpty(params)) {
+                    url += '?' + params;
+                }
+            }
+            if (psuhState) {
+                window.history.pushState('', this._currentPage.options.name, url);
+            }
+            else {
+                window.history.replaceState('', this._currentPage.options.name, url);
+            }
         }
         getDisplayMode() {
             if (this.displayMode) {
@@ -3364,7 +3373,7 @@ var NextAdmin;
                 this.dataset = [];
                 this.onStartRequest = new NextAdmin.EventHandler();
                 this.onEndRequest = new NextAdmin.EventHandler();
-                this.onStartLoadData = new NextAdmin.EventHandler();
+                this.onStartLoadData = new NextAdmin.AsyncEventHandler();
                 this.onDataLoaded = new NextAdmin.EventHandler();
                 this.onDataAdded = new NextAdmin.EventHandler();
                 this.onStartSaveData = new NextAdmin.EventHandler();
@@ -3430,8 +3439,8 @@ var NextAdmin;
                     dataState: Business.DataState.serialized,
                     ...args
                 };
+                await this.onStartLoadData.dispatch(this, this.dataset);
                 return new Promise((resolve) => {
-                    this.onStartLoadData.dispatch(this, this.dataset);
                     this.onStartRequest.dispatch(this, this.dataset);
                     this.loadAction((result) => {
                         if (args.onGetResponse) {
@@ -3464,8 +3473,8 @@ var NextAdmin;
                     dataState: Business.DataState.serialized,
                     ...args
                 };
+                await this.onStartLoadData.dispatch(this, this.dataset);
                 return new Promise((resolve) => {
-                    this.onStartLoadData.dispatch(this, this.dataset);
                     this.onStartRequest.dispatch(this, this.dataset);
                     this.loadAction((result) => {
                         if (args.onGetResponse) {
@@ -3666,6 +3675,7 @@ var NextAdmin;
                     ...options
                 });
                 this.onStartLoadEntity = new NextAdmin.EventHandler();
+                this.isDataMostRecentOverwritingAllowed = true;
                 this.entityLockKey = this.options.entityLockKey;
                 this.loadAction = (dataId, actionResult) => {
                     let detailsToLoad = [];
@@ -3723,29 +3733,35 @@ var NextAdmin;
                             code: response.code
                         };
                         if (response.code == 'VERSION_CONFLICT') {
-                            let msgBox = new NextAdmin.UI.MessageBox({
-                                title: NextAdmin.Resources.overwriteDataTitle,
-                                text: NextAdmin.Resources.overwriteDataMessage,
-                                buttons: [
-                                    new NextAdmin.UI.Button({
-                                        text: NextAdmin.Resources.overwriteData,
-                                        action: () => {
-                                            conflictAction = NextAdmin.Models.ConflictAction.overwrite;
-                                            this.saveAction(data, actionResult);
-                                            conflictAction = NextAdmin.Models.ConflictAction.cancel;
-                                            msgBox.close();
-                                        }
-                                    }),
-                                    new NextAdmin.UI.Button({
-                                        text: NextAdmin.Resources.cancel,
-                                        action: () => {
-                                            actionResult(saveResult);
-                                            msgBox.close();
-                                        }
-                                    }),
-                                ]
-                            });
-                            msgBox.open();
+                            if (this.isDataMostRecentOverwritingAllowed) {
+                                let msgBox = new NextAdmin.UI.MessageBox({
+                                    title: NextAdmin.Resources.overwriteDataTitle,
+                                    text: NextAdmin.Resources.overwriteDataMessage,
+                                    buttons: [
+                                        new NextAdmin.UI.Button({
+                                            text: NextAdmin.Resources.overwriteData,
+                                            action: () => {
+                                                conflictAction = NextAdmin.Models.ConflictAction.overwrite;
+                                                this.saveAction(data, actionResult);
+                                                conflictAction = NextAdmin.Models.ConflictAction.cancel;
+                                                msgBox.close();
+                                            }
+                                        }),
+                                        new NextAdmin.UI.Button({
+                                            text: NextAdmin.Resources.cancel,
+                                            action: () => {
+                                                actionResult(saveResult);
+                                                msgBox.close();
+                                            }
+                                        }),
+                                    ]
+                                });
+                                msgBox.open();
+                            }
+                            else {
+                                NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.saveNotAllowed, NextAdmin.Resources.overwriteDataNotAllowedMessage);
+                                actionResult(saveResult);
+                            }
                             return;
                         }
                         actionResult(saveResult);
@@ -3886,7 +3902,7 @@ var NextAdmin;
 (function (NextAdmin) {
     var Business;
     (function (Business) {
-        class EntityDatasetController extends Business.DatasetController_ {
+        class EntityDatasetController extends Business.DatasetController {
             constructor(options) {
                 super(options);
                 this.onStartLoadEntities = new NextAdmin.EventHandler();
@@ -3985,6 +4001,9 @@ var NextAdmin;
                     });
                 }
                 return messageBox;
+            }
+            getEntityInfo() {
+                return this.options.dataInfos.get(this.options.dataName);
             }
             displayHTTPError(response, endDisplayFunc) {
                 alert('HTTP Error : code : ' + response.status + ', message : ' + response.text);
@@ -4095,7 +4114,7 @@ var NextAdmin;
                 };
             }
             clone() {
-                let clone = new EntityDatasetController(this.options);
+                let clone = new EntityDatasetController_(this.options);
                 clone._take = this._take;
                 clone._skip = this._skip;
                 clone._orderBy = this._orderBy;
@@ -4108,6 +4127,9 @@ var NextAdmin;
             }
         }
         Business.EntityDatasetController = EntityDatasetController;
+        class EntityDatasetController_ extends EntityDatasetController {
+        }
+        Business.EntityDatasetController_ = EntityDatasetController_;
     })(Business = NextAdmin.Business || (NextAdmin.Business = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -4748,6 +4770,8 @@ var NextAdmin;
             this.overwriteDataTitle = "Data overwrite";
             this.overwriteDataMessage = "The data currently being recorded has been updated. By proceeding, you run the risk of erasing some of the previous modifications.What would you like to do? ";
             this.overwriteData = "Overwrite data";
+            this.saveNotAllowed = "Unauthorized recording";
+            this.overwriteDataNotAllowedMessage = "The data currently being recorded has been updated by another user. Please reload the record before proceeding with the recording.";
             this.a = "a";
             this.back = "Back";
             this.warning = "Warning";
@@ -4907,6 +4931,8 @@ var NextAdmin;
             this.add = "Ajouter";
             this.overwriteDataTitle = "Écrasement de données";
             this.overwriteDataMessage = "Les données actuellement en cours d'enregistrement ont été mises à jour. En poursuivant, vous courez le risque d'effacer une partie des modifications précédentes. Que souhaitez-vous faire ?";
+            this.saveNotAllowed = "Enregistrement non autorisé";
+            this.overwriteDataNotAllowedMessage = "Les données actuellement en cours d'enregistrement ont été mises à jour par un autre utilisateur. Veuillez recharger la fiche avant de procéder à l'enregistrement.";
             this.overwriteData = "Écraser les données";
             this.a = "un";
             this.back = "Retour";
@@ -4916,7 +4942,7 @@ var NextAdmin;
             this.success = "Succès";
             this.search = "Recherche";
             this.saveLastModification = 'Enregistrement des dernières modifications';
-            this.lostDataNotSavedMessage = 'Vous avez apporté des modifications non sauvegardées. Souhaitez-vous les enregistrer avant de quitter ?';
+            this.lostDataNotSavedMessage = 'Vous avez apporté des modifications non sauvegardées. Souhaitez-vous les enregistrer ?';
             this.formDeleteMessageTitle = 'Suppression définitive';
             this.formDeleteMessage = 'Si vous validez, cet élément sera supprimé de manière permanente, voulez-vous continuer ?';
             this.formSaveRequiredTitle = "Enregistrement requis";
@@ -7176,6 +7202,7 @@ var NextAdmin;
                     this.element.appendHTML('tr', tr => {
                         this.labelContainer = tr.appendHTML('td');
                         this.labelContainer.classList.add('next-admin-layout-form-control-cell');
+                        this.labelContainer.classList.add('left-label');
                         this.setLabelWidth(this.options.labelWidth);
                         this.label = this.labelContainer.appendHTML('label');
                         this.asterisk = this.labelContainer.appendHTML('label');
@@ -8287,7 +8314,12 @@ var NextAdmin;
     (function (UI) {
         class FormLayout extends NextAdmin.UI.Control {
             constructor(options) {
-                super('div', { rowCount: 0, columnCount: 0, ...options });
+                super('div', {
+                    rowCount: 0,
+                    columnCount: 0,
+                    isResponsive: true,
+                    ...options
+                });
                 this.rows = new Array();
                 this.onDrowCell = new NextAdmin.EventHandler();
                 this._columnCount = 0;
@@ -8299,6 +8331,9 @@ var NextAdmin;
                 this.dataController = this.options.dataController;
                 NextAdmin.Style.append('NextAdmin.UI.FormLayout', FormLayout_.style);
                 this.element.classList.add('next-admin-form-layout');
+                if (this.options.isResponsive) {
+                    this.element.classList.add('responsive');
+                }
                 this.element.style.width = '100%';
                 this.table = this.element.appendHTML('table', (table) => {
                     table.style.width = '100%';
@@ -8324,6 +8359,7 @@ var NextAdmin;
                 this.rows = [];
                 this.table.innerHTML = '';
                 this.firstRow = this.table.appendHTML('tr', (row) => {
+                    row.classList.add('next-admin-form-layout-row');
                     for (let iCol = 0; iCol < this._columnCount; iCol++) {
                         row.appendHTML('td', (td) => {
                             td.style.width = (100 / colCount) + '%';
@@ -8332,6 +8368,7 @@ var NextAdmin;
                 });
                 for (let iRow = 0; iRow < this._rowCount; iRow++) {
                     this.table.appendHTML('tr', (row) => {
+                        row.classList.add('next-admin-form-layout-row');
                         this.rows.add(row);
                         for (let iCol = 0; iCol < this._columnCount; iCol++) {
                             row.appendHTML('td', (td) => {
@@ -8459,6 +8496,7 @@ var NextAdmin;
                 if (rowCount > this._rowCount) {
                     for (let iRow = this._rowCount; iRow < rowCount; iRow++) {
                         this.table.appendHTML('tr', (row) => {
+                            row.classList.add('next-admin-form-layout-row');
                             this.rows.add(row);
                             for (let iCol = 0; iCol < this._columnCount; iCol++) {
                                 row.appendHTML('td', (td) => {
@@ -8678,9 +8716,10 @@ var NextAdmin;
                 let printableElement = document.createElement('table');
                 printableElement.style.width = '100%';
                 for (let row of this.rows) {
-                    printableElement.appendHTML('tr', (tr) => {
+                    printableElement.appendHTML('tr', (row) => {
+                        row.classList.add('next-admin-form-layout-row');
                         for (let cell of row.cells) {
-                            tr.appendHTML('td', (td) => {
+                            row.appendHTML('td', (td) => {
                                 if (cell.style.width != null) {
                                     td.style.width = cell.style.width;
                                 }
@@ -8747,6 +8786,18 @@ var NextAdmin;
         .next-admin-form-layout.thin-label{
             .next-admin-layout-form-control-label-container{
                 padding-left:4px;font-size:12px
+            }
+        }
+
+        .next-admin-form-layout.responsive{
+            @media (max-width: 768px) {
+                .next-admin-form-layout-row{
+                    display:flex;
+                    flex-direction:column;
+                }
+                .next-admin-layout-form-control-label-container.left-label{
+                    width:30% !important;
+                }
             }
         }
 
@@ -9929,8 +9980,13 @@ var NextAdmin;
                         }
                     });
                 });
-                masterController.onDataChanged.subscribe((sender, args) => {
+                let foreignKeyValue;
+                this.onUpdateWhereQuery.subscribe((sender, queryBuilder) => {
+                    queryBuilder.query = queryBuilder.where(detailForeignKey + '=?', foreignKeyValue).query;
+                });
+                masterController.onDataChanged.subscribe(async (sender, args) => {
                     if (args.newData == null) {
+                        foreignKeyValue = null;
                         this._suspendChanging = true;
                         this.clear();
                         this._suspendChanging = false;
@@ -9938,13 +9994,63 @@ var NextAdmin;
                     else {
                         let propertyInfo = this.getPropertyInfo();
                         if (propertyInfo == null || args.newData[propertyInfo.name] == null || args.newData[propertyInfo.name].length == 0) { //if we are not binded or if there is no data, we load it manualy
-                            this.datasetController.where(detailForeignKey + '=?', args.newData[masterPrimaryKey]);
+                            foreignKeyValue = args.newData[masterPrimaryKey];
                             this._suspendChanging = true;
-                            this.datasetController.load({
-                                onGetResponse: () => {
-                                    this._suspendChanging = false;
-                                }
-                            });
+                            await this.load();
+                            this._suspendChanging = false;
+                        }
+                    }
+                });
+            }
+            bindToTab(tab, masterController, detailForeignKey, masterPrimaryKey) {
+                this._masterFormController = masterController;
+                this.buttonSave.element.style.display = 'none';
+                if (this.options.canRefresh !== true) {
+                    this.buttonRefresh.element.style.display = 'none';
+                }
+                if (masterPrimaryKey == null) {
+                    masterPrimaryKey = masterController.options.dataPrimaryKeyName;
+                }
+                this._foreignKeyName = detailForeignKey;
+                this.onFormModalCreated.subscribe((detailModal) => {
+                    detailModal.dataController.onStartChangeData.subscribe(async (sender, args) => {
+                        if (NextAdmin.Business.DataStateHelper.getDataState(args.newData) == NextAdmin.Business.DataState.append) {
+                            args.newData[detailForeignKey] = masterController.getData()[masterPrimaryKey];
+                        }
+                    });
+                });
+                let foreignKeyValue;
+                this.onUpdateWhereQuery.subscribe((sender, queryBuilder) => {
+                    queryBuilder.query = queryBuilder.where(detailForeignKey + '=?', foreignKeyValue).query;
+                });
+                let load = async () => {
+                    if (foreignKeyValue) {
+                        this._suspendChanging = true;
+                        tab.body.startSpin();
+                        await this.load();
+                        this._suspendChanging = false;
+                        tab.body.stopSpin();
+                    }
+                };
+                tab.tabPanel.onActivTabChanged.subscribe((sender, args) => {
+                    if (args.newTab == tab) {
+                        load();
+                    }
+                });
+                masterController.onDataChanged.subscribe((sender, args) => {
+                    if (args.newData == null) {
+                        foreignKeyValue = null;
+                        this._suspendChanging = true;
+                        this.clear();
+                        this._suspendChanging = false;
+                    }
+                    else {
+                        let propertyInfo = this.getPropertyInfo();
+                        if (propertyInfo == null || args.newData[propertyInfo.name] == null || args.newData[propertyInfo.name].length == 0) { //if we are not binded or if there is no data, we load it manualy
+                            foreignKeyValue = args.newData[masterPrimaryKey];
+                            if (tab.isActiv) {
+                                load();
+                            }
                         }
                     }
                 });
@@ -14042,7 +14148,7 @@ var NextAdmin;
         Link.style = `
         .next-admin-link{
             cursor:pointer;
-            text-shadow: 0px 0px 2px rgba(0,0,0,0.40);
+            /*text-shadow: 0px 0px 2px rgba(0,0,0,0.40);*/
             text-decoration:none;
         }
         .next-admin-link.blue{
@@ -15156,6 +15262,15 @@ var NextAdmin;
                 this.navigationController = this.options.navigationController;
                 Page.onCreated.dispatch(this, this.options);
             }
+            setParameters(parameters, updateNavigatorState = NextAdmin.UpdateNavigatorState.replaceState) {
+                this.parameters = parameters;
+                if (updateNavigatorState) {
+                    this.navigationController.updateNavigatorHistory(this.options.name, parameters, updateNavigatorState == NextAdmin.UpdateNavigatorState.pushState);
+                }
+            }
+            getParameters() {
+                return this.parameters;
+            }
             async navigateTo(args) {
                 this.options.container.appendChild(this.element);
                 this.parameters = args?.parameters;
@@ -15371,8 +15486,10 @@ var NextAdmin;
                 super({
                     style: UI.Input.defaultStyle,
                     max: 100,
+                    unit: '%',
+                    decimalCount: 0,
                     progressLabelValueFunc: () => {
-                        return (this.getValue() + ' / ' + this.options.max).toString();
+                        return (this.getValue().toFixed(this.options.decimalCount) + ' / ' + this._maxValue.toFixed(this.options.decimalCount)).toString() + ' ' + this.options.unit;
                     },
                     ...options
                 });
@@ -15382,12 +15499,6 @@ var NextAdmin;
                 this.controlContainer.style.position = 'relative';
                 this.progress = this.controlContainer.appendHTML('progress');
                 this.progress.classList.add('next-admin-progress');
-                if (this.options.min) {
-                    this.progress.setAttribute('min', this.options.min.toString());
-                }
-                if (this.options.max) {
-                    this.progress.setAttribute('max', this.options.max.toString());
-                }
                 this.progressLabelContainer = this.controlContainer.appendHTML('div', (progressLabelContainer) => {
                     progressLabelContainer.style.position = 'absolute';
                     progressLabelContainer.style.left = '0px';
@@ -15402,6 +15513,12 @@ var NextAdmin;
                     progressLabelContainer.style.paddingTop = '4px';
                     progressLabelContainer.style.textShadow = '0px 0px 2px rgba(0,0,0,1)';
                 });
+                if (this.options.min) {
+                    this.progress.setAttribute('min', this.options.min.toString());
+                }
+                if (this.options.max) {
+                    this.setMaxValue(this.options.max);
+                }
             }
             setLabel(text) {
                 this.label.innerHTML = text;
@@ -15420,6 +15537,11 @@ var NextAdmin;
                 if (fireChange) {
                     this.onValueChanged.dispatch(this, { value: value, origin: UI.ChangeOrigin.code });
                 }
+                this.updateValueLabel();
+            }
+            setMaxValue(value) {
+                this._maxValue = value;
+                this.progress.setAttribute('max', this._maxValue.toString());
                 this.updateValueLabel();
             }
             updateValueLabel() {
@@ -17765,6 +17887,114 @@ var NextAdmin;
             TitleStyle[TitleStyle["darkThin"] = 8] = "darkThin";
             TitleStyle[TitleStyle["black"] = 9] = "black";
         })(TitleStyle = UI.TitleStyle || (UI.TitleStyle = {}));
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
+        class Toast extends NextAdmin.UI.Control {
+            constructor(options) {
+                super('div', {
+                    style: ToastStyle.green,
+                    ...options
+                });
+                NextAdmin.Style.append('NextAdmin.UI.Toast', Toast.style);
+                this.element.classList.add('next-admin-toast-container');
+                this.toast = this.element.appendHTML('div', (toast) => {
+                    toast.classList.add('next-admin-toast');
+                });
+                this.setText(this.options.text);
+                this.setStyle(this.options.style);
+            }
+            setText(text) {
+                this.toast.innerHTML = text ?? '';
+            }
+            setStyle(style) {
+                switch (style) {
+                    default:
+                    case ToastStyle.green:
+                        this.toast.classList.add('next-admin-toast-green');
+                        break;
+                    case ToastStyle.blue:
+                        this.toast.classList.add('next-admin-toast-blue');
+                        break;
+                    case ToastStyle.red:
+                        this.toast.classList.add('next-admin-toast-red');
+                        break;
+                }
+            }
+            async show(options) {
+                options = {
+                    duration: 2000,
+                    openAnimation: 'fadeInDown',
+                    openAnimationOptions: { animationSpeed: NextAdmin.AnimationSpeed.faster },
+                    closeAnimation: 'fadeOutUp',
+                    closeAnimationOptions: { animationSpeed: NextAdmin.AnimationSpeed.faster },
+                    container: document.body,
+                    ...options
+                };
+                options.container.appendControl(this);
+                await this.element.anim(options.openAnimation, options.openAnimationOptions);
+                if (!options.duration) {
+                    return;
+                }
+                await NextAdmin.Timer.sleep(options.duration);
+                await this.element.anim(options.closeAnimation, options.closeAnimationOptions);
+                this.element.remove();
+            }
+            static createSuccess(text) {
+                let toast = new Toast({ text: text, style: ToastStyle.green });
+                toast.show();
+                return toast;
+            }
+            static createError(text) {
+                let toast = new Toast({ text: text, style: ToastStyle.red });
+                toast.show();
+                return toast;
+            }
+        }
+        Toast.style = `
+            .next-admin-toast-container{
+                position:fixed;
+                left:0px;
+                top:0px;
+                width:100%;
+                z-index:999999;
+                pointer-events: none;
+
+                .next-admin-toast{
+                    margin:0 auto;
+                    margin-top:10vh;
+                    width:fit-content;
+                    min-width:200px;
+                    text-align:center;
+                    pointer-events: auto;
+                    background:#fff;
+                    box-shadow: 0px 0px 40px rgba(0, 0, 0, 0.25);
+                    padding:20px;
+                    border-radius:16px;
+                }
+                .next-admin-toast-green{
+                    background:#90EE90;
+                }
+                .next-admin-toast-blue{
+                    background:#87CEFA;
+                }
+                .next-admin-toast-red{
+                    background:#DC143C;
+                }
+
+            }
+
+        `;
+        UI.Toast = Toast;
+        let ToastStyle;
+        (function (ToastStyle) {
+            ToastStyle[ToastStyle["green"] = 0] = "green";
+            ToastStyle[ToastStyle["blue"] = 1] = "blue";
+            ToastStyle[ToastStyle["red"] = 2] = "red";
+        })(ToastStyle = UI.ToastStyle || (UI.ToastStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;

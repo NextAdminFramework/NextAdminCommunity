@@ -72,7 +72,7 @@ var NextAdmin;
                 this.setCulture(this.user.culture);
             }
             else {
-                await this.refresh();
+                await this.refreshPage();
             }
             this.onUserLogged.dispatch(this, this.user);
         }
@@ -139,7 +139,7 @@ var NextAdmin;
             this.initializeResources(culture.substring(0, 2));
             NextAdmin.Cookies.set('culture', culture);
             this.onCultureChanged.dispatch(this, culture);
-            await this.refresh();
+            await this.refreshPage();
             if (updateUserCulture && this.user) {
                 await this.userClient.setUserCulture(culture);
             }
@@ -2231,6 +2231,52 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
+        class PageContainer extends NextAdmin.UI.Control {
+            constructor(options) {
+                super('div', {
+                    hasPadding: true,
+                    maxWidth: UI.FrontDefaultStyle.PageContentMaxWidth,
+                    ...options
+                });
+                NextAdmin.Style.append('NextAdmin.UI.PageContainer', PageContainer.style);
+                this.element.classList.add('next-admin-page-container');
+                if (this.options?.hasPadding) {
+                    this.element.classList.add('padding');
+                }
+                if (this.options?.maxWidth) {
+                    this.element.style.maxWidth = this.options.maxWidth;
+                }
+                if (this.options?.minHeight) {
+                    this.element.style.minHeight = this.options.minHeight;
+                }
+            }
+        }
+        PageContainer.style = `
+
+        .next-admin-page-container{
+            margin: 0 auto;
+        }
+        .next-admin-page-container.padding{
+            padding:20px;
+            @media (max-width: 1024px) {
+                padding:16px;
+            }
+            @media (max-width: 768px) {
+                padding:8px;
+            }
+            @media (max-width: 512px) {
+                padding:4px;
+            }
+        }
+
+        `;
+        UI.PageContainer = PageContainer;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
         class PinsCard extends UI.Control {
             constructor(options) {
                 super('div', {
@@ -3174,23 +3220,11 @@ var NextAdmin;
                 }
             }
             appendContainer(options, configAction) {
-                options = {
-                    hasPadding: true,
-                    maxWidth: UI.FrontDefaultStyle.PageContentMaxWidth,
-                    ...options
-                };
-                let container = this.element.appendHTML('div', configAction);
-                container.classList.add('next-admin-front-page-container');
-                if (options?.hasPadding) {
-                    container.classList.add('padding');
-                }
-                if (options?.maxWidth) {
-                    container.style.maxWidth = options.maxWidth;
-                }
-                if (options?.minHeight) {
-                    container.style.minHeight = options.minHeight;
-                }
-                return container;
+                return this.element.appendControl(new UI.PageContainer(options), (container) => {
+                    if (configAction) {
+                        configAction(container.element);
+                    }
+                });
             }
         }
         FrontPage.style = `
@@ -3198,22 +3232,6 @@ var NextAdmin;
         .next-admin-front-page {
             width: 100%;
             min-height:100vh;
-        }
-
-        .next-admin-front-page-container{
-            margin: 0 auto;
-        }
-        .next-admin-front-page-container.padding{
-            padding:20px;
-            @media (max-width: 1024px) {
-                padding:16px;
-            }
-            @media (max-width: 768px) {
-                padding:8px;
-            }
-            @media (max-width: 512px) {
-                padding:4px;
-            }
         }
 
         `;

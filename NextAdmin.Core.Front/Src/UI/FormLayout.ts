@@ -46,15 +46,35 @@ namespace NextAdmin.UI {
             }
         }
 
+        .next-admin-form-layout.responsive{
+            @media (max-width: 768px) {
+                .next-admin-form-layout-row{
+                    display:flex;
+                    flex-direction:column;
+                }
+                .next-admin-layout-form-control-label-container.left-label{
+                    width:30% !important;
+                }
+            }
+        }
+
 
         `;
 
 
         constructor(options?: FormLayoutOptions) {
-            super('div', { rowCount: 0, columnCount: 0, ...options } as FormLayoutOptions);
+            super('div', {
+                rowCount: 0,
+                columnCount: 0,
+                isResponsive: true,
+                ...options
+            } as FormLayoutOptions);
             this.dataController = this.options.dataController;
             Style.append('NextAdmin.UI.FormLayout', FormLayout_.style);
             this.element.classList.add('next-admin-form-layout');
+            if (this.options.isResponsive) {
+                this.element.classList.add('responsive');
+            }
             this.element.style.width = '100%';
             this.table = this.element.appendHTML('table', (table) => {
                 table.style.width = '100%';
@@ -85,6 +105,7 @@ namespace NextAdmin.UI {
             this.table.innerHTML = '';
 
             this.firstRow = this.table.appendHTML('tr', (row) => {
+                row.classList.add('next-admin-form-layout-row');
                 for (let iCol = 0; iCol < this._columnCount; iCol++) {
                     row.appendHTML('td', (td) => {
                         td.style.width = (100 / colCount) + '%';
@@ -94,6 +115,7 @@ namespace NextAdmin.UI {
 
             for (let iRow = 0; iRow < this._rowCount; iRow++) {
                 this.table.appendHTML('tr', (row) => {
+                    row.classList.add('next-admin-form-layout-row');
                     this.rows.add(row);
                     for (let iCol = 0; iCol < this._columnCount; iCol++) {
                         row.appendHTML('td', (td) => {
@@ -235,6 +257,7 @@ namespace NextAdmin.UI {
             if (rowCount > this._rowCount) {
                 for (let iRow = this._rowCount; iRow < rowCount; iRow++) {
                     this.table.appendHTML('tr', (row) => {
+                        row.classList.add('next-admin-form-layout-row');
                         this.rows.add(row);
                         for (let iCol = 0; iCol < this._columnCount; iCol++) {
                             row.appendHTML('td', (td) => {
@@ -475,9 +498,10 @@ namespace NextAdmin.UI {
             let printableElement = document.createElement('table');
             printableElement.style.width = '100%';
             for (let row of this.rows) {
-                printableElement.appendHTML('tr', (tr) => {
+                printableElement.appendHTML('tr', (row) => {
+                    row.classList.add('next-admin-form-layout-row');
                     for (let cell of row.cells) {
-                        tr.appendHTML('td', (td) => {
+                        row.appendHTML('td', (td) => {
                             if (cell.style.width != null) {
                                 td.style.width = cell.style.width;
                             }
@@ -565,6 +589,8 @@ namespace NextAdmin.UI {
         dataController?: NextAdmin.Business.DataController_;
 
         style?: FormLayoutStyle;
+
+        isResponsive?: boolean;
 
     }
 

@@ -10,12 +10,11 @@ using Stripe.Checkout;
 namespace NextAdmin.FrontEnd.API.Controllers
 {
     [ApiController, Route("/api/stripe/webhook/{action}/{id?}")]
-    public abstract class FrontEndStripeWebhookController<TUser, TStripeUserInvoice, TStripeUserSubscription, TStripeUserPaymentSession, TStripeUserPaymentEvent> : Controller<TUser>
+    public abstract class FrontEndStripeWebhookController<TUser, TStripeUserInvoice, TStripeUserSubscription, TStripeUserPaymentSession> : Controller<TUser>
         where TUser : class, IFrontEndUser
-        where TStripeUserInvoice : StripeUserInvoice<TUser>
-        where TStripeUserSubscription : StripeUserSubscription<TUser>
-        where TStripeUserPaymentSession : StripeUserPaymentSession<TUser>
-        where TStripeUserPaymentEvent : StripeUserPaymentEvent<TUser>
+        where TStripeUserInvoice : StripeInvoice
+        where TStripeUserSubscription : StripeSubscription
+        where TStripeUserPaymentSession : StripePaymentSession
     {
 
         public FrontEndStripeWebhookController(NextAdminDbContext? dbContext = null, IConfiguration? configuration = null)
@@ -77,11 +76,8 @@ namespace NextAdmin.FrontEnd.API.Controllers
             if (!isEventHandled)
             {
                 DbContext.DetachAllEntities();
-                var paymentProviderEvent = DbContext.CreateEntity<StripePaymentEvent>();
-                paymentProviderEvent.Id = stripeEvent.Id;
-                paymentProviderEvent.StripeEvent = stripeEvent;
+                var paymentProviderEvent = CreateStripeEvent(stripeEvent);
                 paymentProviderEvent.ErrorMessage = errorMessage;
-                DbContext.Add(paymentProviderEvent);
                 var dbContextSaveResult = DbContext.ValidateAndSave();
                 if (!dbContextSaveResult.Success)/*shoud log error*/
                 {
@@ -98,7 +94,11 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 throw new Exception($"Unable to find payment session {stripeSession.Id}");
             }
 
-            var userPaymentEvent = CreateUserPaymentEvent(stripeEvent, paymentSession.UserId);
+            var userPaymentEvent = CreateStripeEvent(stripeEvent);
+            userPaymentEvent.UserId = paymentSession.UserId;
+            userPaymentEvent.UserType = paymentSession.UserType;
+
+            userPaymentEvent.PaymentSessionId = stripeSession.Id;
             paymentSession.PaymentCompletedEventId = userPaymentEvent.Id;
 
             if (stripeSession.PaymentStatus == "paid")
@@ -114,8 +114,10 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 {
                     subscription = DbContext.CreateEntity<TStripeUserSubscription>();
                     subscription.Id = stripeSession.SubscriptionId;
-                    subscription.StripeSubscription = stripeSession.Subscription;
+                    userPaymentEvent.SubscriptionId = stripeSession.SubscriptionId;
+                    subscription.StripeSubscriptionData = stripeSession.Subscription;
                     subscription.UserId = paymentSession.UserId;
+                    subscription.UserType = paymentSession.UserType;
                     subscription.SessionPaymentCompletedEventId = userPaymentEvent.Id;
                     subscription.PurchasedElementId = paymentSession.PurchasedElementId;
                     DbContext.Add(subscription);
@@ -153,13 +155,17 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 throw new Exception($"Unable to find subscription {stripeInvoice.SubscriptionId}");
             }
 
-            var paymentSessionCompletedEvent = CreateUserPaymentEvent(stripeEvent, subscription.UserId);
+            var paymentSessionCompletedEvent = CreateStripeEvent(stripeEvent);
+            paymentSessionCompletedEvent.UserId = subscription.UserId;
+            paymentSessionCompletedEvent.UserType = subscription.UserType;
+            paymentSessionCompletedEvent.InvoiceId = stripeInvoice.Id;
             subscription.LastInvoicePayedEventId = paymentSessionCompletedEvent.Id;
 
             var invoice = DbContext.CreateEntity<TStripeUserInvoice>();
             invoice.Id = stripeInvoice.Id;
-            invoice.StripeInvoice = stripeInvoice;
+            invoice.StripeInvoiceData = stripeInvoice;
             invoice.UserId = subscription.UserId;
+            invoice.UserType = subscription.UserType;
             invoice.SubscriptionId = subscription.Id;
 
             DbContext.Add(invoice);
@@ -178,16 +184,17 @@ namespace NextAdmin.FrontEnd.API.Controllers
             return key;
         }
 
-        protected virtual TStripeUserPaymentEvent CreateUserPaymentEvent(Event stripeEvent, string userId)
+        protected virtual StripeEvent CreateStripeEvent(Event stripeEvent)
         {
-            var userPaymentEvent = DbContext.CreateEntity<TStripeUserPaymentEvent>();
+            var userPaymentEvent = DbContext.CreateEntity<StripeEvent>();
             userPaymentEvent.Id = stripeEvent.Id;
             userPaymentEvent.EventType = stripeEvent.Type;
-            userPaymentEvent.StripeEvent = stripeEvent;
-            userPaymentEvent.UserId = userId;
+            userPaymentEvent.StripeEventData = stripeEvent;
             DbContext.Add(userPaymentEvent);
             return userPaymentEvent;
         }
+
+
 
 
 

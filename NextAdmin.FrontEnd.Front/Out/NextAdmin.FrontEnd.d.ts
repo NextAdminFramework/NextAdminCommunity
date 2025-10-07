@@ -419,6 +419,19 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
+    class PageContainer extends NextAdmin.UI.Control {
+        element: HTMLDivElement;
+        options: PageContaineOptions;
+        static style: string;
+        constructor(options?: PageContaineOptions);
+    }
+    interface PageContaineOptions extends NextAdmin.UI.ControlOptions {
+        hasPadding?: boolean;
+        maxWidth?: string;
+        minHeight?: string;
+    }
+}
+declare namespace NextAdmin.UI {
     class PinsCard extends Control {
         static style: string;
         options: PinsCardOptions;
@@ -607,17 +620,12 @@ declare namespace NextAdmin.UI {
         constructor(options?: FrontPageOptions);
         navigateTo(args: NextAdmin.UI.NavigateToArgs): Promise<void>;
         navigateFrom(args: NextAdmin.UI.NavigateFromArgs): Promise<void>;
-        appendContainer(options?: FrontPageContaineOptions, configAction?: (container: HTMLDivElement) => void): HTMLDivElement;
+        appendContainer(options?: PageContaineOptions, configAction?: (container: HTMLDivElement) => void): PageContainer;
     }
     interface FrontPageOptions extends PageOptions {
         navigateFromAnimation?: string;
         navigateFromAnimationSpeed?: NextAdmin.AnimationSpeed;
         navigateToAnimation?: string;
         navigateToAnimationSpeed?: NextAdmin.AnimationSpeed;
-    }
-    interface FrontPageContaineOptions {
-        hasPadding?: boolean;
-        maxWidth?: string;
-        minHeight?: string;
     }
 }

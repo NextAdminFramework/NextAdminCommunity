@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace NextAdmin.Core
 {
@@ -13,13 +10,21 @@ namespace NextAdmin.Core
             return !t.IsClass || t == typeof(string);
         }
 
-        public static TTarget CopyTo<TTarget>(this object sourceData, TTarget target = null, bool tryCopyDiffrentMemberType = false, bool copyNullValues = true, IEnumerable<string> memberNamesToCopy = null, bool copyNonPrimitivType = true, bool copyInvariantName = true)
+        public static TTarget CopyTo<TTarget>(this object sourceData, TTarget target = null, bool tryCopyDifferentMemberType = false, bool copyNullValues = true, IEnumerable<string> memberNamesToCopy = null, IEnumerable<string> memberNamesToExclude = null, bool copyNonPrimitiveType = true, bool copyInvariantName = true)
           where TTarget : class
         {
-            if (memberNamesToCopy != null && copyInvariantName)
+            if (copyInvariantName)
             {
-                memberNamesToCopy = memberNamesToCopy.Select(e => e.ToLower());
+                if (memberNamesToCopy != null)
+                {
+                    memberNamesToCopy = memberNamesToCopy.Select(e => e.ToLower()).ToList();
+                }
+                if (memberNamesToExclude != null)
+                {
+                    memberNamesToExclude = memberNamesToExclude.Select(e => e.ToLower()).ToList();
+                }
             }
+
             Dictionary<string, PropertyInfo> childPropertyDictionary = new Dictionary<string, PropertyInfo>();
             foreach (var childProperty in target.GetType().GetProperties())
             {
@@ -32,10 +37,13 @@ namespace NextAdmin.Core
             {
                 if (memberNamesToCopy != null && !memberNamesToCopy.Contains(copyInvariantName ? sourceProperty.Name.ToLower() : sourceProperty.Name))
                     continue;
+                if (memberNamesToExclude != null && memberNamesToExclude.Contains(copyInvariantName ? sourceProperty.Name.ToLower() : sourceProperty.Name))
+                    continue;
+
                 PropertyInfo targetProperty = null;
                 if (childPropertyDictionary.TryGetValue(sourceProperty.Name, out targetProperty))
                 {
-                    if (!copyNonPrimitivType && !_isPrimitiv(sourceProperty.PropertyType))
+                    if (!copyNonPrimitiveType && !_isPrimitiv(sourceProperty.PropertyType))
                         continue;
                     if (sourceProperty.PropertyType == targetProperty.PropertyType)
                     {
@@ -45,7 +53,7 @@ namespace NextAdmin.Core
                             targetProperty.SetValue(target, sourceValue);
                         }
                     }
-                    else if (tryCopyDiffrentMemberType)
+                    else if (tryCopyDifferentMemberType)
                     {
                         object sourceValue = sourceProperty.GetValue(sourceData);
                         if (sourceValue != null)

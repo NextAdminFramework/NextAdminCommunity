@@ -65,6 +65,7 @@
     <TypeScriptCompile Include="Src\UI\Controls\ImageViewerModal.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\MultiImageTextCard.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\MultiImageViwer.ts" />
+    <TypeScriptCompile Include="Src\UI\Controls\PageContainer.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\PinsCard.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\Separator.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\Slider.ts" />

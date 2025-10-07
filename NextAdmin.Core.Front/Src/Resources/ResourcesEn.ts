@@ -32,6 +32,10 @@ namespace NextAdmin {
 
         overwriteData = "Overwrite data";
 
+        saveNotAllowed = "Unauthorized recording";
+
+        overwriteDataNotAllowedMessage = "The data currently being recorded has been updated by another user. Please reload the record before proceeding with the recording.";
+
         a = "a";
 
         back = "Back";

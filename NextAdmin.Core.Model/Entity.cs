@@ -78,7 +78,7 @@ namespace NextAdmin.Core.Model
             {
                 if (this.GetPropertyType(foreignEntityInfo.ForeignEntityKeyMemberName) == typeof(string))
                 {
-                    if (string.IsNullOrEmpty(this.GetMemberValue(foreignEntityInfo.ForeignEntityKeyMemberName) as string))
+                    if (this.GetMemberValue(foreignEntityInfo.ForeignEntityKeyMemberName) as string == string.Empty)
                     {
                         this.SetPropertyValue(foreignEntityInfo.ForeignEntityKeyMemberName, null);
                     }

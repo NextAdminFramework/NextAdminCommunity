@@ -6,8 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NextAdmin.FrontEnd.Model
 {
-    public class StripeUserSubscription<TUser> : Entity, IBlobEntity, ILinkedUserEntity<TUser>
-        where TUser : IFrontEndUser
+    public class StripeSubscription : Entity, IBlobEntity
     {
         [Key, Required, Label]
         public string? Id { get; set; }
@@ -15,21 +14,21 @@ namespace NextAdmin.FrontEnd.Model
         [Label]
         public string? UserId { get; set; }
 
-        [JsonIgnore, ForeignKey(nameof(UserId))]
-        public TUser? User { get; set; }
+        public string? UserType { get; set; }
+
 
         [JsonIgnore, Blob]
-        public Subscription? StripeSubscription { get; set; }
+        public Subscription? StripeSubscriptionData { get; set; }
 
         public string? SessionPaymentCompletedEventId { get; set; }
 
         [JsonIgnore, ForeignKey(nameof(SessionPaymentCompletedEventId))]
-        public StripeUserPaymentEvent<TUser>? SessionPaymentCompletedEvent { get; set; }
+        public StripeEvent? SessionPaymentCompletedEvent { get; set; }
 
         public string? LastInvoicePayedEventId { get; set; }
 
         [JsonIgnore, ForeignKey(nameof(LastInvoicePayedEventId))]
-        public StripeUserPaymentEvent<TUser>? LastInvoicePayedEvent { get; set; }
+        public StripeEvent? LastInvoicePayedEvent { get; set; }
 
         [Required]
         public DateTime? CreationDate { get; set; }
@@ -45,7 +44,7 @@ namespace NextAdmin.FrontEnd.Model
 
         public string? Blob { get; set; }
 
-        public StripeUserSubscription()
+        public StripeSubscription()
         {
             BlobEntity.ExtendBlobEntity(this);
         }
@@ -69,7 +68,7 @@ namespace NextAdmin.FrontEnd.Model
         {
             base.OnSave(dbContext, args);
 
-            List<StripePaymentEvent> paymentEvents = new List<StripePaymentEvent>();
+            List<StripeEvent> paymentEvents = new List<StripeEvent>();
 
             var lastPaymentCompletedEvent = GetLastPaymentCompletedEvent(dbContext);
             if (lastPaymentCompletedEvent != null)
@@ -91,7 +90,7 @@ namespace NextAdmin.FrontEnd.Model
 
 
 
-        public StripeUserPaymentEvent<TUser>? GetLastPaymentCompletedEvent(NextAdminDbContext dbContext)
+        public StripeEvent? GetLastPaymentCompletedEvent(NextAdminDbContext dbContext)
         {
             if (SessionPaymentCompletedEvent != null)
             {
@@ -101,10 +100,10 @@ namespace NextAdmin.FrontEnd.Model
             {
                 return null;
             }
-            return dbContext.Set<StripePaymentEvent>().FirstOrDefault(a => a.Id == SessionPaymentCompletedEventId) as StripeUserPaymentEvent<TUser>;
+            return dbContext.Set<StripeEvent>().FirstOrDefault(a => a.Id == SessionPaymentCompletedEventId) as StripeEvent;
         }
 
-        public StripeUserPaymentEvent<TUser>? GetLastInvoicePayedEvent(NextAdminDbContext dbContext)
+        public StripeEvent? GetLastInvoicePayedEvent(NextAdminDbContext dbContext)
         {
             if (LastInvoicePayedEvent != null)
             {
@@ -114,7 +113,7 @@ namespace NextAdmin.FrontEnd.Model
             {
                 return null;
             }
-            return dbContext.Set<StripePaymentEvent>().FirstOrDefault(a => a.Id == LastInvoicePayedEventId) as StripeUserPaymentEvent<TUser>;
+            return dbContext.Set<StripeEvent>().FirstOrDefault(a => a.Id == LastInvoicePayedEventId) as StripeEvent;
         }
 
 

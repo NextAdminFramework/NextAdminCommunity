@@ -1434,8 +1434,14 @@ namespace NextAdmin.UI {
                 });
             });
 
-            masterController.onDataChanged.subscribe((sender, args: NextAdmin.Business.DataChangedEventArgs) => {
+            let foreignKeyValue: any;
+            this.onUpdateWhereQuery.subscribe((sender, queryBuilder) => {
+                queryBuilder.query = queryBuilder.where(detailForeignKey + '=?', foreignKeyValue).query;
+            });
+
+            masterController.onDataChanged.subscribe(async (sender, args: NextAdmin.Business.DataChangedEventArgs) => {
                 if (args.newData == null) {
+                    foreignKeyValue = null;
                     this._suspendChanging = true;
                     this.clear();
                     this._suspendChanging = false;
@@ -1443,15 +1449,69 @@ namespace NextAdmin.UI {
                 else {
                     let propertyInfo = this.getPropertyInfo();
                     if (propertyInfo == null || args.newData[propertyInfo.name] == null || (args.newData[propertyInfo.name] as Array<any>).length == 0) {//if we are not binded or if there is no data, we load it manualy
-                        this.datasetController.where(detailForeignKey + '=?', args.newData[masterPrimaryKey]);
+                        foreignKeyValue = args.newData[masterPrimaryKey];
                         this._suspendChanging = true;
-                        this.datasetController.load({
-                            onGetResponse: () => {
-                                this._suspendChanging = false;
-                            }
-                        });
+                        await this.load();
+                        this._suspendChanging = false;
                     }
+                }
+            });
+        }
 
+
+        public bindToTab(tab: Tab, masterController: NextAdmin.Business.DataController_, detailForeignKey: string, masterPrimaryKey?: string) {
+            this._masterFormController = masterController;
+            this.buttonSave.element.style.display = 'none';
+            if (this.options.canRefresh !== true) {
+                this.buttonRefresh.element.style.display = 'none';
+            }
+            if (masterPrimaryKey == null) {
+                masterPrimaryKey = masterController.options.dataPrimaryKeyName;
+            }
+            this._foreignKeyName = detailForeignKey;
+
+            this.onFormModalCreated.subscribe((detailModal) => {
+                detailModal.dataController.onStartChangeData.subscribe(async (sender, args) => {
+                    if (NextAdmin.Business.DataStateHelper.getDataState(args.newData) == NextAdmin.Business.DataState.append) {
+                        args.newData[detailForeignKey] = masterController.getData()[masterPrimaryKey];
+                    }
+                });
+            });
+            let foreignKeyValue: any;
+            this.onUpdateWhereQuery.subscribe((sender, queryBuilder) => {
+                queryBuilder.query = queryBuilder.where(detailForeignKey + '=?', foreignKeyValue).query;
+            });
+
+            let load = async () => {
+                if (foreignKeyValue) {
+                    this._suspendChanging = true;
+                    tab.body.startSpin();
+                    await this.load();
+                    this._suspendChanging = false;
+                    tab.body.stopSpin();
+                }
+            };
+
+            tab.tabPanel.onActivTabChanged.subscribe((sender, args) => {
+                if (args.newTab == tab) {
+                    load();
+                }
+            });
+            masterController.onDataChanged.subscribe((sender, args: NextAdmin.Business.DataChangedEventArgs) => {
+                if (args.newData == null) {
+                    foreignKeyValue = null;
+                    this._suspendChanging = true;
+                    this.clear();
+                    this._suspendChanging = false;
+                }
+                else {
+                    let propertyInfo = this.getPropertyInfo();
+                    if (propertyInfo == null || args.newData[propertyInfo.name] == null || (args.newData[propertyInfo.name] as Array<any>).length == 0) {//if we are not binded or if there is no data, we load it manualy
+                        foreignKeyValue = args.newData[masterPrimaryKey];
+                        if (tab.isActiv) {
+                            load();
+                        }
+                    }
                 }
             });
         }

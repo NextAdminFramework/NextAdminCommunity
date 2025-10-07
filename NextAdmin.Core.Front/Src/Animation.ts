@@ -19,42 +19,45 @@ namespace NextAdmin {
         }
 
 
-        public static animate(element: HTMLElement, animation: string, options?: AnimationOptions) {
-            if (options == null) {
-                options = {};
-            }
-            this.registerStyle();
-            if (!element.classList.contains('animated')) {
-                element.classList.add('animated');
-            }
-            if (element['previousAnim'] != undefined) {
-                element.classList.remove(element['previousAnim']);
-            }
-            element['previousAnim'] = animation;
-            element.classList.add(animation);
-            if (options.animationSpeed != null) {
-                element.classList.add(options.animationSpeed);
-            }
-            this.playingAnimationElements.push(element);
-            let animationEnded = false;
-            setTimeout(() => {
-                if (!animationEnded) {
-                    element.trigger('animationend');
+        public static async animate(element: HTMLElement, animation: string, options?: AnimationOptions): Promise<void> {
+            return new Promise((resolve) => {
+                if (options == null) {
+                    options = {};
                 }
-            }, 1000);
-
-            element.addEventsListener('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', () => {
-                if (animationEnded)
-                    return;
-                this.playingAnimationElements.splice(this.playingAnimationElements.indexOf(element), 1);
-                animationEnded = true;
-                if (!String.isNullOrEmpty(element['previousAnim'])) {
+                this.registerStyle();
+                if (!element.classList.contains('animated')) {
+                    element.classList.add('animated');
+                }
+                if (element['previousAnim'] != undefined) {
                     element.classList.remove(element['previousAnim']);
-                    delete element['previousAnim'];
-                }//-webkit-animation-duration
-                if (options.onEndAnimation != undefined && options.onEndAnimation != null) {
-                    options.onEndAnimation();
                 }
+                element['previousAnim'] = animation;
+                element.classList.add(animation);
+                if (options.animationSpeed != null) {
+                    element.classList.add(options.animationSpeed);
+                }
+                this.playingAnimationElements.push(element);
+                let animationEnded = false;
+                setTimeout(() => {
+                    if (!animationEnded) {
+                        element.trigger('animationend');
+                    }
+                }, 1000);
+
+                element.addEventsListener('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', () => {
+                    if (animationEnded)
+                        return;
+                    this.playingAnimationElements.splice(this.playingAnimationElements.indexOf(element), 1);
+                    animationEnded = true;
+                    if (!String.isNullOrEmpty(element['previousAnim'])) {
+                        element.classList.remove(element['previousAnim']);
+                        delete element['previousAnim'];
+                    }//-webkit-animation-duration
+                    if (options.onEndAnimation != undefined && options.onEndAnimation != null) {
+                        options.onEndAnimation();
+                    }
+                    resolve();
+                });
             });
         }
 
@@ -89,7 +92,7 @@ namespace NextAdmin {
 interface HTMLElement {
 
 
-    anim(animation: string, options?: NextAdmin.AnimationOptions);
+    anim(animation: string, options?: NextAdmin.AnimationOptions): Promise<void>;
 
 }
 
@@ -97,8 +100,8 @@ interface HTMLElement {
 try {
 
 
-    HTMLElement.prototype.anim = function (animation: string, options?: NextAdmin.AnimationOptions) {
-        NextAdmin.Animation.animate(this, animation, options);
+    HTMLElement.prototype.anim = async function (animation: string, options?: NextAdmin.AnimationOptions) {
+        await NextAdmin.Animation.animate(this, animation, options);
     };
 
 }

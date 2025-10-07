@@ -20,6 +20,14 @@
       <Generator>DtsGenerator</Generator>
       <LastGenOutput>ContactMessage.cs.d.ts</LastGenOutput>
     </Compile>
+    <Compile Update="StripeEvent.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>StripeEvent.cs.d.ts</LastGenOutput>
+    </Compile>
+    <Compile Update="StripePaymentSession.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>StripePaymentSession.cs.d.ts</LastGenOutput>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +35,16 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ContactMessage.cs</DependentUpon>
+    </None>
+    <None Update="StripeEvent.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>StripeEvent.cs</DependentUpon>
+    </None>
+    <None Update="StripePaymentSession.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>StripePaymentSession.cs</DependentUpon>
     </None>
   </ItemGroup>
 
