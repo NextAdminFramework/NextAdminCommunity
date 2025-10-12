@@ -29,7 +29,7 @@ var NextAdmin;
             super(options);
             this.onUserLoggedIn = new NextAdmin.EventHandler();
             this.onUserLoggedOut = new NextAdmin.EventHandler();
-            this.onStartInitializeApp = new NextAdmin.EventHandlerBase();
+            this.onStartInitializeApp = new NextAdmin.EventHandler();
             this.onAppInitialized = new NextAdmin.EventHandlerBase();
         }
         async startApp() {
@@ -55,10 +55,10 @@ var NextAdmin;
             let user = await this.userClient.getUserByToken();
             document.body.stopSpin();
             if (user) {
-                this.logUser(user);
+                await this.logUser(user);
             }
             else {
-                this.navigateTo(this.options.defaultPage);
+                await this.navigateTo(this.options.defaultPage);
             }
         }
         initializeResources(language) {
@@ -82,7 +82,7 @@ var NextAdmin;
             }
             return this._currentLanguage;
         }
-        getCurrentLenguage() {
+        getCurrentLanguage() {
             return this._currentLanguage ?? 'en';
         }
         async logUser(user) {
@@ -99,11 +99,11 @@ var NextAdmin;
                 }
             }
         }
-        async navigateTo(pageName, parameters, updateBrowserUrl, force) {
+        async navigateTo(pageName, parameters, updateNavigatorState, force) {
             if (pageName == this.options.defaultPage && this.user != null) {
-                return super.navigateTo(this.options.afterLoginPage, null, false);
+                return super.navigateTo(this.options.afterLoginPage, null, NextAdmin.UpdateNavigatorState.none);
             }
-            return await super.navigateTo(pageName, parameters, updateBrowserUrl, force);
+            return await super.navigateTo(pageName, parameters, updateNavigatorState, force);
         }
         logOutUser(reloadPage = true) {
             NextAdmin.Cookies.delete(this.userClient.authTokenName);
@@ -119,20 +119,6 @@ var NextAdmin;
             if (this.user == null || NextAdmin.String.isNullOrEmpty(authToken)) {
                 return false;
             }
-            /*
-            this.entityClient = new AdminEntityClient(this.options.adminEntityControllerUrl, this.options.adminAuthTokenName, authToken);
-            this.serviceClient = new AdminServiceClient(this.options.adminServiceControllerUrl, this.options.adminAuthTokenName, authToken);
-            this.onStartInitializeApp.dispatch();
-    
-            this.appConfig = await this.serviceClient.getAppConfig();
-            if (this.appConfig == null) {
-                NextAdmin.UI.MessageBox.createOk(NextAdmin.Resources.error, Resources.invalidCredentials, () => {
-                    this.logOutUser();
-                });
-                return false;
-            }
-            this.entityInfos = new NextAdmin.Business.EntityInfos(this.appConfig.entityInfos);
-            */
             this.initializeResources(this.user.culture);
             NextAdmin.Business.DatasetController_.factory = (dataName) => dataName == null ? null : new NextAdmin.Business.EntityDatasetController({
                 entityClient: this.entityClient,
@@ -144,6 +130,7 @@ var NextAdmin;
                 dataInfos: this.entityInfos,
                 dataName: dataName
             });
+            this.onStartInitializeApp.dispatch(this, this.options);
             this.leftContainer = document.body.appendHTML('div', (leftContainer) => {
                 leftContainer.classList.add('next-admin-side-container');
                 this.menu = leftContainer.appendControl(new NextAdmin.UI.Sidebar({
@@ -429,8 +416,8 @@ var NextAdmin;
                             loginPanel.appendHTML('div', (form) => {
                                 form.classList.add('form-signin');
                                 let userAppIdInput;
-                                let loginInput = form.appendControl(new NextAdmin.UI.Input({ placeHolder: NextAdmin.BackEndResources.userName }), (input) => { input.element.style.marginBottom = '10px'; });
-                                let passwordInput = form.appendControl(new NextAdmin.UI.Input({ inputType: NextAdmin.UI.InputType.password, placeHolder: NextAdmin.Resources.password }));
+                                let loginInput = form.appendControl(new NextAdmin.UI.Input({ placeholder: NextAdmin.BackEndResources.userName }), (input) => { input.element.style.marginBottom = '10px'; });
+                                let passwordInput = form.appendControl(new NextAdmin.UI.Input({ inputType: NextAdmin.UI.InputType.password, placeholder: NextAdmin.Resources.password }));
                                 passwordInput.input.addEventListener('keyup', (args) => {
                                     if (args.keyCode == 13) {
                                         this.tryLogUser(userAppIdInput?.getValue(), loginInput.getValue(), passwordInput.getValue(), stayConnected.getValue());
@@ -459,7 +446,7 @@ var NextAdmin;
                                         }
                                     }));
                                     if (this.options.gcuInfos?.length) {
-                                        let currentLanguage = this.navigationController.getCurrentLenguage();
+                                        let currentLanguage = this.navigationController.getCurrentLanguage();
                                         let gcuInfo = this.options.gcuInfos.firstOrDefault(a => a.language == currentLanguage) ?? this.options.gcuInfos.firstOrDefault(a => a.language == 'en') ?? this.options.gcuInfos.firstOrDefault();
                                         if (gcuInfo) {
                                             footer.appendControl(new NextAdmin.UI.Button({
@@ -483,9 +470,6 @@ var NextAdmin;
                         });
                     });
                 });
-            }
-            navigateFrom(args) {
-                super.navigateFrom(args);
             }
             async tryLogUser(userAppId, login, password, stayConnected) {
                 this.buttonLogin.startSpin();

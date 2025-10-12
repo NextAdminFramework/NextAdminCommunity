@@ -7,7 +7,7 @@ declare namespace NextAdmin {
         entityInfos: NextAdmin.Business.EntityInfos;
         onUserLoggedIn: EventHandler<BackEndAppController, Models.User>;
         onUserLoggedOut: EventHandler<BackEndAppController, Models.User>;
-        onStartInitializeApp: EventHandlerBase;
+        onStartInitializeApp: EventHandler<BackEndAppController, BackEndAppControllerOptions>;
         onAppInitialized: EventHandlerBase;
         menu: NextAdmin.UI.Sidebar;
         leftContainer?: HTMLDivElement;
@@ -24,9 +24,9 @@ declare namespace NextAdmin {
         startApp(): Promise<void>;
         private _currentLanguage?;
         initializeResources(language?: string): string;
-        getCurrentLenguage(): string;
+        getCurrentLanguage(): string;
         logUser(user: NextAdmin.Models.User): Promise<void>;
-        navigateTo(pageName: string, parameters?: any, updateBrowserUrl?: boolean, force?: boolean): Promise<NextAdmin.UI.Page>;
+        navigateTo(pageName: string, parameters?: any, updateNavigatorState?: UpdateNavigatorState, force?: boolean): Promise<NextAdmin.UI.Page>;
         logOutUser(reloadPage?: boolean): void;
         initializeApp(): Promise<boolean>;
         protected initializeHeader(mainArea: HTMLElement): void;
@@ -82,7 +82,6 @@ declare namespace NextAdmin.UI {
         static style: string;
         constructor(option?: LoginPageOptions);
         navigateTo(args: NextAdmin.UI.NavigateToArgs): Promise<void>;
-        navigateFrom(args: NextAdmin.UI.NavigateFromArgs): void;
         tryLogUser(userAppId: string, login: string, password: string, stayConnected: boolean): Promise<void>;
     }
     interface LoginPageOptions extends PageOptions {

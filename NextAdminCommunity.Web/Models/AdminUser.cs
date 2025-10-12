@@ -35,6 +35,8 @@ namespace NextAdminCommunity.Web.Models
         [NotMapped, Label("AdminUser_IsSuperAdmin")]
         public bool IsSuperAdmin { get; set; }
 
+        public string AuthProviderName { get; set; }
+
         public AdminUser()
         {
             this.ExtendUserEntity();

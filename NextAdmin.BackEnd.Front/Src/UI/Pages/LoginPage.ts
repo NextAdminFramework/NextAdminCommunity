@@ -99,8 +99,8 @@ namespace NextAdmin.UI {
 
                             let userAppIdInput: NextAdmin.UI.Input;
 
-                            let loginInput = form.appendControl(new NextAdmin.UI.Input({ placeHolder: BackEndResources.userName }), (input) => { input.element.style.marginBottom = '10px'; });
-                            let passwordInput = form.appendControl(new NextAdmin.UI.Input({ inputType: NextAdmin.UI.InputType.password, placeHolder: NextAdmin.Resources.password }));
+                            let loginInput = form.appendControl(new NextAdmin.UI.Input({ placeholder: BackEndResources.userName }), (input) => { input.element.style.marginBottom = '10px'; });
+                            let passwordInput = form.appendControl(new NextAdmin.UI.Input({ inputType: NextAdmin.UI.InputType.password, placeholder: NextAdmin.Resources.password }));
                             passwordInput.input.addEventListener('keyup', (args) => {
                                 if (args.keyCode == 13) {
                                     this.tryLogUser(userAppIdInput?.getValue(), loginInput.getValue(), passwordInput.getValue(), stayConnected.getValue());

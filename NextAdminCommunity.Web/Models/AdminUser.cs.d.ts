@@ -6,5 +6,6 @@ declare module Models {
 		disabled: boolean;
 		creationDate?: Date;
 		isSuperAdmin: boolean;
+		authProviderName: string;
 	}
 }
