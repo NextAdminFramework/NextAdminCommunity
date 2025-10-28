@@ -199,13 +199,11 @@
                 if (defaultPageName == null) {
                     defaultPageName = this.options.defaultPage;
                 }
-                this.navigateTo(defaultPageName, null, UpdateNavigatorState.replaceState);
+                await this.navigateTo(defaultPageName, null, UpdateNavigatorState.replaceState);
             }
         }
 
-
-
-        async navigateTo(pageName: string, parameters = null, updateNavigatorState = UpdateNavigatorState.pushState, force = false): Promise<NextAdmin.UI.Page> {
+        async navigateTo(pageName: string, parameters = null, navigatorHistoryAction = UpdateNavigatorState.pushState, force = false): Promise<NextAdmin.UI.Page> {
             if (!force && this._currentPage != null && this._currentPage.options != null && pageName == this._currentPage.options.name && JSON.stringify(parameters) == JSON.stringify(this._currentPage.parameters)) {
                 return;
             }
@@ -233,9 +231,10 @@
                 this._currentPage = nextPage;
             }
 
-            let navigateArgs = { previousPage: this._previousPage, nextPage: nextPage } as NavigationArgs;
-            this.onNavigate.dispatch(this, navigateArgs);
-            if (navigateArgs.cancelNavigation) {
+
+            let navigationArgs = { previousPage: this._previousPage, nextPage: nextPage } as NavigationArgs;
+            this.onNavigate.dispatch(this, navigationArgs);
+            if (navigationArgs.cancelNavigation) {
                 return null;
             }
 
@@ -243,8 +242,10 @@
                 previousPage: previousPage,
                 parameters: parameters,
                 dependencies: nextPage?.options?.pageInfo?.dependencies,
-                contentUrl: nextPage?.options?.pageInfo?.contentUrl
+                contentUrl: nextPage?.options?.pageInfo?.contentUrl,
+                navigatorHistoryAction: navigatorHistoryAction
             } as NextAdmin.UI.NavigateToArgs;
+
             if (nextPageNavigationArgs.contentUrl) {//preload view html content
                 await nextPage.loadContent(nextPageNavigationArgs.contentUrl);
             }
@@ -253,8 +254,8 @@
             }
             await nextPage.navigateTo(nextPageNavigationArgs);
 
-            if (updateNavigatorState && window.history && window.history.pushState) {
-                this.updateNavigatorHistory(this._currentPage.options.name, parameters, updateNavigatorState == UpdateNavigatorState.pushState);
+            if (navigatorHistoryAction && window.history && window.history.pushState) {
+                this.updateNavigatorHistory(this._currentPage.options.name, parameters, navigatorHistoryAction == UpdateNavigatorState.pushState);
             }
             this.onPageChanged.dispatch(this, nextPage);
             return nextPage;

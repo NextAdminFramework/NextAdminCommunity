@@ -157,7 +157,7 @@ namespace NextAdmin.UI {
 
         protected applyButtonItemStyle(buttonItem: Button) {
             if (buttonItem.getColorStyle() == null || buttonItem.getColorStyle() == ButtonStyle.default) {
-                buttonItem.setColorStyle(NextAdmin.UI.ButtonStyle.noBg);
+                buttonItem.setStyle(NextAdmin.UI.ButtonStyle.noBg);
             }
             buttonItem.element.style.width = '100%';
             buttonItem.element.style.overflow = 'hidden';

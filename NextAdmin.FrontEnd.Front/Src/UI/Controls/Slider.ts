@@ -47,6 +47,7 @@ namespace NextAdmin.UI {
         constructor(options?: SliderOptions) {
             super('div', {
                 changeSlideDelaySecond: 10,
+                uiScale: 1,
                 navigationButtonsStyle: NextAdmin.UI.ButtonStyle.noBg,
                 ...options
             } as SliderOptions);
@@ -69,6 +70,7 @@ namespace NextAdmin.UI {
                     }
                 }), (btnPreviousSlide) => {
                     btnPreviousSlide.element.center();
+                    (btnPreviousSlide.element.firstChild as HTMLElement).style.transform = 'scale(' + this.options.uiScale + ')';
                 });
             });
             this.nextSlideArrowContainer = this.element.appendHTML('div', (rightArrowContainer) => {
@@ -82,6 +84,7 @@ namespace NextAdmin.UI {
                     }
                 }), (btnNextSlide) => {
                     btnNextSlide.element.center();
+                    (btnNextSlide.element.firstChild as HTMLElement).style.transform = 'scale(' + this.options.uiScale + ')';
                 });
             });
 
@@ -237,6 +240,8 @@ namespace NextAdmin.UI {
 
         changeSlideDelaySecond?: number;
 
+        uiScale?: number;
+
         navigationButtonsStyle?: NextAdmin.UI.ButtonStyle;
 
     }
@@ -257,7 +262,7 @@ namespace NextAdmin.UI {
         constructor(options?: SlideOptions) {
             super('div', {
                 imageSize: 'cover',
-                imagePosition:'center top',
+                imagePosition: 'center top',
                 ...options
             } as SlideOptions);
             Style.append('NextAdmin.UI.Slide', Slide.style);

@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using NextAdmin.Core;
-using NextAdmin.Core.API;
 using NextAdmin.Core.API.Controllers;
 using NextAdmin.Core.API.ViewModels.Args;
 using NextAdmin.Core.API.ViewModels.Responses;
@@ -49,7 +48,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 {
                     this.InitializeUser(user, signUpUserArgs);
                     user.AuthProviderName = null;
-                    user.EmailVerificationCode = Guid.NewGuid().ToString().Substring(0, 5);
+                    user.EmailVerificationCode = new Random().Next(10000, 99999).ToString();
                 }
                 else if (user == null)
                 {
@@ -57,7 +56,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                     this.InitializeUser(user, signUpUserArgs);
                     user.AuthProviderName = null;
                     user.Disabled = true;
-                    user.EmailVerificationCode = Guid.NewGuid().ToString().Substring(0, 5);
+                    user.EmailVerificationCode = new Random().Next(10000, 99999).ToString();
                     DbContext.AddEntity(user);
                 }
                 else
@@ -336,7 +335,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
 
         protected virtual string GetConfirmationEmailTitle(TUser user)
         {
-            return NextAdminHelper.AppName + " : " + DbContext.Resources.CreateAccountEmailConfirmationTitle;
+            return DbContext.Resources.CreateAccountEmailConfirmationTitle;
         }
 
         protected virtual string GetConfirmationEmailContent(TUser user, string confirmationCode)

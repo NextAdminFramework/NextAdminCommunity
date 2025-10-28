@@ -156,13 +156,11 @@ namespace NextAdmin.UI {
                 if (this.options.canSave) {
                     toolBar.appendControl(this.saveButton);
                 }
-
-
                 if (this.options.hasFooterCloseButton) {
                     toolBar.appendControl(this.footerCloseButton = new Button({
                         text: Resources.closeIcon + ' ' + Resources.close,
                         action: () => {
-                            this.close({ chackDataState: true });
+                            this.close();
                         }
                     }));
                 }
@@ -319,7 +317,7 @@ namespace NextAdmin.UI {
                 chackDataState: !this.options.isDetailFormModal && !this.options.hasValidateButton,
                 ...args
             };
-            if (args.chackDataState) {
+            if (this.dataController && args.chackDataState) {
                 this.dataController.askUserToSaveDataIfNeededAndExecuteAction(() => {
                     super.close(args);
                 });

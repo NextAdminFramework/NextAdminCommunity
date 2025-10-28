@@ -42,6 +42,8 @@ namespace NextAdmin.FrontEnd.API.Controllers
                 {
                     return ApiResponse<string>.Error("INVALID_PLAN");
                 }
+                var price = Math.Round(monthPrice.Value, 2);
+
 
                 var service = new SessionService(new StripeClient(GetStripeSecretApiKey()));
                 Session stripeSession = service.Create(new SessionCreateOptions
@@ -57,7 +59,7 @@ namespace NextAdmin.FrontEnd.API.Controllers
                                 ProductData = new SessionLineItemPriceDataProductDataOptions {
                                     Name = planName,
                                 },
-                                UnitAmountDecimal = monthPrice.Value * 100,
+                                UnitAmountDecimal = price * 100,
                                 Currency = "EUR",
                                 Recurring = new SessionLineItemPriceDataRecurringOptions {
                                     Interval = "month",

@@ -182,6 +182,7 @@ namespace NextAdmin.UI {
                 canClose: true,
                 hasHeader: true,
                 hasFooter: true,
+                closeOnClickOutside: false,
                 openAnimation: 'zoomIn',
                 closeAnimation: 'zoomOut',
                 minimizeAnimation: 'fadeOutDown',
@@ -205,7 +206,6 @@ namespace NextAdmin.UI {
                 this.element.style.background = this.options.backdropColor;
                 this.element.anim('fadeIn', { animationSpeed: AnimationSpeed.faster });
             }
-
 
             this.modal = this.element.appendHTML('div', (modal) => {
                 modal.classList.add('next-admin-modal');
@@ -341,6 +341,15 @@ namespace NextAdmin.UI {
                     });
                 }) as HTMLDivElement;
             });
+
+            if (this.options.closeOnClickOutside) {
+                this.modal.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                });
+                this.element.addEventListener('click', () => {
+                    this.close();
+                });
+            }
 
             this.setSize(this.options.size);
             this.setStyle(this.options.style);
@@ -1067,6 +1076,8 @@ namespace NextAdmin.UI {
         hasHeader?: boolean;
 
         hasFooter?: boolean;
+
+        closeOnClickOutside?: boolean;
 
         onClose?: (modal: NextAdmin.UI.Modal, args: CloseModalArgs) => void;
 

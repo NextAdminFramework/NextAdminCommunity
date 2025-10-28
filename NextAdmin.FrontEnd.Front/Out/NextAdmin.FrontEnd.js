@@ -735,25 +735,35 @@ var NextAdmin;
             constructor(options) {
                 super('div', {
                     margin: '10px',
+                    isItemsCentered: true,
                     ...options
                 });
+                this._cards = new Array();
                 NextAdmin.Style.append('NextAdmin.UI.CardsGrid', CardsGrid.style);
                 this.element.classList.add('next-admin-cards-grid');
                 this.header = this.element.appendHTML('div');
                 this.body = this.element.appendHTML('div', (body) => {
                     body.classList.add('next-admin-cards-grid-body');
+                    if (this.options.isItemsCentered) {
+                        body.classList.add('items-centered');
+                    }
                 });
                 this.footer = this.element.appendHTML('div');
             }
             appendCard(card, controlOption) {
                 this.body.appendControl(card, controlOption);
+                this._cards.add(card);
                 card.element.style.margin = this.options.margin;
                 return card;
+            }
+            getCards() {
+                return this._cards;
             }
             appendControl(control, configAction) {
                 return this.body.appendControl(control, configAction);
             }
             clear() {
+                this._cards.clear();
                 this.body.innerHTML = '';
             }
         }
@@ -763,6 +773,8 @@ var NextAdmin;
             .next-admin-cards-grid-body{
                 display:flex;
                 flex-flow:wrap;
+            }
+            .next-admin-cards-grid-body.items-centered{
                 place-content:center;
             }
         }
@@ -770,16 +782,25 @@ var NextAdmin;
         `;
         UI.CardsGrid = CardsGrid;
         class CardsDataGrid extends CardsGrid {
-            constructor() {
-                super(...arguments);
+            constructor(options) {
+                super({
+                    paginItemCount: 50,
+                    ...options
+                });
                 this.dataset = new Array();
+                this._isFullyLoaded = false;
+                this._isLoading = false;
             }
             cardFactory(data) {
                 throw Error('Not implemented');
             }
+            async retrieveDataset(take, skip) {
+                throw Error('Not implemented');
+            }
             clear() {
-                this.dataset = [];
+                this.dataset = new Array();
                 this.body.innerHTML = '';
+                this._isFullyLoaded = false;
             }
             setDataset(dataset) {
                 this.clear();
@@ -798,6 +819,40 @@ var NextAdmin;
                     this.dataset.add(data);
                     this.appendCard(card);
                 }
+            }
+            async load(take = this.options.paginItemCount, skip) {
+                this._isLoading = true;
+                let spinerContainer = this.body.appendHTML('div', (spinerContainer) => {
+                    spinerContainer.style.height = '200px';
+                    spinerContainer.style.width = '100%';
+                    spinerContainer.startSpin();
+                });
+                let items = await this.retrieveDataset(take, skip);
+                spinerContainer.remove();
+                if (!skip) {
+                    this.setDataset(items);
+                }
+                else {
+                    this.addDataset(items);
+                }
+                if (take == null || (take && (items?.length ?? 0) < take)) {
+                    this._isFullyLoaded = true;
+                }
+                this._isLoading = false;
+                return items;
+            }
+            enableScrollLoading(scrollElement) {
+                scrollElement = window;
+                let lastLoadedItemCount = -1;
+                let timer = new NextAdmin.Timer();
+                scrollElement.addEventListener('scroll', () => {
+                    timer.throttle(async () => {
+                        if (!this._isLoading && !this._isFullyLoaded && lastLoadedItemCount != 0 && window.scrollY + window.innerHeight > document.body.offsetHeight - 500) {
+                            let items = await this.load(this.options.paginItemCount, this.dataset?.length);
+                            lastLoadedItemCount = items?.length ?? 0;
+                        }
+                    }, 10);
+                });
             }
         }
         UI.CardsDataGrid = CardsDataGrid;
@@ -1001,8 +1056,10 @@ var NextAdmin;
                     size: ImageCardSize.medium_4_3,
                     style: ImageCardStyle.imageLightBorderedTextLeft,
                     isResponsive: true,
+                    multiImageDisplayDelay: 5000,
                     ...options
                 });
+                this._isImageAutoPlayingEnabled = true;
                 NextAdmin.Style.append('Eshop.UI.Card', ImageCard.style);
                 this.element.classList.add('next-admin-image-card-wrapper');
                 if (this.options.isResponsive) {
@@ -1010,6 +1067,9 @@ var NextAdmin;
                 }
                 this.card = this.element.appendHTML('a', (card) => {
                     card.classList.add('next-admin-image-card');
+                    if (this.options.href || this.options.action) {
+                        card.style.cursor = 'pointer';
+                    }
                     if (this.options.backgroundColor) {
                         card.style.background = this.options.backgroundColor;
                     }
@@ -1037,8 +1097,13 @@ var NextAdmin;
                 });
                 this.setSize(this.options.size);
                 this.setStyle(this.options.style);
-                if (this.options.imageUrl) {
-                    this.setBackground(this.options.imageUrl);
+                if (this.options.imageSrc) {
+                    if (Array.isArray(this.options.imageSrc)) {
+                        this.setMultiImageSrcs(this.options.imageSrc);
+                    }
+                    else {
+                        this.setImageSrc(this.options.imageSrc);
+                    }
                 }
                 if (this.options.imageTitle) {
                     this.setImageTitle(this.options.imageTitle);
@@ -1081,6 +1146,10 @@ var NextAdmin;
             setSize(size) {
                 switch (size) {
                     default:
+                    case ImageCardSize.ultraSmall_1_1:
+                        this.element.classList.add('ultra-small');
+                        this.card.classList.add('next-admin-image-card-ultra-small-1-1');
+                        break;
                     case ImageCardSize.extraSmall_1_1:
                         this.element.classList.add('extra-small');
                         this.card.classList.add('next-admin-image-card-extra-small-1-1');
@@ -1161,9 +1230,28 @@ var NextAdmin;
                         break;
                 }
             }
-            setBackground(url) {
-                if (url) {
-                    this.cardImage.style.background = 'url("' + url + '")';
+            async setMultiImageSrcs(srcs) {
+                let i = 0;
+                let isFirstImage = true;
+                while (this._isImageAutoPlayingEnabled) {
+                    if (!isFirstImage) {
+                        await this.cardImage.anim('fadeOut', { animationSpeed: NextAdmin.AnimationSpeed.faster });
+                    }
+                    this.setImageSrc(srcs[i]);
+                    if (!isFirstImage) {
+                        this.cardImage.anim('fadeIn', { animationSpeed: NextAdmin.AnimationSpeed.faster });
+                    }
+                    await NextAdmin.Timer.sleep(this.options.multiImageDisplayDelay);
+                    i++;
+                    if (i == (srcs.length)) {
+                        i = 0;
+                    }
+                    isFirstImage = false;
+                }
+            }
+            setImageSrc(src) {
+                if (src) {
+                    this.cardImage.style.background = 'url("' + src + '")';
                     this.cardImage.style.backgroundSize = 'cover';
                     this.cardImage.style.backgroundRepeat = 'no-repeat';
                     this.cardImage.style.backgroundPosition = 'center';
@@ -1171,6 +1259,20 @@ var NextAdmin;
                 else {
                     this.cardImage.style.background = 'unset';
                 }
+            }
+            displayAsSelected() {
+                this.element.classList.add('selected');
+            }
+            displayAsUnselected() {
+                if (this.element.classList.contains('selected')) {
+                    this.element.classList.remove('selected');
+                }
+            }
+            isSelected() {
+                return this.element.classList.contains('selected');
+            }
+            dispose() {
+                this._isImageAutoPlayingEnabled = false;
             }
         }
         ImageCard.style = `
@@ -1183,7 +1285,6 @@ var NextAdmin;
 
         .next-admin-image-card{
             display:block;
-            cursor:pointer;
             overflow: hidden;
             position:relative;
             width:100%;
@@ -1196,6 +1297,7 @@ var NextAdmin;
             position:relative;
             transition: transform 0.9s;
         }
+
 
         .next-admin-image-card-title{
             position:absolute;
@@ -1243,13 +1345,13 @@ var NextAdmin;
 
         .next-admin-image-card-border-radius{
             .next-admin-image-card{
-                border-radius:16px;
+                border-radius:10%;
                 box-shadow:0px 0px 20px rgba(0,0,0,0.25);
             }
         }
         .next-admin-image-card-border-radius-text-center{
             .next-admin-image-card{
-                border-radius:16px;
+                border-radius:10%;
                 box-shadow:0px 0px 20px rgba(0,0,0,0.25);
             }
             .next-admin-image-card-outside-title{
@@ -1262,14 +1364,14 @@ var NextAdmin;
 
         .next-admin-image-card-border-radius-b{
             .next-admin-image-card{
-                border-radius:16px;
+                border-radius:10%;
                 box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
             }
         }
 
         .next-admin-image-card-border-radius-b-text-center{
             .next-admin-image-card{
-                border-radius:16px;
+                border-radius:10%;
                 box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
             }
             .next-admin-image-card-outside-title{
@@ -1280,12 +1382,19 @@ var NextAdmin;
             }
         }
 
+        .next-admin-image-card-wrapper.ultra-small{
+            width:100px;
+            .next-admin-image-card-title{
+                font-size:14px;
+            }
+        }
         .next-admin-image-card-wrapper.extra-small{
             width:200px;
             .next-admin-image-card-title{
                 font-size:16px;
             }
         }
+
         .next-admin-image-card-wrapper.small{
             width:300px;
             .next-admin-image-card-title{
@@ -1304,8 +1413,10 @@ var NextAdmin;
                 font-size:24px;
             }
         }
-
-
+        
+        .next-admin-image-card-ultra-small-1-1{
+            height:100px;
+        }
         .next-admin-image-card-extra-small-1-1{
             height:200px;
         }
@@ -1365,12 +1476,13 @@ var NextAdmin;
             font-size:14px;
             .next-admin-image-card-outside-title{
                 text-overflow: ellipsis;
-                color:#999;
+                color:#444;
             }
 
             .next-admin-image-card-outside-description{
                 text-overflow: ellipsis;
-                color:#444;
+                color:#999;
+                font-size:12px;
             }
         }
         .next-admin-image-card-wrapper.small{
@@ -1378,9 +1490,44 @@ var NextAdmin;
                 height:40px;
             }
         }
+
+        .next-admin-image-card-wrapper.ultra-small{
+            .next-admin-image-card-outside-text{
+                height:20px;
+            }
+        }
         .next-admin-image-card-wrapper.extra-small{
             .next-admin-image-card-outside-text{
                 height:30px;
+            }
+        }
+        .next-admin-image-card-wrapper.ultra-small.responsive{
+            @media (max-width: 1024px) {
+                width:80px;
+                .next-admin-image-card-outside-text{
+                    padding-top:5px;
+                    font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
+                }
+            }
+            @media (max-width: 768px) {
+                width:60px;
+                .next-admin-image-card-outside-text{
+                    padding-top:4px;
+                    font-size:11px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:40px;
+                .next-admin-image-card-outside-text{
+                    padding-top:2px;
+                    font-size:10px;
+                    .next-admin-image-card-outside-description{
+                        font-size:9px;
+                    }
+                }
             }
         }
 
@@ -1391,6 +1538,9 @@ var NextAdmin;
                 .next-admin-image-card-outside-text{
                     padding-top:5px;
                     font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
                 }
             }
             @media (max-width: 768px) {
@@ -1405,6 +1555,9 @@ var NextAdmin;
                 .next-admin-image-card-outside-text{
                     padding-top:2px;
                     font-size:10px;
+                    .next-admin-image-card-outside-description{
+                        font-size:9px;
+                    }
                 }
             }
         }
@@ -1415,6 +1568,9 @@ var NextAdmin;
                 .next-admin-image-card-outside-text{
                     padding-top:6px;
                     font-size:13px;
+                    .next-admin-image-card-outside-description{
+                        font-size:12px;
+                    }
                 }
             }
             @media (max-width: 768px) {
@@ -1422,6 +1578,9 @@ var NextAdmin;
                 .next-admin-image-card-outside-text{
                     padding-top:5px;
                     font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
                 }
             }
             @media (max-width: 512px) {
@@ -1429,6 +1588,9 @@ var NextAdmin;
                 .next-admin-image-card-outside-text{
                     padding-top:4px;
                     font-size:11px;
+                    .next-admin-image-card-outside-description{
+                        font-size:10px;
+                    }
                 }
             }
         }
@@ -1438,6 +1600,9 @@ var NextAdmin;
                 .next-admin-image-card-outside-text{
                     padding-top:8px;
                     font-size:14px;
+                    .next-admin-image-card-outside-description{
+                        font-size:12px;
+                    }
                 }
             }
             @media (max-width: 768px) {
@@ -1445,13 +1610,19 @@ var NextAdmin;
                 .next-admin-image-card-outside-text{
                     padding-top:6px;
                     font-size:13px;
+                    .next-admin-image-card-outside-description{
+                        font-size:12px;
+                    }
                 }
             }
             @media (max-width: 512px) {
-                width:180px;
+                width:160px;
                 .next-admin-image-card-outside-text{
                     padding-top:5px;
                     font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
                 }
             }
         }
@@ -1464,6 +1635,9 @@ var NextAdmin;
                 .next-admin-image-card-outside-text{
                     padding-top:8px;
                     font-size:13px;
+                    .next-admin-image-card-outside-description{
+                        font-size:12px;
+                    }
                 }
             }
             @media (max-width: 512px) {
@@ -1471,12 +1645,27 @@ var NextAdmin;
                 .next-admin-image-card-outside-text{
                     padding-top:6px;
                     font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
                 }
             }
         }
 
 
         .next-admin-image-card-wrapper.responsive{
+
+            .next-admin-image-card-ultra-small-1-1{
+                @media (max-width: 1024px) {
+                    height:80px;
+                }
+                @media (max-width: 768px) {
+                    height:60px;
+                }
+                @media (max-width: 512px) {
+                    height:40px;
+                }
+            }
 
             .next-admin-image-card-extra-small-1-1{
                 @media (max-width: 1024px) {
@@ -1632,12 +1821,19 @@ var NextAdmin;
                 }
             }
         }
-
+        .next-admin-image-card-wrapper.selected{
+            .next-admin-image-card{
+                box-sizing:border-box;
+                box-shadow:0px 0px 0px rgba(0,0,0,0.25);
+                border:1px solid ` + UI.DefaultStyle.BlueOne + `;
+            }
+        }
 
         `;
         UI.ImageCard = ImageCard;
         let ImageCardSize;
         (function (ImageCardSize) {
+            ImageCardSize[ImageCardSize["ultraSmall_1_1"] = 1] = "ultraSmall_1_1";
             ImageCardSize[ImageCardSize["extraSmall_1_1"] = 100] = "extraSmall_1_1";
             ImageCardSize[ImageCardSize["small_1_1"] = 300] = "small_1_1";
             ImageCardSize[ImageCardSize["small_4_3"] = 301] = "small_4_3";
@@ -1668,6 +1864,72 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
+        class ImageSelect extends UI.LabelFormControl {
+            constructor(options) {
+                super({
+                    imagesSize: NextAdmin.UI.ImageCardSize.ultraSmall_1_1,
+                    imageStyle: NextAdmin.UI.ImageCardStyle.imageShadowedBorderRadiusBTextCenter,
+                    ...options
+                });
+                this.imagesGrid = this.controlContainer.appendControl(new NextAdmin.UI.CardsGrid({ isItemsCentered: false, css: { width: '100%' } }));
+                if (this.options.items?.length) {
+                    this.setItems(this.options.items);
+                }
+            }
+            setItems(items, fireChange) {
+                if (!items?.length) {
+                    this.imagesGrid.clear();
+                    return;
+                }
+                for (let valueItem of items) {
+                    this.imagesGrid.appendCard(new NextAdmin.UI.ImageCard({
+                        imageSrc: valueItem.imageSrc,
+                        outsideDescription: valueItem.label,
+                        size: this.options.imagesSize,
+                        style: this.options.imageStyle,
+                        css: { cursor: 'pointer' }
+                    }), (card) => {
+                        card['_value'] = valueItem.value;
+                        card.element.addEventListener('click', () => {
+                            this.setValue(card['_value'], true);
+                        });
+                    });
+                }
+                let selectedItem = items.firstOrDefault(a => a.selected);
+                if (selectedItem) {
+                    this.setValue(selectedItem.value, fireChange);
+                }
+            }
+            setValue(value, fireChange) {
+                let previousValue = this._currentValue;
+                let cards = this.imagesGrid.getCards();
+                for (let card of cards) {
+                    if (card['_value'] == value) {
+                        card.displayAsSelected();
+                    }
+                    else {
+                        card.displayAsUnselected();
+                    }
+                }
+                this._currentValue = value;
+                if (fireChange) {
+                    this.onValueChanged.dispatch(this, {
+                        previousValue: previousValue,
+                        value: value
+                    });
+                }
+            }
+            getValue() {
+                return this._currentValue;
+            }
+        }
+        UI.ImageSelect = ImageSelect;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
         class ImageViewerModal extends UI.NoUiModal {
             constructor(options) {
                 super({
@@ -1679,6 +1941,7 @@ var NextAdmin;
                     imagesSize: 'contain',
                     imagePosition: 'center center',
                     imageUrls: this.options.imageUrls,
+                    uiScale: 2,
                     css: { height: '100%' }
                 }));
             }
@@ -1877,6 +2140,7 @@ var NextAdmin;
                     aspectRationWidth: 1,
                     aspectRationHeight: 1,
                     isResponsive: true,
+                    canOpenInFullScreen: true,
                     ...options
                 });
                 this._images = new NextAdmin.Dictionary();
@@ -1949,6 +2213,12 @@ var NextAdmin;
                 this.mainImageContainer.body.appendHTML('img', (mainImage) => {
                     mainImage.classList.add('image-viewer-main-image');
                     mainImage.src = imageItem.url;
+                    if (this.options.canOpenInFullScreen) {
+                        mainImage.style.cursor = 'pointer';
+                        mainImage.addEventListener('click', () => {
+                            new UI.ImageViewerModal({ imageUrls: [imageItem.url, ...this._images.getValues().select(a => a.url).where(a => a != imageItem.url)] }).open();
+                        });
+                    }
                 });
             }
             getMiniatureImages() {
@@ -2062,7 +2332,23 @@ var NextAdmin;
                     case NavigationTopBarStyle.white:
                         this.element.classList.add('next-admin-top-bar-white');
                         break;
+                    case NavigationTopBarStyle.noBackgroundStickyWhiteScroll:
+                        this.element.classList.add('next-admin-top-bar-white-glass');
+                        window.addEventListener('scroll', (ev) => {
+                            if (window.scrollY > 50) {
+                                if (!this.element.classList.contains('scroll')) {
+                                    this.element.classList.add('scroll');
+                                }
+                            }
+                            else {
+                                this.element.classList.remove('scroll');
+                            }
+                        });
+                        break;
                     case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
+                        this.element.classList.add('next-admin-top-bar-glass', 'scroll');
+                        break;
+                    case NavigationTopBarStyle.noBackgroundStickyDarkBlueScroll:
                         this.element.classList.add('next-admin-top-bar-glass');
                         window.addEventListener('scroll', (ev) => {
                             if (window.scrollY > 50) {
@@ -2103,8 +2389,10 @@ var NextAdmin;
             getDefaultLinkStyle() {
                 switch (this.options.style) {
                     default:
+                    case NavigationTopBarStyle.noBackgroundStickyWhiteScroll:
                     case NavigationTopBarStyle.white:
                         return UI.LinkStyle.dark;
+                    case NavigationTopBarStyle.noBackgroundStickyDarkBlueScroll:
                     case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
                         return UI.LinkStyle.white;
                 }
@@ -2162,6 +2450,24 @@ var NextAdmin;
             background-color:#fff;
             box-shadow:0px 0px 2px rgba(0,0,0,0.25);
         }
+        .next-admin-top-bar-white-glass{
+            .next-admin-top-bar-center-container{
+                padding-top:10px;
+                padding-bottom:10px;
+                border-bottom:1px solid rgba(0,0,0,0.1)
+            }
+        }
+        .next-admin-top-bar-white-glass.scroll{
+            background:rgba(255,255,255,0.95);
+            box-shadow:0px 0px 2px rgba(0,0,0,0.25);
+            .next-admin-top-bar-center-container{
+                padding-top:0px;
+                padding-bottom:0px;
+                border-bottom:0px;
+            }
+        }
+
+
         .next-admin-top-bar-glass{
             .next-admin-top-bar-center-container{
                 padding-top:10px;
@@ -2223,7 +2529,9 @@ var NextAdmin;
         let NavigationTopBarStyle;
         (function (NavigationTopBarStyle) {
             NavigationTopBarStyle[NavigationTopBarStyle["white"] = 0] = "white";
-            NavigationTopBarStyle[NavigationTopBarStyle["noBackgroundStickyDarkBlue"] = 1] = "noBackgroundStickyDarkBlue";
+            NavigationTopBarStyle[NavigationTopBarStyle["noBackgroundStickyWhiteScroll"] = 1] = "noBackgroundStickyWhiteScroll";
+            NavigationTopBarStyle[NavigationTopBarStyle["noBackgroundStickyDarkBlueScroll"] = 2] = "noBackgroundStickyDarkBlueScroll";
+            NavigationTopBarStyle[NavigationTopBarStyle["noBackgroundStickyDarkBlue"] = 3] = "noBackgroundStickyDarkBlue";
         })(NavigationTopBarStyle = UI.NavigationTopBarStyle || (UI.NavigationTopBarStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
@@ -2361,34 +2669,11 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
-        class Separator extends UI.Control {
-            constructor(options) {
-                super('div', options);
-                NextAdmin.Style.append('NextAdmin.UI.Separator', Separator.style);
-                this.element.classList.add('next-admin-separator');
-            }
-        }
-        Separator.style = `
-
-        .next-admin-separator{
-            margin-top:40px;
-            margin-bottom:40px;
-            height:1px;
-            background-color:#ccc;
-            box-shadow:0px 0px 12px rgba(0,0,0,0.25);
-        }
-        `;
-        UI.Separator = Separator;
-    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
-})(NextAdmin || (NextAdmin = {}));
-var NextAdmin;
-(function (NextAdmin) {
-    var UI;
-    (function (UI) {
         class Slider extends NextAdmin.UI.Control {
             constructor(options) {
                 super('div', {
                     changeSlideDelaySecond: 10,
+                    uiScale: 1,
                     navigationButtonsStyle: NextAdmin.UI.ButtonStyle.noBg,
                     ...options
                 });
@@ -2410,6 +2695,7 @@ var NextAdmin;
                         }
                     }), (btnPreviousSlide) => {
                         btnPreviousSlide.element.center();
+                        btnPreviousSlide.element.firstChild.style.transform = 'scale(' + this.options.uiScale + ')';
                     });
                 });
                 this.nextSlideArrowContainer = this.element.appendHTML('div', (rightArrowContainer) => {
@@ -2423,6 +2709,7 @@ var NextAdmin;
                         }
                     }), (btnNextSlide) => {
                         btnNextSlide.element.center();
+                        btnNextSlide.element.firstChild.style.transform = 'scale(' + this.options.uiScale + ')';
                     });
                 });
                 if (this.options.slides?.length) {

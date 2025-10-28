@@ -63,11 +63,11 @@
     <TypeScriptCompile Include="Src\UI\Controls\ContactCard.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\IconCard.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\ImageViewerModal.ts" />
+    <TypeScriptCompile Include="Src\UI\Controls\ImageSelect.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\MultiImageTextCard.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\MultiImageViwer.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\PageContainer.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\PinsCard.ts" />
-    <TypeScriptCompile Include="Src\UI\Controls\Separator.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\Slider.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\ImageCard.ts" />
     <TypeScriptCompile Include="Src\UI\Controls\NavigationTopBar.ts" />

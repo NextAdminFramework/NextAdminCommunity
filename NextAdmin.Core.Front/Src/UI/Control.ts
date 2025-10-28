@@ -445,6 +445,7 @@ namespace NextAdmin.UI {
         userSelect?: string;
         verticalAlign?: string;
         visibility?: string;
+        whiteSpace?: string;
 
     }
 

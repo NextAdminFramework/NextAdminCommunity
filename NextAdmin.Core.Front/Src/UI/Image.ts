@@ -37,6 +37,8 @@ namespace NextAdmin.UI {
             super('div', {
                 style: ImageStyle.none,
                 displayMode: ImageDisplayMode.contain,
+                multiFramePlayingMode: MultiFramePlayingMode.auto,
+                frameDuration:1000,
                 ...options
             } as ImageOptions);
 
@@ -51,14 +53,27 @@ namespace NextAdmin.UI {
 
             this.image = this.element.appendHTML('img', (image) => {
                 image.classList.add('next-admin-image');
-                image.style.width = '100%';
-                image.style.height = '100%';
-                //image.style.backgroundColor = '#f9f9f9';
-                image.src = this.options.src;
+                if (Array.isArray(this.options.src)) {
+                    image.src = this.options.src[0];
+                } else {
+                    image.src = this.options.src;
+                }
             });
 
             this.setStyle(this.options.style);
             this.setDisplayMode(this.options.displayMode);
+            if (Array.isArray(this.options.src)) {
+                if (this.options.multiFramePlayingMode == MultiFramePlayingMode.auto) {
+                    this.startPlayFrames();
+                } else if (this.options.multiFramePlayingMode == MultiFramePlayingMode.onHover) {
+                    this.element.addEventListener('mouseenter', () => {
+                        this.startPlayFrames();
+                    });
+                    this.element.addEventListener('mouseleave', () => {
+                        this.stopPlayFrames();
+                    });
+                }
+            }
         }
 
         setStyle(style?: ImageStyle){
@@ -90,7 +105,42 @@ namespace NextAdmin.UI {
             }
         }
 
+        private _isMultiFramePlaying = false;
 
+        async startPlayFrames(srcs?: Array<string>, frameDuration?: number) {
+            if (this._isMultiFramePlaying) {
+                return;
+            }
+            if (frameDuration == null) {
+                frameDuration = this.options.frameDuration;
+            }
+            if (srcs == null && Array.isArray(this.options.src)) {
+                srcs = this.options.src as Array<string>;
+            }
+            if (srcs == null) {
+                return;
+            }
+            this._isMultiFramePlaying = true;
+            let i = 0;
+            let isFirstImage = true;
+            while (this._isMultiFramePlaying) {
+                this.image.src = srcs[i];
+                await NextAdmin.Timer.sleep(frameDuration);
+                i++;
+                if (i == (srcs.length)) {
+                    i = 0;
+                }
+                isFirstImage = false;
+            }
+        }
+
+        stopPlayFrames() {
+            this._isMultiFramePlaying = false;
+        }
+
+        public dispose() {
+            this._isMultiFramePlaying = false;
+        }
     }
 
     export interface ImageOptions extends ControlOptions{
@@ -99,7 +149,11 @@ namespace NextAdmin.UI {
 
         height?: string;
 
-        src?: string;
+        src?: string | Array<string>;
+
+        frameDuration?: number;
+
+        multiFramePlayingMode?: MultiFramePlayingMode;
 
         style?: ImageStyle;
 
@@ -117,6 +171,12 @@ namespace NextAdmin.UI {
         contain,
         cover,
         stretch
+    }
+
+    export enum MultiFramePlayingMode {
+        manual,
+        auto,
+        onHover
     }
 
 }

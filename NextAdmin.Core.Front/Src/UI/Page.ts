@@ -33,10 +33,10 @@ namespace NextAdmin.UI {
             Page.onCreated.dispatch(this, this.options);
         }
 
-        public setParameters(parameters?: any, updateNavigatorState = UpdateNavigatorState.replaceState) {
+        public setParameters(parameters?: any, navigatorHistoryAction = UpdateNavigatorState.replaceState) {
             this.parameters = parameters;
-            if (updateNavigatorState) {
-                this.navigationController.updateNavigatorHistory(this.options.name, parameters, updateNavigatorState == UpdateNavigatorState.pushState);
+            if (navigatorHistoryAction) {
+                this.navigationController.updateNavigatorHistory(this.options.name, parameters, navigatorHistoryAction == UpdateNavigatorState.pushState);
             }
         }
 
@@ -89,6 +89,14 @@ namespace NextAdmin.UI {
             });
         }
 
+        public async refresh(realod?: boolean) {
+            await this.navigationController.refreshPage(realod);
+        }
+
+        public getName(): string {
+            return this.options.name;
+        }
+
     }
 
     export interface PageOptions extends ViewOptions {
@@ -115,6 +123,8 @@ namespace NextAdmin.UI {
         contentUrl?: string;
 
         dependencies?: Array<string | DependencyInfo>;
+
+        navigatorHistoryAction?: NextAdmin.UpdateNavigatorState;
     }
 
     export interface NavigateFromArgs {

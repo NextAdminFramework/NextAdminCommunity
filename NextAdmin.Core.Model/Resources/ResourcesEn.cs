@@ -31,7 +31,7 @@
 
         public virtual string CreateAccountEmailConfirmationTitle => "Email confirmation";
 
-        public virtual string CreateAccountEmailConfirmationContent => "Here is your confirmation code : <b>{CONFIRMATION_CODE}</b>";
+        public virtual string CreateAccountEmailConfirmationContent => "Here is your confirmation code : <h1 style='letter-spacing:1rem'>{CONFIRMATION_CODE}</h1>";
 
     }
 }

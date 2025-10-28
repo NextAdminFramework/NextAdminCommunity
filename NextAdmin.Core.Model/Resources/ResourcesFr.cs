@@ -27,7 +27,7 @@
 
         public override string CreateAccountEmailConfirmationTitle => "Vérification de votre email";
 
-        public override string CreateAccountEmailConfirmationContent => "Voici votre code de confirmation : <b>{CONFIRMATION_CODE}</b>";
+        public override string CreateAccountEmailConfirmationContent => "Voici votre code de confirmation : <h1 style='letter-spacing:1rem'>{CONFIRMATION_CODE}</h1>";
 
     }
 }

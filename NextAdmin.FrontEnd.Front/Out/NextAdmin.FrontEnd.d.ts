@@ -188,22 +188,35 @@ declare namespace NextAdmin.UI {
         header: HTMLDivElement;
         body: HTMLDivElement;
         footer: HTMLDivElement;
+        private _cards;
         static style: string;
         constructor(options?: CardsGridOptions);
         appendCard<TCard extends Control>(card: TCard, controlOption?: (card: TCard) => void): TCard;
+        getCards(): Array<Control>;
         appendControl<TControl extends NextAdmin.UI.IControl>(control: TControl, configAction?: (control: TControl) => void): TControl;
         clear(): void;
     }
     interface CardsGridOptions extends NextAdmin.UI.ControlOptions {
         margin?: string;
+        isItemsCentered?: boolean;
     }
     class CardsDataGrid<TData> extends CardsGrid {
         protected dataset: TData[];
+        options: CardsDataGridOptions;
+        private _isFullyLoaded;
+        constructor(options?: CardsDataGridOptions);
         cardFactory(data: TData): NextAdmin.UI.Control;
+        protected retrieveDataset(take?: number, skip?: number): Promise<Array<TData>>;
         clear(): void;
         setDataset(dataset?: Array<TData>): void;
         getDataset(): TData[];
         addDataset(dataset?: Array<TData>): void;
+        private _isLoading;
+        load(take?: number, skip?: number): Promise<Array<TData>>;
+        enableScrollLoading(scrollElement?: HTMLElement): void;
+    }
+    interface CardsDataGridOptions extends CardsGridOptions {
+        paginItemCount?: number;
     }
 }
 declare namespace NextAdmin.UI {
@@ -255,12 +268,19 @@ declare namespace NextAdmin.UI {
         setHoverText(hoverText?: string): void;
         setSize(size: ImageCardSize): void;
         setStyle(style: ImageCardStyle): void;
-        setBackground(url?: string): void;
+        private _isImageAutoPlayingEnabled;
+        private setMultiImageSrcs;
+        setImageSrc(src?: string): void;
+        displayAsSelected(): void;
+        displayAsUnselected(): void;
+        isSelected(): boolean;
+        dispose(): void;
     }
     interface ImageCardOptions extends NextAdmin.UI.ControlOptions {
         size?: ImageCardSize;
         style?: ImageCardStyle;
-        imageUrl?: string;
+        imageSrc?: string | Array<string>;
+        multiImageDisplayDelay?: number;
         backgroundColor?: string;
         imageTitle?: string;
         imageHoverText?: string;
@@ -271,6 +291,7 @@ declare namespace NextAdmin.UI {
         action?: (card: ImageCard) => void;
     }
     enum ImageCardSize {
+        ultraSmall_1_1 = 1,
         extraSmall_1_1 = 100,
         small_1_1 = 300,
         small_4_3 = 301,
@@ -293,6 +314,25 @@ declare namespace NextAdmin.UI {
         imageShadowedBorderRadiusTextCenter = 21,
         imageShadowedBorderRadiusBTextLeft = 30,
         imageShadowedBorderRadiusBTextCenter = 31
+    }
+}
+declare namespace NextAdmin.UI {
+    class ImageSelect extends LabelFormControl {
+        imagesGrid: NextAdmin.UI.CardsGrid;
+        options: ImageSelectOptions;
+        constructor(options?: ImageSelectOptions);
+        setItems(items?: Array<ImageSelectItem>, fireChange?: boolean): void;
+        private _currentValue?;
+        setValue(value?: string | number, fireChange?: boolean): void;
+        getValue(): string | number;
+    }
+    interface ImageSelectOptions extends LabelFormControlOptions {
+        items?: Array<ImageSelectItem>;
+        imagesSize?: ImageCardSize;
+        imageStyle?: ImageCardStyle;
+    }
+    interface ImageSelectItem extends SelectItem {
+        imageSrc?: string;
     }
 }
 declare namespace NextAdmin.UI {
@@ -374,6 +414,7 @@ declare namespace NextAdmin.UI {
         isResponsive?: boolean;
         imageItems?: Array<MultiImageViwerImageItem>;
         imageUrls?: Array<string>;
+        canOpenInFullScreen?: boolean;
     }
     interface MultiImageViwerImageItem {
         url?: string;
@@ -415,7 +456,9 @@ declare namespace NextAdmin.UI {
     }
     enum NavigationTopBarStyle {
         white = 0,
-        noBackgroundStickyDarkBlue = 1
+        noBackgroundStickyWhiteScroll = 1,
+        noBackgroundStickyDarkBlueScroll = 2,
+        noBackgroundStickyDarkBlue = 3
     }
 }
 declare namespace NextAdmin.UI {
@@ -444,12 +487,6 @@ declare namespace NextAdmin.UI {
         iconColor?: string;
         textColor?: string;
         isResponsive?: boolean;
-    }
-}
-declare namespace NextAdmin.UI {
-    class Separator extends Control {
-        static style: string;
-        constructor(options?: ControlOptions);
     }
 }
 declare namespace NextAdmin.UI {
@@ -484,6 +521,7 @@ declare namespace NextAdmin.UI {
         autoPlay?: boolean;
         page?: Page;
         changeSlideDelaySecond?: number;
+        uiScale?: number;
         navigationButtonsStyle?: NextAdmin.UI.ButtonStyle;
     }
     class Slide extends Control {

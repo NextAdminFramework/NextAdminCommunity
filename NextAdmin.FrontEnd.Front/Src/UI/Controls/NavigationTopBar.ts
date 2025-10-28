@@ -73,6 +73,24 @@ namespace NextAdmin.UI {
             background-color:#fff;
             box-shadow:0px 0px 2px rgba(0,0,0,0.25);
         }
+        .next-admin-top-bar-white-glass{
+            .next-admin-top-bar-center-container{
+                padding-top:10px;
+                padding-bottom:10px;
+                border-bottom:1px solid rgba(0,0,0,0.1)
+            }
+        }
+        .next-admin-top-bar-white-glass.scroll{
+            background:rgba(255,255,255,0.95);
+            box-shadow:0px 0px 2px rgba(0,0,0,0.25);
+            .next-admin-top-bar-center-container{
+                padding-top:0px;
+                padding-bottom:0px;
+                border-bottom:0px;
+            }
+        }
+
+
         .next-admin-top-bar-glass{
             .next-admin-top-bar-center-container{
                 padding-top:10px;
@@ -157,7 +175,23 @@ namespace NextAdmin.UI {
                 case NavigationTopBarStyle.white:
                     this.element.classList.add('next-admin-top-bar-white');
                     break;
+                case NavigationTopBarStyle.noBackgroundStickyWhiteScroll:
+                    this.element.classList.add('next-admin-top-bar-white-glass');
+                    window.addEventListener('scroll', (ev) => {
+                        if (window.scrollY > 50) {
+                            if (!this.element.classList.contains('scroll')) {
+                                this.element.classList.add('scroll');
+                            }
+                        }
+                        else {
+                            this.element.classList.remove('scroll');
+                        }
+                    });
+                    break;
                 case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
+                    this.element.classList.add('next-admin-top-bar-glass','scroll');
+                    break;
+                case NavigationTopBarStyle.noBackgroundStickyDarkBlueScroll:
                     this.element.classList.add('next-admin-top-bar-glass');
                     window.addEventListener('scroll', (ev) => {
                         if (window.scrollY > 50) {
@@ -204,8 +238,10 @@ namespace NextAdmin.UI {
         public getDefaultLinkStyle(): LinkStyle {
             switch (this.options.style) {
                 default:
+                case NavigationTopBarStyle.noBackgroundStickyWhiteScroll:
                 case NavigationTopBarStyle.white:
                     return LinkStyle.dark;
+                case NavigationTopBarStyle.noBackgroundStickyDarkBlueScroll:
                 case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
                     return LinkStyle.white;
 
@@ -280,7 +316,9 @@ namespace NextAdmin.UI {
 
     export enum NavigationTopBarStyle {
         white,
-        noBackgroundStickyDarkBlue,
+        noBackgroundStickyWhiteScroll,
+        noBackgroundStickyDarkBlueScroll,
+        noBackgroundStickyDarkBlue
     }
 
 }

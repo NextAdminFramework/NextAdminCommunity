@@ -24,6 +24,8 @@ namespace NextAdmin.FrontEnd.API.Services
         public TStripePaymentSession CreatePaymentSession(IItemInfo item, TUser user, string? successPaymentUrl = null, string? cancelPaymentUrl = null)
         {
             var unitSalePrice = item.GetUnitSalePrice(DbContext);
+            unitSalePrice = Math.Round(unitSalePrice, 2);
+
             var elementName = item.GetItemName(DbContext);
             var service = new SessionService(new StripeClient(StripeSecretApiKey));
 

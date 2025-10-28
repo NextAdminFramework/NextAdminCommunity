@@ -19,6 +19,9 @@ namespace NextAdmin.UI {
                         font-size:32px
                     }
                 }
+                .next-admin-modal-body{
+                    background:unset;
+                }
                 .next-admin-modal-footer{
                     color:#fff;
                     font-weight:bold;
@@ -31,10 +34,12 @@ namespace NextAdmin.UI {
         constructor(options: noUiModalOptions) {
             super({
                 size: NextAdmin.UI.ModalSize.ultraLarge,
+                style: ModalStyle.default,
                 canMoveAndResize: false,
                 canChangeScreenMode: false,
-                canMinimize:false,
-                backdropColor: 'rgba(0,0,0,0.75)',
+                canMinimize: false,
+                closeOnClickOutside: true,
+                backdropColor: 'rgba(0,0,0,0.25)',
                 ...options,
             } as noUiModalOptions);
             Style.append('NextAdmin.UI.NoUiModal', NoUiModal.style);

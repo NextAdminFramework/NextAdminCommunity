@@ -88,7 +88,7 @@ namespace NextAdmin.UI {
                 if (dropDownItem instanceof Control) {
                     dropDownItemContainer.appendControl(dropDownItem);
                     if (dropDownItem instanceof DropDownButton) {
-                        dropDownItem.setColorStyle(NextAdmin.UI.ButtonStyle.noBg);
+                        dropDownItem.setStyle(NextAdmin.UI.ButtonStyle.noBg);
                         dropDownItem.element.style.width = '100%';
                         dropDownItem.element.style.textAlign = 'left';
                         if (!dropDownItem.dropDownPosition) {

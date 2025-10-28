@@ -61,6 +61,7 @@ namespace NextAdmin.UI {
                 aspectRationWidth: 1,
                 aspectRationHeight: 1,
                 isResponsive: true,
+                canOpenInFullScreen: true,
                 ...options
             } as MultiImageViwerOptions);
             Style.append('NextAdmin.UI.MultiImageViwer', MultiImageViwer.style);
@@ -139,6 +140,12 @@ namespace NextAdmin.UI {
             this.mainImageContainer.body.appendHTML('img', (mainImage) => {
                 mainImage.classList.add('image-viewer-main-image');
                 mainImage.src = imageItem.url;
+                if (this.options.canOpenInFullScreen) {
+                    mainImage.style.cursor = 'pointer';
+                    mainImage.addEventListener('click', () => {
+                        new ImageViewerModal({ imageUrls: [imageItem.url, ...this._images.getValues().select(a => a.url).where(a => a != imageItem.url)] }).open();
+                    });
+                }
             });
 
         }
@@ -166,6 +173,8 @@ namespace NextAdmin.UI {
         imageItems?: Array<MultiImageViwerImageItem>;
 
         imageUrls?: Array<string>;
+
+        canOpenInFullScreen?: boolean;
 
     }
 

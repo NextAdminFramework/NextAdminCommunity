@@ -31,7 +31,6 @@ namespace NextAdmin.UI {
 
         .next-admin-image-card{
             display:block;
-            cursor:pointer;
             overflow: hidden;
             position:relative;
             width:100%;
@@ -44,6 +43,7 @@ namespace NextAdmin.UI {
             position:relative;
             transition: transform 0.9s;
         }
+
 
         .next-admin-image-card-title{
             position:absolute;
@@ -91,13 +91,13 @@ namespace NextAdmin.UI {
 
         .next-admin-image-card-border-radius{
             .next-admin-image-card{
-                border-radius:16px;
+                border-radius:10%;
                 box-shadow:0px 0px 20px rgba(0,0,0,0.25);
             }
         }
         .next-admin-image-card-border-radius-text-center{
             .next-admin-image-card{
-                border-radius:16px;
+                border-radius:10%;
                 box-shadow:0px 0px 20px rgba(0,0,0,0.25);
             }
             .next-admin-image-card-outside-title{
@@ -110,14 +110,14 @@ namespace NextAdmin.UI {
 
         .next-admin-image-card-border-radius-b{
             .next-admin-image-card{
-                border-radius:16px;
+                border-radius:10%;
                 box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
             }
         }
 
         .next-admin-image-card-border-radius-b-text-center{
             .next-admin-image-card{
-                border-radius:16px;
+                border-radius:10%;
                 box-shadow: 0px 0px 2px rgba(0,0,0,0.5);
             }
             .next-admin-image-card-outside-title{
@@ -128,12 +128,19 @@ namespace NextAdmin.UI {
             }
         }
 
+        .next-admin-image-card-wrapper.ultra-small{
+            width:100px;
+            .next-admin-image-card-title{
+                font-size:14px;
+            }
+        }
         .next-admin-image-card-wrapper.extra-small{
             width:200px;
             .next-admin-image-card-title{
                 font-size:16px;
             }
         }
+
         .next-admin-image-card-wrapper.small{
             width:300px;
             .next-admin-image-card-title{
@@ -152,8 +159,10 @@ namespace NextAdmin.UI {
                 font-size:24px;
             }
         }
-
-
+        
+        .next-admin-image-card-ultra-small-1-1{
+            height:100px;
+        }
         .next-admin-image-card-extra-small-1-1{
             height:200px;
         }
@@ -213,12 +222,13 @@ namespace NextAdmin.UI {
             font-size:14px;
             .next-admin-image-card-outside-title{
                 text-overflow: ellipsis;
-                color:#999;
+                color:#444;
             }
 
             .next-admin-image-card-outside-description{
                 text-overflow: ellipsis;
-                color:#444;
+                color:#999;
+                font-size:12px;
             }
         }
         .next-admin-image-card-wrapper.small{
@@ -226,9 +236,44 @@ namespace NextAdmin.UI {
                 height:40px;
             }
         }
+
+        .next-admin-image-card-wrapper.ultra-small{
+            .next-admin-image-card-outside-text{
+                height:20px;
+            }
+        }
         .next-admin-image-card-wrapper.extra-small{
             .next-admin-image-card-outside-text{
                 height:30px;
+            }
+        }
+        .next-admin-image-card-wrapper.ultra-small.responsive{
+            @media (max-width: 1024px) {
+                width:80px;
+                .next-admin-image-card-outside-text{
+                    padding-top:5px;
+                    font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
+                }
+            }
+            @media (max-width: 768px) {
+                width:60px;
+                .next-admin-image-card-outside-text{
+                    padding-top:4px;
+                    font-size:11px;
+                }
+            }
+            @media (max-width: 512px) {
+                width:40px;
+                .next-admin-image-card-outside-text{
+                    padding-top:2px;
+                    font-size:10px;
+                    .next-admin-image-card-outside-description{
+                        font-size:9px;
+                    }
+                }
             }
         }
 
@@ -239,6 +284,9 @@ namespace NextAdmin.UI {
                 .next-admin-image-card-outside-text{
                     padding-top:5px;
                     font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
                 }
             }
             @media (max-width: 768px) {
@@ -253,6 +301,9 @@ namespace NextAdmin.UI {
                 .next-admin-image-card-outside-text{
                     padding-top:2px;
                     font-size:10px;
+                    .next-admin-image-card-outside-description{
+                        font-size:9px;
+                    }
                 }
             }
         }
@@ -263,6 +314,9 @@ namespace NextAdmin.UI {
                 .next-admin-image-card-outside-text{
                     padding-top:6px;
                     font-size:13px;
+                    .next-admin-image-card-outside-description{
+                        font-size:12px;
+                    }
                 }
             }
             @media (max-width: 768px) {
@@ -270,6 +324,9 @@ namespace NextAdmin.UI {
                 .next-admin-image-card-outside-text{
                     padding-top:5px;
                     font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
                 }
             }
             @media (max-width: 512px) {
@@ -277,6 +334,9 @@ namespace NextAdmin.UI {
                 .next-admin-image-card-outside-text{
                     padding-top:4px;
                     font-size:11px;
+                    .next-admin-image-card-outside-description{
+                        font-size:10px;
+                    }
                 }
             }
         }
@@ -286,6 +346,9 @@ namespace NextAdmin.UI {
                 .next-admin-image-card-outside-text{
                     padding-top:8px;
                     font-size:14px;
+                    .next-admin-image-card-outside-description{
+                        font-size:12px;
+                    }
                 }
             }
             @media (max-width: 768px) {
@@ -293,13 +356,19 @@ namespace NextAdmin.UI {
                 .next-admin-image-card-outside-text{
                     padding-top:6px;
                     font-size:13px;
+                    .next-admin-image-card-outside-description{
+                        font-size:12px;
+                    }
                 }
             }
             @media (max-width: 512px) {
-                width:180px;
+                width:160px;
                 .next-admin-image-card-outside-text{
                     padding-top:5px;
                     font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
                 }
             }
         }
@@ -312,6 +381,9 @@ namespace NextAdmin.UI {
                 .next-admin-image-card-outside-text{
                     padding-top:8px;
                     font-size:13px;
+                    .next-admin-image-card-outside-description{
+                        font-size:12px;
+                    }
                 }
             }
             @media (max-width: 512px) {
@@ -319,12 +391,27 @@ namespace NextAdmin.UI {
                 .next-admin-image-card-outside-text{
                     padding-top:6px;
                     font-size:12px;
+                    .next-admin-image-card-outside-description{
+                        font-size:11px;
+                    }
                 }
             }
         }
 
 
         .next-admin-image-card-wrapper.responsive{
+
+            .next-admin-image-card-ultra-small-1-1{
+                @media (max-width: 1024px) {
+                    height:80px;
+                }
+                @media (max-width: 768px) {
+                    height:60px;
+                }
+                @media (max-width: 512px) {
+                    height:40px;
+                }
+            }
 
             .next-admin-image-card-extra-small-1-1{
                 @media (max-width: 1024px) {
@@ -480,7 +567,13 @@ namespace NextAdmin.UI {
                 }
             }
         }
-
+        .next-admin-image-card-wrapper.selected{
+            .next-admin-image-card{
+                box-sizing:border-box;
+                box-shadow:0px 0px 0px rgba(0,0,0,0.25);
+                border:1px solid ` + DefaultStyle.BlueOne + `;
+            }
+        }
 
         `;
 
@@ -489,6 +582,7 @@ namespace NextAdmin.UI {
                 size: ImageCardSize.medium_4_3,
                 style: ImageCardStyle.imageLightBorderedTextLeft,
                 isResponsive: true,
+                multiImageDisplayDelay:5000,
                 ...options
             } as ImageCardOptions);
 
@@ -499,6 +593,10 @@ namespace NextAdmin.UI {
             }
             this.card = this.element.appendHTML('a', (card) => {
                 card.classList.add('next-admin-image-card');
+                if (this.options.href || this.options.action) {
+                    card.style.cursor = 'pointer';
+                }
+
                 if (this.options.backgroundColor) {
                     card.style.background = this.options.backgroundColor;
                 }
@@ -532,8 +630,12 @@ namespace NextAdmin.UI {
 
             this.setSize(this.options.size);
             this.setStyle(this.options.style);
-            if (this.options.imageUrl) {
-                this.setBackground(this.options.imageUrl);
+            if (this.options.imageSrc) {
+                if (Array.isArray(this.options.imageSrc)) {
+                    this.setMultiImageSrcs(this.options.imageSrc)
+                } else {
+                    this.setImageSrc(this.options.imageSrc);
+                }
             }
             if (this.options.imageTitle) {
                 this.setImageTitle(this.options.imageTitle);
@@ -579,12 +681,13 @@ namespace NextAdmin.UI {
             this.animatedHoverText.setText(hoverText);
         }
 
-
-
-
         public setSize(size: ImageCardSize) {
             switch (size) {
                 default:
+                case ImageCardSize.ultraSmall_1_1:
+                    this.element.classList.add('ultra-small');
+                    this.card.classList.add('next-admin-image-card-ultra-small-1-1');
+                    break;
                 case ImageCardSize.extraSmall_1_1:
                     this.element.classList.add('extra-small');
                     this.card.classList.add('next-admin-image-card-extra-small-1-1');
@@ -673,17 +776,58 @@ namespace NextAdmin.UI {
             }
         }
 
-        public setBackground(url?: string) {
-            if (url) {
-                this.cardImage.style.background = 'url("' + url + '")';
+        private _isImageAutoPlayingEnabled = true;
+
+        private async setMultiImageSrcs(srcs: Array<string>) {
+            let i = 0;
+            let isFirstImage = true;
+            while (this._isImageAutoPlayingEnabled) {
+                if (!isFirstImage) {
+                    await this.cardImage.anim('fadeOut', { animationSpeed: NextAdmin.AnimationSpeed.faster });
+                }
+                this.setImageSrc(srcs[i]);
+                if (!isFirstImage) {
+                    this.cardImage.anim('fadeIn', { animationSpeed: NextAdmin.AnimationSpeed.faster });
+                }
+                await NextAdmin.Timer.sleep(this.options.multiImageDisplayDelay);
+                
+                i++;
+                if (i == (srcs.length)) {
+                    i = 0;
+                }
+                isFirstImage = false;
+            }
+        }
+
+        public setImageSrc(src?: string) {
+            if (src) {
+                this.cardImage.style.background = 'url("' + src + '")';
                 this.cardImage.style.backgroundSize = 'cover';
                 this.cardImage.style.backgroundRepeat = 'no-repeat';
                 this.cardImage.style.backgroundPosition = 'center';
-
             }
             else {
                 this.cardImage.style.background = 'unset';
             }
+        }
+
+        public displayAsSelected() {
+            this.element.classList.add('selected');
+
+        }
+
+        public displayAsUnselected() {
+            if (this.element.classList.contains('selected')) {
+                this.element.classList.remove('selected');
+            }
+        }
+
+        public isSelected(): boolean {
+            return this.element.classList.contains('selected');
+        }
+
+        public dispose() {
+            this._isImageAutoPlayingEnabled = false;
         }
 
     }
@@ -694,7 +838,9 @@ namespace NextAdmin.UI {
 
         style?: ImageCardStyle;
 
-        imageUrl?: string;
+        imageSrc?: string | Array<string>;
+
+        multiImageDisplayDelay?: number;
 
         backgroundColor?: string;
 
@@ -711,11 +857,11 @@ namespace NextAdmin.UI {
         isResponsive?: boolean;
 
         action?: (card: ImageCard) => void;
-
     }
 
 
     export enum ImageCardSize {
+        ultraSmall_1_1 = 1,
         extraSmall_1_1 = 100,
         small_1_1 = 300,
         small_4_3 = 301,

@@ -9,13 +9,13 @@ namespace NextAdmin.UI {
 
         constructor(options?: ContainerOptions) {
             super('div', {
-                width: '1280px',
+                maxWidth: '1280px',
                 ...options
             } as ContainerOptions);
 
             this.body = this.element.appendHTML('div', (body) => {
                 body.style.margin = '0 auto';
-                body.style.maxWidth = this.options.width;
+                body.style.maxWidth = this.options.maxWidth;
             });
         }
     }
@@ -23,7 +23,7 @@ namespace NextAdmin.UI {
 
     export interface ContainerOptions extends ControlOptions {
 
-        width?: string;
+        maxWidth?: string;
 
     }
 

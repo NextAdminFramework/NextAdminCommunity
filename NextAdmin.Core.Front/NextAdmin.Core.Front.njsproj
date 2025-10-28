@@ -118,6 +118,7 @@
     <TypeScriptCompile Include="Src\UI\Range.ts" />
     <TypeScriptCompile Include="Src\UI\ScrollableHorizontalBar.ts" />
     <TypeScriptCompile Include="Src\UI\SelectDropDownButton.ts" />
+    <TypeScriptCompile Include="Src\UI\Separator.ts" />
     <TypeScriptCompile Include="Src\UI\Text.ts" />
     <TypeScriptCompile Include="Src\UI\Title.ts" />
     <TypeScriptCompile Include="Src\UI\Toast.ts" />

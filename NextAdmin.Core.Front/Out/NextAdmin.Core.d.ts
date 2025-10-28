@@ -330,7 +330,7 @@ declare namespace NextAdmin {
         refreshPage(reload?: boolean): Promise<void>;
         navigateBack(): Promise<NextAdmin.UI.Page>;
         navigateBackOrDefault(defaultPageName?: string): Promise<NextAdmin.UI.Page>;
-        navigateTo(pageName: string, parameters?: any, updateNavigatorState?: UpdateNavigatorState, force?: boolean): Promise<NextAdmin.UI.Page>;
+        navigateTo(pageName: string, parameters?: any, navigatorHistoryAction?: UpdateNavigatorState, force?: boolean): Promise<NextAdmin.UI.Page>;
         updateNavigatorHistory(pageName: string, parameters?: {}, psuhState?: boolean): void;
         protected displayMode?: DisplayMode;
         getDisplayMode(): DisplayMode;
@@ -1995,6 +1995,7 @@ declare namespace NextAdmin.UI {
         userSelect?: string;
         verticalAlign?: string;
         visibility?: string;
+        whiteSpace?: string;
     }
     enum ControlStyle {
         default = 0,
@@ -2041,8 +2042,10 @@ declare namespace NextAdmin.UI {
         onActionExecuted: EventHandler<Button, any>;
         static style: string;
         constructor(options?: ButtonOptions);
+        private _currentSizeClass?;
+        setSize(size?: ButtonSize): void;
         private _currentStyle;
-        setColorStyle(style: ButtonStyle): void;
+        setStyle(style: ButtonStyle): void;
         getColorStyle(): ButtonStyle;
         static getColorStyleClass(style: ButtonStyle): "next-admin-btn-default" | "next-admin-btn-blue" | "next-admin-btn-light-blue" | "next-admin-btn-green" | "next-admin-btn-light-green" | "next-admin-btn-red" | "next-admin-btn-bg-white" | "next-admin-btn-bg-light-grey" | "next-admin-btn-bg-grey" | "next-admin-btn-bg-black" | "next-admin-btn-bg-blue" | "next-admin-btn-bg-green" | "next-admin-btn-bg-red" | "next-admin-btn-no-bg" | "next-admin-btn-no-bg-white" | "next-admin-btn-no-bg-light-grey" | "next-admin-btn-no-bg-dark-blue" | "next-admin-btn-no-bg-blue" | "next-admin-btn-no-bg-red";
         private _isPressed;
@@ -2211,6 +2214,7 @@ declare namespace NextAdmin.UI {
         style?: ModalStyle | any;
         hasHeader?: boolean;
         hasFooter?: boolean;
+        closeOnClickOutside?: boolean;
         onClose?: (modal: NextAdmin.UI.Modal, args: CloseModalArgs) => void;
     }
     enum ModalSize {
@@ -2463,7 +2467,7 @@ declare namespace NextAdmin.UI {
         constructor(options?: ContainerOptions);
     }
     interface ContainerOptions extends ControlOptions {
-        width?: string;
+        maxWidth?: string;
     }
 }
 declare namespace NextAdmin.UI {
@@ -3507,11 +3511,17 @@ declare namespace NextAdmin.UI {
         constructor(options?: ImageOptions);
         setStyle(style?: ImageStyle): void;
         setDisplayMode(displayMode: ImageDisplayMode): void;
+        private _isMultiFramePlaying;
+        startPlayFrames(srcs?: Array<string>, frameDuration?: number): Promise<void>;
+        stopPlayFrames(): void;
+        dispose(): void;
     }
     interface ImageOptions extends ControlOptions {
         width?: string;
         height?: string;
-        src?: string;
+        src?: string | Array<string>;
+        frameDuration?: number;
+        multiFramePlayingMode?: MultiFramePlayingMode;
         style?: ImageStyle;
         displayMode?: ImageDisplayMode;
     }
@@ -3524,6 +3534,11 @@ declare namespace NextAdmin.UI {
         contain = 0,
         cover = 1,
         stretch = 2
+    }
+    enum MultiFramePlayingMode {
+        manual = 0,
+        auto = 1,
+        onHover = 2
     }
 }
 declare namespace NextAdmin.UI {
@@ -5664,35 +5679,54 @@ declare namespace NextAdmin.UI {
 declare namespace NextAdmin.UI {
     class MessageBox extends Control {
         modal: HTMLDivElement;
-        modalContent: HTMLDivElement;
-        image?: HTMLImageElement;
-        header: HTMLHeadingElement;
-        body: HTMLParagraphElement;
+        modalContent: Container;
+        image?: Image;
+        body: HTMLDivElement;
+        bodyLayout: HorizontalFlexLayout;
+        title: Title;
+        text: HTMLDivElement;
         footer: HTMLDivElement;
+        footerSeparator: Separator;
         options: MessageBoxOptions;
         private _desktopButtonToolbar;
         private _button;
-        static onCreated: EventHandler<MessageBox, MessageBoxOptions>;
         static style: string;
         constructor(options: MessageBoxOptions);
         appendButton(button: Button): void;
         prependButton(button: Button): void;
+        isMobileDisplayModeEnabled(): boolean;
         getButtons(): Array<Button>;
         startSpin(): void;
-        private static _previousBodyOverflow;
-        close(): void;
-        open(): void;
+        private _currentStyle?;
+        setStyle(style?: MessageBoxStyle): void;
+        close(): Promise<void>;
+        open(): Promise<void>;
+        openToast(displayDuration?: number): Promise<void>;
         static createOk(title: string, message: string, okAction?: any, parentContainer?: HTMLElement): MessageBox;
-        static createLoading(title?: string, message?: string, cancelAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
+        static createToast(title: string, message: string, parentContainer?: HTMLElement): MessageBox;
+        static createLoadingBox(title?: string, message?: string, cancelAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
         static createYesNo(title: string, message: string, yesAction?: (msgBox: MessageBox) => void, noAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
         static createYesCancel(title: string, message: string, yesAction?: (msgBox: MessageBox) => void, cancelAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
     }
     interface MessageBoxOptions extends ControlOptions {
-        title: string;
+        title?: string;
         text?: string;
-        imageUrl?: string;
+        imageSrc?: string;
         buttons?: Array<Button>;
         parentContainer?: Element;
+        style?: MessageBoxStyle;
+        openAnimation?: string;
+        closeAnimation?: string;
+        displayMode?: MessageBoxDisplayMode;
+    }
+    enum MessageBoxStyle {
+        default = 0,
+        modern = 1
+    }
+    enum MessageBoxDisplayMode {
+        auto = 0,
+        desktop = 1,
+        mobile = 2
     }
 }
 declare namespace NextAdmin.UI {
@@ -5766,7 +5800,7 @@ declare namespace NextAdmin.UI {
         parameters?: any;
         static onCreated: EventHandler<Page, PageOptions>;
         constructor(options?: PageOptions);
-        setParameters(parameters?: any, updateNavigatorState?: UpdateNavigatorState): void;
+        setParameters(parameters?: any, navigatorHistoryAction?: UpdateNavigatorState): void;
         getParameters(): any;
         navigateTo(args: NavigateToArgs): Promise<void>;
         navigateFrom(args: NavigateFromArgs): Promise<void>;
@@ -5774,6 +5808,8 @@ declare namespace NextAdmin.UI {
         dispose(): void;
         isActivePage(): boolean;
         bindEvent<TSender, TArgs>(eventHandler: EventHandler<TSender, TArgs>, eventAction: (sender: TSender, args: TArgs) => void): void;
+        refresh(realod?: boolean): Promise<void>;
+        getName(): string;
     }
     interface PageOptions extends ViewOptions {
         name?: string;
@@ -5787,6 +5823,7 @@ declare namespace NextAdmin.UI {
         parameters: any;
         contentUrl?: string;
         dependencies?: Array<string | DependencyInfo>;
+        navigatorHistoryAction?: NextAdmin.UpdateNavigatorState;
     }
     interface NavigateFromArgs {
         cancelNavigation: boolean;
@@ -6209,6 +6246,12 @@ declare namespace NextAdmin.UI {
         style?: ButtonStyle;
         dropDownWidth?: string;
         onAddButton?: (sender: SelectDropDownButton, args: AddButtonArgs) => void;
+    }
+}
+declare namespace NextAdmin.UI {
+    class Separator extends Control {
+        static style: string;
+        constructor(options?: ControlOptions);
     }
 }
 declare namespace NextAdmin.UI {

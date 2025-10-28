@@ -70,30 +70,8 @@ namespace NextAdmin.UI {
                 this.element.setPopover(this.options.popover);
             }
 
-            this.setColorStyle(this.options.style);
-
-            switch (this.options.size) {
-
-                case ButtonSize.extraSmall:
-                    this.element.classList.add('next-admin-btn-extra-small');
-                    break;
-                case ButtonSize.small:
-                    this.element.classList.add('next-admin-btn-small');
-                    break;
-                default:
-                case ButtonSize.medium:
-                    this.element.classList.add('next-admin-btn-medium');
-                    break;
-                case ButtonSize.mediumResponsive:
-                    this.element.classList.add('next-admin-btn-medium-responsive');
-                    break;
-                case ButtonSize.large:
-                    this.element.classList.add('next-admin-btn-large');
-                    break;
-                case ButtonSize.largeResponsive:
-                    this.element.classList.add('next-admin-btn-large-responsive');
-                    break;
-            }
+            this.setStyle(this.options.style);
+            this.setSize(this.options.size);
 
 
             this.element.addEventListener('click', (event) => {
@@ -107,8 +85,41 @@ namespace NextAdmin.UI {
             Button.onCreated.dispatch(this, this.options);
         }
 
+
+        private _currentSizeClass?: string;
+        setSize(size?: ButtonSize) {
+            if (this._currentSizeClass) {
+                this.element.classList.remove(this._currentSizeClass);
+            }
+
+            switch (size) {
+                case ButtonSize.extraSmall:
+                    this._currentSizeClass = 'next-admin-btn-extra-small';
+                    break;
+                case ButtonSize.small:
+                    this._currentSizeClass = 'next-admin-btn-small';
+                    break;
+                default:
+                case ButtonSize.medium:
+                    this._currentSizeClass = 'next-admin-btn-medium';
+                    break;
+                case ButtonSize.mediumResponsive:
+                    this._currentSizeClass = 'next-admin-btn-medium-responsive';
+                    break;
+                case ButtonSize.large:
+                    this._currentSizeClass = 'next-admin-btn-large';
+                    break;
+                case ButtonSize.largeResponsive:
+                    this._currentSizeClass = 'next-admin-btn-large-responsive';
+                    break;
+            }
+            this.element.classList.add(this._currentSizeClass);
+
+        }
+
+
         private _currentStyle = null;
-        public setColorStyle(style: ButtonStyle) {
+        public setStyle(style: ButtonStyle) {
             if (this._currentStyle == style) {
                 return;
             }

@@ -431,7 +431,7 @@ namespace NextAdmin.UI {
                 }
                 else {
                     this.toolBar.appendControl(this.buttonMultiDelete);
-                    this.buttonMultiDelete.setColorStyle(ButtonStyle.red);
+                    this.buttonMultiDelete.setStyle(ButtonStyle.red);
                 }
 
                 this.buttonMultiDelete.disable();
@@ -1040,7 +1040,7 @@ namespace NextAdmin.UI {
                     throw new Error('please set dataset form to enable hard delete');
                 }
                 MessageBox.createYesCancel(Resources.formDeleteMessageTitle, Resources.formDeleteMessage, async () => {
-                    let waitBox = NextAdmin.UI.MessageBox.createLoading();
+                    let waitBox = NextAdmin.UI.MessageBox.createLoadingBox();
                     let result = await this.datasetController.deleteItems(rows.select(e => e.data));
                     waitBox.close();
                     if (result.success) {

@@ -18,7 +18,8 @@ namespace NextAdmin.UI {
                 imagesSize: 'contain',
                 imagePosition: 'center center',
                 imageUrls: this.options.imageUrls,
-                css: { height:'100%' }
+                uiScale: 2,
+                css: { height: '100%' }
             }));
         }
 
