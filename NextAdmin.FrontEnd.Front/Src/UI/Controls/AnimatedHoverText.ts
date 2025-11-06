@@ -62,7 +62,7 @@ namespace NextAdmin.UI {
         options: AnimatedHoverTextOptions;
 
         constructor(options?: AnimatedHoverTextOptions) {
-            super('div', {
+            super(options?.htmlTag ?? 'div', {
                 ...options
             } as AnimatedHoverTextOptions);
 
@@ -137,6 +137,8 @@ namespace NextAdmin.UI {
         text?: string;
 
         color?: string;
+
+        htmlTag?: string;
 
     }
 

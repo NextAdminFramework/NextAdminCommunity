@@ -9,7 +9,7 @@ using System.Security.Claims;
 namespace NextAdmin.Core.Model
 {
     [Index(nameof(UserName), IsUnique = true), Label()]
-    public abstract class User : StrGuidEntity, IUser
+    public abstract class User : StrGuidIdEntity, IUser
     {
         [Required, Label, Previewable, MaxLength(96)]
         public string UserName { get; set; }

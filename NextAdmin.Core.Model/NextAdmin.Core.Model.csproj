@@ -27,17 +27,21 @@
       <Generator>DtsGenerator</Generator>
       <LastGenOutput>GuidEntity.cs.d.ts</LastGenOutput>
     </Compile>
-    <Compile Update="LongEntity.cs">
+    <Compile Update="LongIdEntity.cs">
       <Generator>DtsGenerator</Generator>
-      <LastGenOutput>LongEntity.cs.d.ts</LastGenOutput>
+      <LastGenOutput>LongIdEntity.cs.d.ts</LastGenOutput>
     </Compile>
     <Compile Update="RightType.cs">
       <Generator>DtsGenerator</Generator>
       <LastGenOutput>RightType.cs.d.ts</LastGenOutput>
     </Compile>
-    <Compile Update="StrGuidEntity.cs">
+    <Compile Update="StrGuidIdEntity.cs">
       <Generator>DtsGenerator</Generator>
-      <LastGenOutput>StrGuidEntity.cs.d.ts</LastGenOutput>
+      <LastGenOutput>StrGuidIdEntity.cs.d.ts</LastGenOutput>
+    </Compile>
+    <Compile Update="StrIdEntity.cs">
+      <Generator>DtsGenerator</Generator>
+      <LastGenOutput>StrIdEntity.cs.d.ts</LastGenOutput>
     </Compile>
   </ItemGroup>
 
@@ -57,20 +61,25 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>GuidEntity.cs</DependentUpon>
     </None>
-    <None Update="LongEntity.cs.d.ts">
+    <None Update="LongIdEntity.cs.d.ts">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>LongEntity.cs</DependentUpon>
+      <DependentUpon>LongIdEntity.cs</DependentUpon>
     </None>
     <None Update="RightType.cs.d.ts">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>RightType.cs</DependentUpon>
     </None>
-    <None Update="StrGuidEntity.cs.d.ts">
+    <None Update="StrGuidIdEntity.cs.d.ts">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>StrGuidEntity.cs</DependentUpon>
+      <DependentUpon>StrGuidIdEntity.cs</DependentUpon>
+    </None>
+    <None Update="StrIdEntity.cs.d.ts">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>StrIdEntity.cs</DependentUpon>
     </None>
   </ItemGroup>
 

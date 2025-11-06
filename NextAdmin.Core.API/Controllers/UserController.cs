@@ -37,6 +37,7 @@ namespace NextAdmin.Core.API.Controllers
                     return response;
                 }
                 var token = user.CreateAuthToken(DbContext, new AuthTokenSerializer(), AuthTokenIssuer, TokenDayValidity);
+                AppEvent.AddAppEvent(DbContext, user, "CREATE_USER_AUTH_TOKEN");
                 var saveResult = DbContext.ValidateAndSave();
                 if (!saveResult.Success)
                 {
@@ -133,7 +134,9 @@ namespace NextAdmin.Core.API.Controllers
                 {
                     response.User = GetUserDto(User);
                     response.UserType = User.GetType().Name;
-                    response.Code = ApiResponseCode.Success.ToString(); ;
+                    response.Code = ApiResponseCode.Success.ToString();
+                    AppEvent.AddAppEvent(DbContext, User, "AUTH_BY_TOKEN", Request.HttpContext.Connection.RemoteIpAddress?.ToString());
+                    DbContext.SaveChanges();
                 }
             }
             catch (Exception ex)

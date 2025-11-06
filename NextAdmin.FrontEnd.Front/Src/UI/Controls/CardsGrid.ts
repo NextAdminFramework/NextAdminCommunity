@@ -50,7 +50,6 @@ namespace NextAdmin.UI {
         appendCard<TCard extends Control>(card: TCard, controlOption?: (card: TCard) => void): TCard {
             this.body.appendControl(card, controlOption);
             this._cards.add(card);
-            card.element.style.margin = this.options.margin;
             return card;
         }
 
@@ -72,8 +71,6 @@ namespace NextAdmin.UI {
 
 
     export interface CardsGridOptions extends NextAdmin.UI.ControlOptions {
-
-        margin?: string;
 
         isItemsCentered?: boolean;
 
@@ -97,7 +94,6 @@ namespace NextAdmin.UI {
 
 
         }
-
 
         cardFactory(data: TData): NextAdmin.UI.Control {
             throw Error('Not implemented');

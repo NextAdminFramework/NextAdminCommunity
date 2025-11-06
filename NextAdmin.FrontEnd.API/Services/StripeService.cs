@@ -32,7 +32,6 @@ namespace NextAdmin.FrontEnd.API.Services
             if (successPaymentUrl == null)
             {
                 successPaymentUrl = NextAdminHelper.AppUrl + "/successPayment?itemId=" + item.GetItemId(DbContext);
-
             }
             if (cancelPaymentUrl == null)
             {

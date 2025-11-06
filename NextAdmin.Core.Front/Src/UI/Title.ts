@@ -50,7 +50,9 @@ namespace NextAdmin.UI {
         .next-admin-title-black {
             color:#000;
         }
-
+        .next-admin-title-ultra-large{
+            font-size:48px;
+        }
         .next-admin-title-large {
             font-size:36px;
         }
@@ -64,6 +66,9 @@ namespace NextAdmin.UI {
             font-size:16px;
         }
         @media (max-width: 1280px) {
+            .next-admin-title-responsive.next-admin-title-ultra-large {
+                font-size:40px;
+            }
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:32px;
             }
@@ -75,6 +80,9 @@ namespace NextAdmin.UI {
             }
         }
         @media (max-width: 1024px) {
+            .next-admin-title-responsive.next-admin-title-ultra-large {
+                font-size:32px;
+            }
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:28px;
             }
@@ -89,6 +97,9 @@ namespace NextAdmin.UI {
             }
         }
         @media (max-width: 768px) {
+            .next-admin-title-responsive.next-admin-title-ultra-large {
+                font-size:28px;
+            }
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:24px;
             }
@@ -165,6 +176,9 @@ namespace NextAdmin.UI {
 
         setSize(size?: TitleSize) {
             switch (size) {
+                case TitleSize.ultraLarge:
+                    this.element.classList.add('next-admin-title-ultra-large');
+                    break;
                 default:
                 case TitleSize.large:
                     this.element.classList.add('next-admin-title-large');
@@ -198,10 +212,11 @@ namespace NextAdmin.UI {
     }
 
     export enum TitleSize {
-        large,
-        medium,
-        small,
-        ultraSmall
+        ultraLarge = 0,
+        large = 1,
+        medium = 2,
+        small = 3,
+        ultraSmall = 4,
     }
 
 

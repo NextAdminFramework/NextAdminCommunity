@@ -42,6 +42,7 @@ namespace NextAdmin.UI {
                 backdropColor: 'rgba(0,0,0,0.25)',
                 ...options,
             } as noUiModalOptions);
+            this.buttonClose.innerHTML = Resources.closeIcon;
             Style.append('NextAdmin.UI.NoUiModal', NoUiModal.style);
             this.element.classList.add('next-admin-no-ui-modal-container');
         }

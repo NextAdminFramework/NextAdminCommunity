@@ -49,7 +49,7 @@ namespace NextAdmin.Core.API.Controllers
 
         protected virtual IEntityRight? GetUserEntityRight(string entityName)
         {
-            if (this.User == null)
+            if (User == null)
             {
                 return null;
             }
@@ -63,7 +63,7 @@ namespace NextAdmin.Core.API.Controllers
 
         protected virtual RightType GetUserGlobalEntityRight(string entityName)
         {
-            if (this.User == null)
+            if (User == null)
             {
                 return RightType.Denied;
             }

@@ -1,5 +1,5 @@
 declare module Models {
-	interface ContactMessageDto extends StrGuidEntity {
+	interface ContactMessage extends StrGuidIdEntity {
 		userId: string;
 		date?: Date;
 		responseDate?: Date;

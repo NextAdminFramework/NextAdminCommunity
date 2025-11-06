@@ -14330,7 +14330,7 @@ var NextAdmin;
                 }
                 let features = result.parseJson();
                 let feature = features?.features?.firstOrDefault();
-                let coordinates = feature.properties?.coordinates;
+                let coordinates = feature?.properties?.coordinates;
                 if (coordinates == null) {
                     return null;
                 }
@@ -15078,6 +15078,7 @@ var NextAdmin;
                     backdropColor: 'rgba(0,0,0,0.25)',
                     ...options,
                 });
+                this.buttonClose.innerHTML = NextAdmin.Resources.closeIcon;
                 NextAdmin.Style.append('NextAdmin.UI.NoUiModal', NoUiModal.style);
                 this.element.classList.add('next-admin-no-ui-modal-container');
             }
@@ -17963,6 +17964,9 @@ var NextAdmin;
             }
             setSize(size) {
                 switch (size) {
+                    case TitleSize.ultraLarge:
+                        this.element.classList.add('next-admin-title-ultra-large');
+                        break;
                     default:
                     case TitleSize.large:
                         this.element.classList.add('next-admin-title-large');
@@ -18024,7 +18028,9 @@ var NextAdmin;
         .next-admin-title-black {
             color:#000;
         }
-
+        .next-admin-title-ultra-large{
+            font-size:48px;
+        }
         .next-admin-title-large {
             font-size:36px;
         }
@@ -18038,6 +18044,9 @@ var NextAdmin;
             font-size:16px;
         }
         @media (max-width: 1280px) {
+            .next-admin-title-responsive.next-admin-title-ultra-large {
+                font-size:40px;
+            }
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:32px;
             }
@@ -18049,6 +18058,9 @@ var NextAdmin;
             }
         }
         @media (max-width: 1024px) {
+            .next-admin-title-responsive.next-admin-title-ultra-large {
+                font-size:32px;
+            }
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:28px;
             }
@@ -18063,6 +18075,9 @@ var NextAdmin;
             }
         }
         @media (max-width: 768px) {
+            .next-admin-title-responsive.next-admin-title-ultra-large {
+                font-size:28px;
+            }
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:24px;
             }
@@ -18077,10 +18092,11 @@ var NextAdmin;
         UI.Title = Title;
         let TitleSize;
         (function (TitleSize) {
-            TitleSize[TitleSize["large"] = 0] = "large";
-            TitleSize[TitleSize["medium"] = 1] = "medium";
-            TitleSize[TitleSize["small"] = 2] = "small";
-            TitleSize[TitleSize["ultraSmall"] = 3] = "ultraSmall";
+            TitleSize[TitleSize["ultraLarge"] = 0] = "ultraLarge";
+            TitleSize[TitleSize["large"] = 1] = "large";
+            TitleSize[TitleSize["medium"] = 2] = "medium";
+            TitleSize[TitleSize["small"] = 3] = "small";
+            TitleSize[TitleSize["ultraSmall"] = 4] = "ultraSmall";
         })(TitleSize = UI.TitleSize || (UI.TitleSize = {}));
         let TitleStyle;
         (function (TitleStyle) {

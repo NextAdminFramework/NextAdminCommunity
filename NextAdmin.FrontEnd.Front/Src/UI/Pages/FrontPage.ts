@@ -42,13 +42,17 @@ namespace NextAdmin.UI {
         }
 
 
-        appendContainer(options?: PageContaineOptions, configAction?: (container: HTMLDivElement) => void): PageContainer {
-
-            return this.element.appendControl(new PageContainer(options), (container) => {
+        appendContainer(options?: PageSectionOptions, configAction?: (container: HTMLDivElement) => void): PageSection {
+            return this.appendSection(options, (section) => {
                 if (configAction) {
-                    configAction(container.element);
+                    configAction(section.body);
                 }
             });
+        }
+
+
+        appendSection(options?: PageSectionOptions, configAction?: (section: PageSection) => void): PageSection {
+            return this.element.appendControl(new PageSection(options), configAction);
         }
 
     }

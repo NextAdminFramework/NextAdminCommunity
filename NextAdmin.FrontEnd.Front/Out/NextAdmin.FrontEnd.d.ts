@@ -144,6 +144,7 @@ declare namespace NextAdmin.UI {
     interface AnimatedHoverTextOptions extends ControlOptions {
         text?: string;
         color?: string;
+        htmlTag?: string;
     }
 }
 declare namespace NextAdmin.UI {
@@ -197,7 +198,6 @@ declare namespace NextAdmin.UI {
         clear(): void;
     }
     interface CardsGridOptions extends NextAdmin.UI.ControlOptions {
-        margin?: string;
         isItemsCentered?: boolean;
     }
     class CardsDataGrid<TData> extends CardsGrid {
@@ -268,6 +268,7 @@ declare namespace NextAdmin.UI {
         setHoverText(hoverText?: string): void;
         setSize(size: ImageCardSize): void;
         setStyle(style: ImageCardStyle): void;
+        setHoverEffect(effect: ImageCardHoverEffect): void;
         private _isImageAutoPlayingEnabled;
         private setMultiImageSrcs;
         setImageSrc(src?: string): void;
@@ -279,6 +280,8 @@ declare namespace NextAdmin.UI {
     interface ImageCardOptions extends NextAdmin.UI.ControlOptions {
         size?: ImageCardSize;
         style?: ImageCardStyle;
+        hasMargin?: boolean;
+        hoverEffect?: ImageCardHoverEffect;
         imageSrc?: string | Array<string>;
         multiImageDisplayDelay?: number;
         backgroundColor?: string;
@@ -314,6 +317,10 @@ declare namespace NextAdmin.UI {
         imageShadowedBorderRadiusTextCenter = 21,
         imageShadowedBorderRadiusBTextLeft = 30,
         imageShadowedBorderRadiusBTextCenter = 31
+    }
+    enum ImageCardHoverEffect {
+        scaleUpImageInsideCard = 0,
+        scaleUpCard = 1
     }
 }
 declare namespace NextAdmin.UI {
@@ -401,7 +408,7 @@ declare namespace NextAdmin.UI {
         static style: string;
         constructor(options?: MultiImageViwerOptions);
         addImageItem(imageItem: MultiImageViwerImageItem): void;
-        addImage(url: string): void;
+        addImage(previewImageUrl: string, fullSizeImageUrl?: string): void;
         addImages(urls: Array<string>): void;
         setActiveImage(imageId?: string): void;
         getMiniatureImages(): Array<HTMLElement>;
@@ -417,7 +424,8 @@ declare namespace NextAdmin.UI {
         canOpenInFullScreen?: boolean;
     }
     interface MultiImageViwerImageItem {
-        url?: string;
+        previewImageUrl?: string;
+        fullSizeImageUrl?: string;
         description?: string;
     }
 }
@@ -462,15 +470,14 @@ declare namespace NextAdmin.UI {
     }
 }
 declare namespace NextAdmin.UI {
-    class PageContainer extends NextAdmin.UI.Control {
+    class PageSection extends NextAdmin.UI.Container {
         element: HTMLDivElement;
-        options: PageContaineOptions;
+        options: PageSectionOptions;
         static style: string;
-        constructor(options?: PageContaineOptions);
+        constructor(options?: PageSectionOptions);
     }
-    interface PageContaineOptions extends NextAdmin.UI.ControlOptions {
+    interface PageSectionOptions extends NextAdmin.UI.ContainerOptions {
         hasPadding?: boolean;
-        maxWidth?: string;
         minHeight?: string;
     }
 }
@@ -503,7 +510,7 @@ declare namespace NextAdmin.UI {
         startPlay(): Promise<void>;
         stopPlay(): void;
         addSlideItem(itemOption: SlideOptions): Slide;
-        appendSlide(control: Slide, configAction?: (control: Slide) => void): Slide;
+        appendSlide<TSlide extends Slide>(control: TSlide, configAction?: (control: TSlide) => void): TSlide;
         setActiveSlide(slide: Slide): void;
         getActiveSlide(): Slide;
         passToNextSlide(): void;
@@ -537,10 +544,13 @@ declare namespace NextAdmin.UI {
     }
     class HeadingSlide extends Slide {
         options: HeadingSlideOptions;
+        contentContainer?: Container;
         constructor(options?: HeadingSlideOptions);
     }
     interface HeadingSlideOptions extends SlideOptions {
         textColor?: string;
+        textAlign?: string;
+        textContainerMaxWidth?: string;
         title?: string;
         subTitle?: string;
         hoverText?: string;
@@ -553,7 +563,7 @@ declare namespace NextAdmin.UI {
         hoverText: AnimatedHoverText;
         static style: string;
         constructor(options?: SliderImageViewerOptions);
-        appendSlide(control: Slide, configAction?: (control: Slide) => void): Slide;
+        appendSlide<TSlide extends Slide>(control: TSlide, configAction?: (control: TSlide) => void): TSlide;
         openImagesViewerModal(): void;
     }
     interface SliderImageViewerOptions extends SliderOptions {
@@ -658,7 +668,8 @@ declare namespace NextAdmin.UI {
         constructor(options?: FrontPageOptions);
         navigateTo(args: NextAdmin.UI.NavigateToArgs): Promise<void>;
         navigateFrom(args: NextAdmin.UI.NavigateFromArgs): Promise<void>;
-        appendContainer(options?: PageContaineOptions, configAction?: (container: HTMLDivElement) => void): PageContainer;
+        appendContainer(options?: PageSectionOptions, configAction?: (container: HTMLDivElement) => void): PageSection;
+        appendSection(options?: PageSectionOptions, configAction?: (section: PageSection) => void): PageSection;
     }
     interface FrontPageOptions extends PageOptions {
         navigateFromAnimation?: string;

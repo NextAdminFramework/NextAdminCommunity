@@ -6,7 +6,7 @@ using NextAdmin.FrontEnd.Model.Resources;
 namespace NextAdmin.FrontEnd.Model
 {
     [Label(nameof(FrontEndResourcesFr.ContactMessage))]
-    public class ContactMessage : StrGuidEntity, IBlobEntity
+    public class ContactMessage : StrGuidIdEntity, IBlobEntity
     {
 
         [Label]

@@ -6495,10 +6495,11 @@ declare namespace NextAdmin.UI {
         text?: string;
     }
     enum TitleSize {
-        large = 0,
-        medium = 1,
-        small = 2,
-        ultraSmall = 3
+        ultraLarge = 0,
+        large = 1,
+        medium = 2,
+        small = 3,
+        ultraSmall = 4
     }
     enum TitleStyle {
         ultraLightGreyThin = 0,

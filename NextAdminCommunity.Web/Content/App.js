@@ -1598,10 +1598,10 @@ var NextAdmin;
                 if (defaultPageName == null) {
                     defaultPageName = this.options.defaultPage;
                 }
-                this.navigateTo(defaultPageName, null, UpdateNavigatorState.replaceState);
+                await this.navigateTo(defaultPageName, null, UpdateNavigatorState.replaceState);
             }
         }
-        async navigateTo(pageName, parameters = null, updateNavigatorState = UpdateNavigatorState.pushState, force = false) {
+        async navigateTo(pageName, parameters = null, navigatorHistoryAction = UpdateNavigatorState.pushState, force = false) {
             if (!force && this._currentPage != null && this._currentPage.options != null && pageName == this._currentPage.options.name && JSON.stringify(parameters) == JSON.stringify(this._currentPage.parameters)) {
                 return;
             }
@@ -1628,16 +1628,17 @@ var NextAdmin;
                 this._previousPage = previousPage;
                 this._currentPage = nextPage;
             }
-            let navigateArgs = { previousPage: this._previousPage, nextPage: nextPage };
-            this.onNavigate.dispatch(this, navigateArgs);
-            if (navigateArgs.cancelNavigation) {
+            let navigationArgs = { previousPage: this._previousPage, nextPage: nextPage };
+            this.onNavigate.dispatch(this, navigationArgs);
+            if (navigationArgs.cancelNavigation) {
                 return null;
             }
             let nextPageNavigationArgs = {
                 previousPage: previousPage,
                 parameters: parameters,
                 dependencies: nextPage?.options?.pageInfo?.dependencies,
-                contentUrl: nextPage?.options?.pageInfo?.contentUrl
+                contentUrl: nextPage?.options?.pageInfo?.contentUrl,
+                navigatorHistoryAction: navigatorHistoryAction
             };
             if (nextPageNavigationArgs.contentUrl) { //preload view html content
                 await nextPage.loadContent(nextPageNavigationArgs.contentUrl);
@@ -1646,8 +1647,8 @@ var NextAdmin;
                 previousPage.endNavigateFrom();
             }
             await nextPage.navigateTo(nextPageNavigationArgs);
-            if (updateNavigatorState && window.history && window.history.pushState) {
-                this.updateNavigatorHistory(this._currentPage.options.name, parameters, updateNavigatorState == UpdateNavigatorState.pushState);
+            if (navigatorHistoryAction && window.history && window.history.pushState) {
+                this.updateNavigatorHistory(this._currentPage.options.name, parameters, navigatorHistoryAction == UpdateNavigatorState.pushState);
             }
             this.onPageChanged.dispatch(this, nextPage);
             return nextPage;
@@ -5783,28 +5784,8 @@ var NextAdmin;
                 if (this.options.popover) {
                     this.element.setPopover(this.options.popover);
                 }
-                this.setColorStyle(this.options.style);
-                switch (this.options.size) {
-                    case ButtonSize.extraSmall:
-                        this.element.classList.add('next-admin-btn-extra-small');
-                        break;
-                    case ButtonSize.small:
-                        this.element.classList.add('next-admin-btn-small');
-                        break;
-                    default:
-                    case ButtonSize.medium:
-                        this.element.classList.add('next-admin-btn-medium');
-                        break;
-                    case ButtonSize.mediumResponsive:
-                        this.element.classList.add('next-admin-btn-medium-responsive');
-                        break;
-                    case ButtonSize.large:
-                        this.element.classList.add('next-admin-btn-large');
-                        break;
-                    case ButtonSize.largeResponsive:
-                        this.element.classList.add('next-admin-btn-large-responsive');
-                        break;
-                }
+                this.setStyle(this.options.style);
+                this.setSize(this.options.size);
                 this.element.addEventListener('click', (event) => {
                     if (this.options.stopClickEventPropagation) {
                         event.stopPropagation();
@@ -5815,7 +5796,34 @@ var NextAdmin;
                 });
                 Button.onCreated.dispatch(this, this.options);
             }
-            setColorStyle(style) {
+            setSize(size) {
+                if (this._currentSizeClass) {
+                    this.element.classList.remove(this._currentSizeClass);
+                }
+                switch (size) {
+                    case ButtonSize.extraSmall:
+                        this._currentSizeClass = 'next-admin-btn-extra-small';
+                        break;
+                    case ButtonSize.small:
+                        this._currentSizeClass = 'next-admin-btn-small';
+                        break;
+                    default:
+                    case ButtonSize.medium:
+                        this._currentSizeClass = 'next-admin-btn-medium';
+                        break;
+                    case ButtonSize.mediumResponsive:
+                        this._currentSizeClass = 'next-admin-btn-medium-responsive';
+                        break;
+                    case ButtonSize.large:
+                        this._currentSizeClass = 'next-admin-btn-large';
+                        break;
+                    case ButtonSize.largeResponsive:
+                        this._currentSizeClass = 'next-admin-btn-large-responsive';
+                        break;
+                }
+                this.element.classList.add(this._currentSizeClass);
+            }
+            setStyle(style) {
                 if (this._currentStyle == style) {
                     return;
                 }
@@ -6123,6 +6131,7 @@ var NextAdmin;
                     canClose: true,
                     hasHeader: true,
                     hasFooter: true,
+                    closeOnClickOutside: false,
                     openAnimation: 'zoomIn',
                     closeAnimation: 'zoomOut',
                     minimizeAnimation: 'fadeOutDown',
@@ -6268,6 +6277,14 @@ var NextAdmin;
                         });
                     });
                 });
+                if (this.options.closeOnClickOutside) {
+                    this.modal.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                    });
+                    this.element.addEventListener('click', () => {
+                        this.close();
+                    });
+                }
                 this.setSize(this.options.size);
                 this.setStyle(this.options.style);
                 if (this.options.startFullScreen) {
@@ -7949,12 +7966,12 @@ var NextAdmin;
         class Container extends UI.Control {
             constructor(options) {
                 super('div', {
-                    width: '1280px',
+                    maxWidth: '1280px',
                     ...options
                 });
                 this.body = this.element.appendHTML('div', (body) => {
                     body.style.margin = '0 auto';
-                    body.style.maxWidth = this.options.width;
+                    body.style.maxWidth = this.options.maxWidth;
                 });
             }
         }
@@ -8107,7 +8124,7 @@ var NextAdmin;
                         toolBar.appendControl(this.footerCloseButton = new UI.Button({
                             text: NextAdmin.Resources.closeIcon + ' ' + NextAdmin.Resources.close,
                             action: () => {
-                                this.close({ chackDataState: true });
+                                this.close();
                             }
                         }));
                     }
@@ -8273,7 +8290,7 @@ var NextAdmin;
                     chackDataState: !this.options.isDetailFormModal && !this.options.hasValidateButton,
                     ...args
                 };
-                if (args.chackDataState) {
+                if (this.dataController && args.chackDataState) {
                     this.dataController.askUserToSaveDataIfNeededAndExecuteAction(() => {
                         super.close(args);
                     });
@@ -9061,7 +9078,7 @@ var NextAdmin;
                     }
                     else {
                         this.toolBar.appendControl(this.buttonMultiDelete);
-                        this.buttonMultiDelete.setColorStyle(UI.ButtonStyle.red);
+                        this.buttonMultiDelete.setStyle(UI.ButtonStyle.red);
                     }
                     this.buttonMultiDelete.disable();
                     this.onDatasetChanged.subscribe(() => {
@@ -9625,7 +9642,7 @@ var NextAdmin;
                         throw new Error('please set dataset form to enable hard delete');
                     }
                     UI.MessageBox.createYesCancel(NextAdmin.Resources.formDeleteMessageTitle, NextAdmin.Resources.formDeleteMessage, async () => {
-                        let waitBox = NextAdmin.UI.MessageBox.createLoading();
+                        let waitBox = NextAdmin.UI.MessageBox.createLoadingBox();
                         let result = await this.datasetController.deleteItems(rows.select(e => e.data));
                         waitBox.close();
                         if (result.success) {
@@ -13201,7 +13218,7 @@ var NextAdmin;
             }
             applyButtonItemStyle(buttonItem) {
                 if (buttonItem.getColorStyle() == null || buttonItem.getColorStyle() == UI.ButtonStyle.default) {
-                    buttonItem.setColorStyle(NextAdmin.UI.ButtonStyle.noBg);
+                    buttonItem.setStyle(NextAdmin.UI.ButtonStyle.noBg);
                 }
                 buttonItem.element.style.width = '100%';
                 buttonItem.element.style.overflow = 'hidden';
@@ -13964,8 +13981,11 @@ var NextAdmin;
                 super('div', {
                     style: ImageStyle.none,
                     displayMode: ImageDisplayMode.contain,
+                    multiFramePlayingMode: MultiFramePlayingMode.auto,
+                    frameDuration: 1000,
                     ...options
                 });
+                this._isMultiFramePlaying = false;
                 NextAdmin.Style.append("NextAdmin.UI.Image", Image.style);
                 this.element.classList.add('next-admin-image-container');
                 if (this.options.width) {
@@ -13976,13 +13996,28 @@ var NextAdmin;
                 }
                 this.image = this.element.appendHTML('img', (image) => {
                     image.classList.add('next-admin-image');
-                    image.style.width = '100%';
-                    image.style.height = '100%';
-                    //image.style.backgroundColor = '#f9f9f9';
-                    image.src = this.options.src;
+                    if (Array.isArray(this.options.src)) {
+                        image.src = this.options.src[0];
+                    }
+                    else {
+                        image.src = this.options.src;
+                    }
                 });
                 this.setStyle(this.options.style);
                 this.setDisplayMode(this.options.displayMode);
+                if (Array.isArray(this.options.src)) {
+                    if (this.options.multiFramePlayingMode == MultiFramePlayingMode.auto) {
+                        this.startPlayFrames();
+                    }
+                    else if (this.options.multiFramePlayingMode == MultiFramePlayingMode.onHover) {
+                        this.element.addEventListener('mouseenter', () => {
+                            this.startPlayFrames();
+                        });
+                        this.element.addEventListener('mouseleave', () => {
+                            this.stopPlayFrames();
+                        });
+                    }
+                }
             }
             setStyle(style) {
                 switch (style) {
@@ -14010,6 +14045,38 @@ var NextAdmin;
                         this.image.style.objectFit = 'fill';
                         break;
                 }
+            }
+            async startPlayFrames(srcs, frameDuration) {
+                if (this._isMultiFramePlaying) {
+                    return;
+                }
+                if (frameDuration == null) {
+                    frameDuration = this.options.frameDuration;
+                }
+                if (srcs == null && Array.isArray(this.options.src)) {
+                    srcs = this.options.src;
+                }
+                if (srcs == null) {
+                    return;
+                }
+                this._isMultiFramePlaying = true;
+                let i = 0;
+                let isFirstImage = true;
+                while (this._isMultiFramePlaying) {
+                    this.image.src = srcs[i];
+                    await NextAdmin.Timer.sleep(frameDuration);
+                    i++;
+                    if (i == (srcs.length)) {
+                        i = 0;
+                    }
+                    isFirstImage = false;
+                }
+            }
+            stopPlayFrames() {
+                this._isMultiFramePlaying = false;
+            }
+            dispose() {
+                this._isMultiFramePlaying = false;
             }
         }
         Image.style = `
@@ -14051,6 +14118,12 @@ var NextAdmin;
             ImageDisplayMode[ImageDisplayMode["cover"] = 1] = "cover";
             ImageDisplayMode[ImageDisplayMode["stretch"] = 2] = "stretch";
         })(ImageDisplayMode = UI.ImageDisplayMode || (UI.ImageDisplayMode = {}));
+        let MultiFramePlayingMode;
+        (function (MultiFramePlayingMode) {
+            MultiFramePlayingMode[MultiFramePlayingMode["manual"] = 0] = "manual";
+            MultiFramePlayingMode[MultiFramePlayingMode["auto"] = 1] = "auto";
+            MultiFramePlayingMode[MultiFramePlayingMode["onHover"] = 2] = "onHover";
+        })(MultiFramePlayingMode = UI.MultiFramePlayingMode || (UI.MultiFramePlayingMode = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -14257,7 +14330,7 @@ var NextAdmin;
                 }
                 let features = result.parseJson();
                 let feature = features?.features?.firstOrDefault();
-                let coordinates = feature.properties?.coordinates;
+                let coordinates = feature?.properties?.coordinates;
                 if (coordinates == null) {
                     return null;
                 }
@@ -14356,7 +14429,7 @@ var NextAdmin;
                     if (dropDownItem instanceof UI.Control) {
                         dropDownItemContainer.appendControl(dropDownItem);
                         if (dropDownItem instanceof UI.DropDownButton) {
-                            dropDownItem.setColorStyle(NextAdmin.UI.ButtonStyle.noBg);
+                            dropDownItem.setStyle(NextAdmin.UI.ButtonStyle.noBg);
                             dropDownItem.element.style.width = '100%';
                             dropDownItem.element.style.textAlign = 'left';
                             if (!dropDownItem.dropDownPosition) {
@@ -14417,7 +14490,13 @@ var NextAdmin;
     (function (UI) {
         class MessageBox extends UI.Control {
             constructor(options) {
-                super('div', options);
+                super('div', {
+                    style: MessageBoxStyle.modern,
+                    displayMode: MessageBoxDisplayMode.auto,
+                    openAnimation: 'fadeIn',
+                    closeAnimation: 'fadeOut',
+                    ...options
+                });
                 this._button = new Array();
                 NextAdmin.Style.append("MessageBox", MessageBox.style);
                 if (this.options.parentContainer == null) {
@@ -14426,34 +14505,50 @@ var NextAdmin;
                 this.element.classList.add('next-admin-msgbox-container');
                 this.modal = this.element.appendHTML('div', (modal) => {
                     modal.classList.add('next-admin-msgbox-modal');
-                    this.modalContent = modal.appendHTML('div', (modalContent) => {
-                        modalContent.classList.add('next-admin-msgbox-modal-content');
-                        if (options.imageUrl) {
-                            this.image = modalContent.appendHTML('img', (image) => {
-                                image.classList.add('next-admin-msgbox-modal-image');
-                                image.src = options.imageUrl;
-                            });
-                        }
-                        this.header = modalContent.appendHTML('div', (header) => {
-                            header.classList.add('next-admin-msgbox-modal-content-header');
-                            header.innerHTML = this.options.title;
-                        });
-                        this.body = modalContent.appendHTML('div', (body) => {
-                            body.classList.add('next-admin-msgbox-modal-content-body');
-                            body.style.overflow = 'auto';
-                            if (NextAdmin.UserAgent.isDesktop()) {
-                                body.appendPerfectScrollbar();
+                    this.modalContent = modal.appendControl(new UI.Container(), (container) => {
+                        container.body.classList.add('next-admin-msgbox-modal-content');
+                        this.bodyLayout = container.body.appendControl(new NextAdmin.UI.HorizontalFlexLayout(), (bodyLayout) => {
+                            if (options.imageSrc) {
+                                this.image = bodyLayout.appendControl(new UI.Image({
+                                    src: options.imageSrc,
+                                    style: NextAdmin.UI.ImageStyle.lightBordered,
+                                    width: '160px',
+                                    height: '120px',
+                                    css: { minWidth: '160px', margin: 'auto auto', marginRight: '10px' }
+                                }));
                             }
-                            if (this.options.text) {
-                                body.innerHTML = this.options.text;
-                            }
-                        });
-                        this.footer = modalContent.appendHTML('div', (footer) => {
-                            footer.classList.add('next-admin-msgbox-modal-footer');
-                            if (NextAdmin.UserAgent.isDesktop()) {
-                                this._desktopButtonToolbar = footer.appendControl(new UI.Toolbar(), (footerToolbar) => {
-                                    footerToolbar.element.style.cssFloat = 'right';
+                            this.body = bodyLayout.appendHTML('div', (stretchContainer) => {
+                                stretchContainer.classList.add('next-admin-msgbox-modal-content-stretch');
+                                stretchContainer.appendHTML('div', (centeredContainer) => {
+                                    centeredContainer.centerVertically();
+                                    centeredContainer.style.top = '45%';
+                                    if (!NextAdmin.String.isNullOrEmpty(this.options.title)) {
+                                        this.title = centeredContainer.appendControl(new NextAdmin.UI.Title({
+                                            size: NextAdmin.UI.TitleSize.medium,
+                                            style: NextAdmin.UI.TitleStyle.darkGreyThin,
+                                            text: this.options.title,
+                                        }));
+                                    }
+                                    this.text = centeredContainer.appendHTML('div', (body) => {
+                                        body.classList.add('next-admin-msgbox-modal-content-body');
+                                        body.style.overflow = 'auto';
+                                        if (NextAdmin.UserAgent.isDesktop()) {
+                                            body.appendPerfectScrollbar();
+                                        }
+                                        if (this.options.text) {
+                                            body.innerHTML = this.options.text;
+                                        }
+                                    });
                                 });
+                            });
+                        });
+                        this.footer = container.body.appendHTML('div', (footer) => {
+                            footer.classList.add('next-admin-msgbox-modal-footer');
+                            this._desktopButtonToolbar = footer.appendControl(new UI.Toolbar(), (footerToolbar) => {
+                                footerToolbar.element.style.cssFloat = 'right';
+                            });
+                            if (this.isMobileDisplayModeEnabled()) {
+                                this._desktopButtonToolbar.hide();
                             }
                         });
                         if (this.options.buttons) {
@@ -14463,29 +14558,34 @@ var NextAdmin;
                         }
                     });
                 });
-                MessageBox.onCreated.dispatch(this, this.options);
+                this.setStyle(this.options.style);
             }
             appendButton(button) {
-                if (NextAdmin.UserAgent.isDesktop()) {
-                    this._button.add(this._desktopButtonToolbar.appendControl(button));
-                }
-                else {
+                if (this.isMobileDisplayModeEnabled()) {
                     this.footer.appendHTML('div', (btnContainer) => {
-                        btnContainer.style.marginTop = '5px';
+                        btnContainer.style.padding = '5px';
+                        button.element.style.width = '100%';
                         this._button.add(btnContainer.appendControl(button));
                     });
                 }
+                else {
+                    this._button.add(this._desktopButtonToolbar.appendControl(button));
+                }
             }
             prependButton(button) {
-                if (NextAdmin.UserAgent.isDesktop()) {
-                    this._button.add(this._desktopButtonToolbar.prependControl(button));
-                }
-                else {
+                if (this.isMobileDisplayModeEnabled()) {
                     this.footer.appendHTML('div', (btnContainer) => {
-                        btnContainer.style.marginTop = '5px';
+                        btnContainer.style.padding = '5px';
+                        button.element.style.width = '100%';
                         this._button.add(btnContainer.prependControl(button));
                     });
                 }
+                else {
+                    this._button.add(this._desktopButtonToolbar.prependControl(button));
+                }
+            }
+            isMobileDisplayModeEnabled() {
+                return (this.options.displayMode == MessageBoxDisplayMode.auto && window.innerWidth < 512) || this.options.displayMode == MessageBoxDisplayMode.mobile;
             }
             getButtons() {
                 return this._button;
@@ -14493,31 +14593,57 @@ var NextAdmin;
             startSpin() {
                 this.modal.startSpin();
             }
-            close() {
-                this.element.anim('fadeOut', {
+            setStyle(style) {
+                if (this._currentStyle) {
+                    this.element.classList.remove(this._currentStyle);
+                }
+                switch (style) {
+                    default:
+                    case MessageBoxStyle.default:
+                        this._currentStyle = 'default';
+                        break;
+                    case MessageBoxStyle.modern:
+                        this._currentStyle = 'modern';
+                        break;
+                }
+                this.element.classList.add(this._currentStyle);
+            }
+            async close() {
+                if (this.element.parentElement == null) {
+                    return;
+                }
+                await this.element.anim(this.options.closeAnimation, {
                     animationSpeed: NextAdmin.AnimationSpeed.faster,
                     onEndAnimation: () => {
                         this.element.remove();
-                        document.body.style.overflow = MessageBox._previousBodyOverflow;
-                        MessageBox._previousBodyOverflow = null;
                     }
                 });
             }
-            open() {
+            async open() {
                 if (this.element.parentElement != null)
                     return;
-                if (MessageBox._previousBodyOverflow == null) {
-                    MessageBox._previousBodyOverflow = document.body.style.overflow;
-                }
-                document.body.style.overflow = 'hidden';
                 this.options.parentContainer.appendChild(this.element);
-                this.element.anim('fadeIn', { animationSpeed: NextAdmin.AnimationSpeed.faster });
+                await this.element.anim(this.options.openAnimation, { animationSpeed: NextAdmin.AnimationSpeed.faster });
+            }
+            async openToast(displayDuration = 1000) {
+                if (!this.getButtons()?.length) {
+                    this.appendButton(new NextAdmin.UI.Button({
+                        text: NextAdmin.Resources.closeIcon + ' ' + NextAdmin.Resources.close,
+                        action: () => {
+                            this.close();
+                        }
+                    }));
+                }
+                await this.open();
+                await NextAdmin.Timer.sleep(displayDuration);
+                await this.close();
             }
             static createOk(title, message, okAction, parentContainer = document.body) {
                 let messageBox = new MessageBox({
                     title: title,
                     text: message,
                     parentContainer: parentContainer,
+                    displayMode: MessageBoxDisplayMode.desktop,
                     buttons: [
                         new UI.Button({
                             text: 'OK', action: () => {
@@ -14534,11 +14660,24 @@ var NextAdmin;
                 }
                 return messageBox;
             }
-            static createLoading(title = NextAdmin.Resources.loading, message = NextAdmin.Resources.pleaseWait, cancelAction, parentContainer = document.body) {
+            static createToast(title, message, parentContainer = document.body) {
+                let messageBox = new MessageBox({
+                    title: title,
+                    text: message,
+                    displayMode: MessageBoxDisplayMode.desktop,
+                    parentContainer: parentContainer
+                });
+                if (parentContainer != null) {
+                    messageBox.openToast();
+                }
+                return messageBox;
+            }
+            static createLoadingBox(title = NextAdmin.Resources.loading, message = NextAdmin.Resources.pleaseWait, cancelAction, parentContainer = document.body) {
                 let messageBox = new MessageBox({
                     title: title,
                     text: message,
                     parentContainer: parentContainer,
+                    displayMode: MessageBoxDisplayMode.desktop,
                     buttons: cancelAction ? [new UI.Button({
                             text: NextAdmin.Resources.cancel, action: () => {
                                 cancelAction(messageBox);
@@ -14546,13 +14685,12 @@ var NextAdmin;
                             }
                         })] : null
                 });
-                //messageBox.header.style.marginTop = '60px';
-                let spinner = NextAdmin.Spinner.createDefault(50);
-                //spinner.style.marginTop = '40px';
-                spinner.style.marginRight = '20px';
-                spinner.style.marginLeft = '20vw';
-                spinner.style.cssFloat = 'left';
-                messageBox.modal.prepend(spinner);
+                messageBox.bodyLayout.prependHTML('div', (spinerContainer) => {
+                    spinerContainer.style.width = '120px';
+                    spinerContainer.style.height = '120px';
+                    spinerContainer.style.margin = 'auto auto';
+                    spinerContainer.startSpin();
+                });
                 if (parentContainer != null) {
                     messageBox.open();
                 }
@@ -14563,6 +14701,7 @@ var NextAdmin;
                     title: title,
                     text: message,
                     parentContainer: parentContainer,
+                    displayMode: MessageBoxDisplayMode.desktop,
                     buttons: [
                         new UI.Button({
                             text: NextAdmin.Resources.yes, action: () => {
@@ -14592,6 +14731,7 @@ var NextAdmin;
                     title: title,
                     text: message,
                     parentContainer: parentContainer,
+                    displayMode: MessageBoxDisplayMode.desktop,
                     buttons: [
                         new UI.Button({
                             text: NextAdmin.Resources.yes, action: () => {
@@ -14617,12 +14757,13 @@ var NextAdmin;
                 return messageBox;
             }
         }
-        MessageBox.onCreated = new NextAdmin.EventHandler();
         MessageBox.style = `
         .next-admin-msgbox-container { 
             position:fixed;
-            left:0px;top:0px;width:100%;
-            height:100%;background:rgba(0,0,0,0.1);
+            left:0px;
+            top:0px;
+            width:100%;
+            height:100%;
             z-index:10000;
         }
         .next-admin-msgbox-modal{
@@ -14630,43 +14771,75 @@ var NextAdmin;
             min-height:70px;
             width:100%;
             margin:0 auto;
-            padding-top:40px;
-            padding-bottom:60px;
-            background:rgba(255,255,255,1);
-            box-shadow:0px 0px 100px rgba(0,0,0,0.4);
             top:50%;
             transform:perspective(1px) translateY(-50%);
         }
         .next-admin-msgbox-modal-content {
-            height:100%;
-            margin-left:15%;
-            width:70%;
             position:relative;
+            display:flex;
+            flex-direction:column;
+            padding:30px;
 
-            .next-admin-msgbox-modal-image{
-                float:left;
-                height:100px;
-                margin-right:20px;
-                border-radius: 5px;
+            @media (max-width: 1024px) {
+                padding-left:20px;
+                padding-right:20px;
+            }
+            @media (max-width: 768px) {
+                padding-left:10px;
+                padding-right:10px;
             }
 
-            .next-admin-msgbox-modal-content-header {
-                font-weight:bold;
-                font-size:20px;
-            }
-            .next-admin-msgbox-modal-content-body {
-                margin-bottom:20px;
-                max-height:50vh;
-                overflow:auto;
-                position:relative;
+            .next-admin-msgbox-modal-content-stretch{
+                flex-grow:1;
+
+                .next-admin-msgbox-modal-content-body {
+                    margin-bottom:20px;
+                    max-height:50vh;
+                    overflow:auto;
+                    position:relative;
+                    color:#444;
+                }
+
             }
         }
         .next-admin-msgbox-modal-footer {
             position:relative;
+            padding-top:10px;
         }
+
+        .next-admin-msgbox-container.default{
+            background:rgba(0,0,0,0.1);
+            .next-admin-msgbox-modal{
+                background:rgba(255,255,255,1);
+                box-shadow:0px 0px 100px rgba(0,0,0,0.4);
+            }
+
+        }
+        .next-admin-msgbox-container.modern{
+            background:rgba(0,0,0,0.2);
+            .next-admin-msgbox-modal-content{
+                border-radius:20px;
+                background:rgba(255,255,255,1);
+                box-shadow:0px 0px 100px rgba(0,0,0,0.4);
+                @media (max-width: 512px) {
+                    border-radius:10px;
+                }
+            }
+        }
+
         `;
-        MessageBox._previousBodyOverflow = null;
         UI.MessageBox = MessageBox;
+        let MessageBoxStyle;
+        (function (MessageBoxStyle) {
+            MessageBoxStyle[MessageBoxStyle["default"] = 0] = "default";
+            MessageBoxStyle[MessageBoxStyle["modern"] = 1] = "modern";
+        })(MessageBoxStyle = UI.MessageBoxStyle || (UI.MessageBoxStyle = {}));
+        let MessageBoxDisplayMode;
+        (function (MessageBoxDisplayMode) {
+            MessageBoxDisplayMode[MessageBoxDisplayMode["auto"] = 0] = "auto";
+            MessageBoxDisplayMode[MessageBoxDisplayMode["desktop"] = 1] = "desktop";
+            MessageBoxDisplayMode[MessageBoxDisplayMode["mobile"] = 2] = "mobile";
+        })(MessageBoxDisplayMode = UI.MessageBoxDisplayMode || (UI.MessageBoxDisplayMode = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 /// <reference path="InputSelect.ts"/>
@@ -14897,12 +15070,15 @@ var NextAdmin;
             constructor(options) {
                 super({
                     size: NextAdmin.UI.ModalSize.ultraLarge,
+                    style: UI.ModalStyle.default,
                     canMoveAndResize: false,
                     canChangeScreenMode: false,
                     canMinimize: false,
-                    backdropColor: 'rgba(0,0,0,0.75)',
+                    closeOnClickOutside: true,
+                    backdropColor: 'rgba(0,0,0,0.25)',
                     ...options,
                 });
+                this.buttonClose.innerHTML = NextAdmin.Resources.closeIcon;
                 NextAdmin.Style.append('NextAdmin.UI.NoUiModal', NoUiModal.style);
                 this.element.classList.add('next-admin-no-ui-modal-container');
             }
@@ -14921,6 +15097,9 @@ var NextAdmin;
                     .next-admin-modal-btn-close{
                         font-size:32px
                     }
+                }
+                .next-admin-modal-body{
+                    background:unset;
                 }
                 .next-admin-modal-footer{
                     color:#fff;
@@ -15262,10 +15441,10 @@ var NextAdmin;
                 this.navigationController = this.options.navigationController;
                 Page.onCreated.dispatch(this, this.options);
             }
-            setParameters(parameters, updateNavigatorState = NextAdmin.UpdateNavigatorState.replaceState) {
+            setParameters(parameters, navigatorHistoryAction = NextAdmin.UpdateNavigatorState.replaceState) {
                 this.parameters = parameters;
-                if (updateNavigatorState) {
-                    this.navigationController.updateNavigatorHistory(this.options.name, parameters, updateNavigatorState == NextAdmin.UpdateNavigatorState.pushState);
+                if (navigatorHistoryAction) {
+                    this.navigationController.updateNavigatorHistory(this.options.name, parameters, navigatorHistoryAction == NextAdmin.UpdateNavigatorState.pushState);
                 }
             }
             getParameters() {
@@ -15308,6 +15487,12 @@ var NextAdmin;
                 this.onEndNavigateFrom.subscribe(() => {
                     eventHandler.unsubscribe(eventAction);
                 });
+            }
+            async refresh(realod) {
+                await this.navigationController.refreshPage(realod);
+            }
+            getName() {
+                return this.options.name;
             }
         }
         Page.onCreated = new NextAdmin.EventHandler();
@@ -16448,6 +16633,30 @@ var NextAdmin;
             }
         }
         UI.SelectDropDownButton = SelectDropDownButton;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
+        class Separator extends UI.Control {
+            constructor(options) {
+                super('div', options);
+                NextAdmin.Style.append('NextAdmin.UI.Separator', Separator.style);
+                this.element.classList.add('next-admin-separator');
+            }
+        }
+        Separator.style = `
+
+        .next-admin-separator{
+            margin-top:40px;
+            margin-bottom:40px;
+            height:1px;
+            background-color:#ccc;
+            box-shadow:0px 0px 12px rgba(0,0,0,0.25);
+        }
+        `;
+        UI.Separator = Separator;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -17755,6 +17964,9 @@ var NextAdmin;
             }
             setSize(size) {
                 switch (size) {
+                    case TitleSize.ultraLarge:
+                        this.element.classList.add('next-admin-title-ultra-large');
+                        break;
                     default:
                     case TitleSize.large:
                         this.element.classList.add('next-admin-title-large');
@@ -17816,7 +18028,9 @@ var NextAdmin;
         .next-admin-title-black {
             color:#000;
         }
-
+        .next-admin-title-ultra-large{
+            font-size:48px;
+        }
         .next-admin-title-large {
             font-size:36px;
         }
@@ -17830,6 +18044,9 @@ var NextAdmin;
             font-size:16px;
         }
         @media (max-width: 1280px) {
+            .next-admin-title-responsive.next-admin-title-ultra-large {
+                font-size:40px;
+            }
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:32px;
             }
@@ -17841,6 +18058,9 @@ var NextAdmin;
             }
         }
         @media (max-width: 1024px) {
+            .next-admin-title-responsive.next-admin-title-ultra-large {
+                font-size:32px;
+            }
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:28px;
             }
@@ -17855,6 +18075,9 @@ var NextAdmin;
             }
         }
         @media (max-width: 768px) {
+            .next-admin-title-responsive.next-admin-title-ultra-large {
+                font-size:28px;
+            }
             .next-admin-title-responsive.next-admin-title-large {
                 font-size:24px;
             }
@@ -17869,10 +18092,11 @@ var NextAdmin;
         UI.Title = Title;
         let TitleSize;
         (function (TitleSize) {
-            TitleSize[TitleSize["large"] = 0] = "large";
-            TitleSize[TitleSize["medium"] = 1] = "medium";
-            TitleSize[TitleSize["small"] = 2] = "small";
-            TitleSize[TitleSize["ultraSmall"] = 3] = "ultraSmall";
+            TitleSize[TitleSize["ultraLarge"] = 0] = "ultraLarge";
+            TitleSize[TitleSize["large"] = 1] = "large";
+            TitleSize[TitleSize["medium"] = 2] = "medium";
+            TitleSize[TitleSize["small"] = 3] = "small";
+            TitleSize[TitleSize["ultraSmall"] = 4] = "ultraSmall";
         })(TitleSize = UI.TitleSize || (UI.TitleSize = {}));
         let TitleStyle;
         (function (TitleStyle) {

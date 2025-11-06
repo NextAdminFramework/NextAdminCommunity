@@ -132,7 +132,7 @@ namespace NextAdmin.UI {
             return this.appendSlide(new Slide(itemOption));
         }
 
-        appendSlide(control: Slide, configAction?: (control: Slide) => void): Slide {
+        appendSlide<TSlide extends Slide>(control: TSlide, configAction?: (control: TSlide) => void): TSlide {
             this.slides.add(control);
             if (this.getActiveSlide() == null) {
                 this.setActiveSlide(control);
@@ -298,46 +298,52 @@ namespace NextAdmin.UI {
 
         options: HeadingSlideOptions;
 
+        contentContainer?: Container;
+
         constructor(options?: HeadingSlideOptions) {
             super({
                 textColor: '#ffffff',
+                textAlign: 'left',
+                textContainerMaxWidth: '1280px',
                 ...options
             } as HeadingSlideOptions);
 
-            this.element.appendControl(new HorizontalFlexLayout(), (flexLayout) => {
-                flexLayout.element.style.height = '100%';
+            this.contentContainer = this.element.appendControl(new Container({ maxWidth: this.options.textContainerMaxWidth }), (container) => {
+                container.element.style.height = '100%';
+                container.body.style.height = '100%';
+                container.body.appendHTML('div', (content) => {
+                    content.centerVertically();
+                    content.style.textAlign = this.options.textAlign;
+                    content.appendHTML('a', (link) => {
+                        link.style.textDecoration = 'none';
+                        link.style.textShadow = '0px 0px 10px rgba(0,0,0,0.75)';
 
-                flexLayout.appendHTML('div', (emptyLeftArea) => {
-                    emptyLeftArea.style.width = '80px';
-                });
-                flexLayout.appendHTMLStretch('div', (centerArea) => {
-                    centerArea.appendHTML('a', (content) => {
-                        content.centerVertically();
-                        if (this.options.textColor) {
-                            content.style.color = this.options.textColor;
-                            content.style.textDecoration = 'none';
-                            content.style.textShadow = '0px 0px 2px rgba(0,0,0,0.75)';
-                        }
                         if (this.options.targetUrl) {
-                            content.href = this.options.targetUrl;
+                            link.href = this.options.targetUrl;
                         }
                         if (this.options.title) {
-                            content.appendHTML('div', (title) => {
-                                title.style.fontSize = '34px';
-                                title.innerHTML = this.options.title;
-                            });
+                            link.appendControl(new NextAdmin.UI.Title({
+                                text: this.options.title,
+                                size: NextAdmin.UI.TitleSize.ultraLarge,
+                                css: { color: this.options.textColor },
+                                htmlTag: 'span'
+                            }));
                         }
+                        link.appendHTML('br');
                         if (this.options.subTitle) {
-                            content.appendHTML('div', (title) => {
-                                title.style.fontSize = '24px';
-                                title.style.fontWeight = '100';
-                                title.innerHTML = this.options.subTitle;
-                            });
+                            link.appendControl(new NextAdmin.UI.Title({
+                                text: this.options.subTitle,
+                                size: NextAdmin.UI.TitleSize.medium,
+                                css: { color: this.options.textColor },
+                                htmlTag: 'span'
+                            }));
                         }
                         if (this.options.hoverText) {
-                            content.appendControl(new AnimatedHoverText({
+                            link.appendHTML('br');
+                            link.appendControl(new AnimatedHoverText({
                                 text: this.options.hoverText,
                                 color: this.options.textColor,
+                                css: { display: 'inline-block' }
                             }), (hoverText) => {
                                 hoverText.element.style.width = 'fit-content';
                                 this.element.addEventListener('pointerenter', () => {
@@ -349,10 +355,51 @@ namespace NextAdmin.UI {
                             });
                         }
                     });
+
+
                 });
-                flexLayout.appendHTML('div', (emptyRightArea) => {
-                    emptyRightArea.style.width = '40px';
-                });
+
+                /*
+                container.body.appendHTML('a', (content) => {
+                    content.centerVertically();
+                    if (this.options.textColor) {
+                        content.style.color = this.options.textColor;
+                        content.style.textDecoration = 'none';
+                        content.style.textShadow = '0px 0px 2px rgba(0,0,0,0.75)';
+                    }
+                    if (this.options.targetUrl) {
+                        content.href = this.options.targetUrl;
+                    }
+                    if (this.options.title) {
+                        content.appendControl(new NextAdmin.UI.Title({
+                            text: this.options.title,
+                            size: NextAdmin.UI.TitleSize.large,
+                            css: { color: this.options.textColor, textAlign: this.options.textAlign }
+                        }));
+                    }
+                    if (this.options.subTitle) {
+                        content.appendControl(new NextAdmin.UI.Title({
+                            text: this.options.subTitle,
+                            size: NextAdmin.UI.TitleSize.medium,
+                            css: { color: this.options.textColor, textAlign: this.options.textAlign }
+                        }));
+                    }
+                    if (this.options.hoverText) {
+                        content.appendControl(new AnimatedHoverText({
+                            text: this.options.hoverText,
+                            color: this.options.textColor,
+                        }), (hoverText) => {
+                            hoverText.element.style.width = 'fit-content';
+                            this.element.addEventListener('pointerenter', () => {
+                                hoverText.animDisplayText();
+                            });
+                            this.element.addEventListener('pointerleave', () => {
+                                hoverText.animHideText();
+                            });
+                        });
+                    }
+                });*/
+
             });
 
         }
@@ -363,6 +410,10 @@ namespace NextAdmin.UI {
 
         textColor?: string;
 
+        textAlign?: string;
+
+        textContainerMaxWidth?: string;
+
         title?: string;
 
         subTitle?: string;
@@ -370,7 +421,6 @@ namespace NextAdmin.UI {
         hoverText?: string;
 
         targetUrl?: string;
-
 
     }
 

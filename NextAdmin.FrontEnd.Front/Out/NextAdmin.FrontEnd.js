@@ -452,7 +452,7 @@ var NextAdmin;
     (function (UI) {
         class AnimatedHoverText extends NextAdmin.UI.Control {
             constructor(options) {
-                super('div', {
+                super(options?.htmlTag ?? 'div', {
                     ...options
                 });
                 this._isHovertextVisible = false;
@@ -753,7 +753,6 @@ var NextAdmin;
             appendCard(card, controlOption) {
                 this.body.appendControl(card, controlOption);
                 this._cards.add(card);
-                card.element.style.margin = this.options.margin;
                 return card;
             }
             getCards() {
@@ -1056,7 +1055,9 @@ var NextAdmin;
                     size: ImageCardSize.medium_4_3,
                     style: ImageCardStyle.imageLightBorderedTextLeft,
                     isResponsive: true,
+                    hasMargin: true,
                     multiImageDisplayDelay: 5000,
+                    hoverEffect: ImageCardHoverEffect.scaleUpImageInsideCard,
                     ...options
                 });
                 this._isImageAutoPlayingEnabled = true;
@@ -1064,6 +1065,9 @@ var NextAdmin;
                 this.element.classList.add('next-admin-image-card-wrapper');
                 if (this.options.isResponsive) {
                     this.element.classList.add('responsive');
+                }
+                if (this.options.hasMargin) {
+                    this.element.classList.add('margin');
                 }
                 this.card = this.element.appendHTML('a', (card) => {
                     card.classList.add('next-admin-image-card');
@@ -1097,6 +1101,7 @@ var NextAdmin;
                 });
                 this.setSize(this.options.size);
                 this.setStyle(this.options.style);
+                this.setHoverEffect(this.options.hoverEffect);
                 if (this.options.imageSrc) {
                     if (Array.isArray(this.options.imageSrc)) {
                         this.setMultiImageSrcs(this.options.imageSrc);
@@ -1129,6 +1134,11 @@ var NextAdmin;
                 });
                 if (this.options.href) {
                     this.card.href = this.options.href;
+                    this.card.addEventListener('click', () => {
+                        if (this.animatedHoverText) {
+                            this.animatedHoverText.animHideText();
+                        }
+                    });
                 }
             }
             setImageTitle(title) {
@@ -1220,13 +1230,24 @@ var NextAdmin;
                         this.element.classList.add('next-admin-image-card-border-radius');
                         break;
                     case ImageCardStyle.imageShadowedBorderRadiusTextCenter:
-                        this.element.classList.add('next-admin-image-card-border-text-center');
+                        this.element.classList.add('next-admin-image-card-border-radius-text-center');
                         break;
                     case ImageCardStyle.imageShadowedBorderRadiusBTextLeft:
                         this.element.classList.add('next-admin-image-card-border-radius-b');
                         break;
                     case ImageCardStyle.imageShadowedBorderRadiusBTextCenter:
                         this.element.classList.add('next-admin-image-card-border-radius-b-text-center');
+                        break;
+                }
+            }
+            setHoverEffect(effect) {
+                switch (effect) {
+                    default:
+                    case ImageCardHoverEffect.scaleUpImageInsideCard:
+                        this.element.classList.add('hover-scale-up-image');
+                        break;
+                    case ImageCardHoverEffect.scaleUpCard:
+                        this.element.classList.add('hover-scale-up-card');
                         break;
                 }
             }
@@ -1283,6 +1304,10 @@ var NextAdmin;
             position:relative;
         }
 
+        .next-admin-image-card-wrapper.margin{
+            margin:6px;
+        }
+
         .next-admin-image-card{
             display:block;
             overflow: hidden;
@@ -1295,7 +1320,6 @@ var NextAdmin;
             height:100%;
             display:block;
             position:relative;
-            transition: transform 0.9s;
         }
 
 
@@ -1312,9 +1336,6 @@ var NextAdmin;
             text-shadow:0px 0px 2px rgba(0,0,0,0.75)
         }
 
-        .next-admin-image-card-image:hover{
-            transform: scale(1.1);
-        }
         .next-admin-image-card-no-border {
             .next-admin-image-card{
                 border:0px;
@@ -1345,13 +1366,13 @@ var NextAdmin;
 
         .next-admin-image-card-border-radius{
             .next-admin-image-card{
-                border-radius:10%;
+                border-radius:5%;
                 box-shadow:0px 0px 20px rgba(0,0,0,0.25);
             }
         }
         .next-admin-image-card-border-radius-text-center{
             .next-admin-image-card{
-                border-radius:10%;
+                border-radius:5%;
                 box-shadow:0px 0px 20px rgba(0,0,0,0.25);
             }
             .next-admin-image-card-outside-title{
@@ -1462,7 +1483,7 @@ var NextAdmin;
         }
 
         .next-admin-image-card-large-3-4 {
-            height:665;
+            height:665px;
         }
 
         .next-admin-image-card-large-9-16 {
@@ -1564,7 +1585,7 @@ var NextAdmin;
 
         .next-admin-image-card-wrapper.small.responsive{
             @media (max-width: 1024px) {
-                width:240px;
+                width:28vw;
                 .next-admin-image-card-outside-text{
                     padding-top:6px;
                     font-size:13px;
@@ -1574,7 +1595,7 @@ var NextAdmin;
                 }
             }
             @media (max-width: 768px) {
-                width:180px;
+                width:42vw;
                 .next-admin-image-card-outside-text{
                     padding-top:5px;
                     font-size:12px;
@@ -1584,7 +1605,6 @@ var NextAdmin;
                 }
             }
             @media (max-width: 512px) {
-                width:160px;
                 .next-admin-image-card-outside-text{
                     padding-top:4px;
                     font-size:11px;
@@ -1593,10 +1613,14 @@ var NextAdmin;
                     }
                 }
             }
+
+            @media (max-width: 320px) {
+                width:90vw;
+            }
         }
         .next-admin-image-card-wrapper.medium.responsive{
             @media (max-width: 1024px) {
-                width:300px;
+                width:42vw;
                 .next-admin-image-card-outside-text{
                     padding-top:8px;
                     font-size:14px;
@@ -1606,7 +1630,6 @@ var NextAdmin;
                 }
             }
             @media (max-width: 768px) {
-                width:240px;
                 .next-admin-image-card-outside-text{
                     padding-top:6px;
                     font-size:13px;
@@ -1616,7 +1639,6 @@ var NextAdmin;
                 }
             }
             @media (max-width: 512px) {
-                width:160px;
                 .next-admin-image-card-outside-text{
                     padding-top:5px;
                     font-size:12px;
@@ -1625,13 +1647,17 @@ var NextAdmin;
                     }
                 }
             }
+
+            @media (max-width: 320px) {
+                width:90vw;
+            }
         }
         .next-admin-image-card-wrapper.large.responsive{
             @media (max-width: 1024px) {
-                width:400px;
+                width:42vw;
             }
             @media (max-width: 768px) {
-                width:300px;
+                width:90vw;
                 .next-admin-image-card-outside-text{
                     padding-top:8px;
                     font-size:13px;
@@ -1641,7 +1667,6 @@ var NextAdmin;
                 }
             }
             @media (max-width: 512px) {
-                width:240px;
                 .next-admin-image-card-outside-text{
                     padding-top:6px;
                     font-size:12px;
@@ -1651,6 +1676,7 @@ var NextAdmin;
                 }
             }
         }
+
 
 
         .next-admin-image-card-wrapper.responsive{
@@ -1678,154 +1704,153 @@ var NextAdmin;
                     height:100px;
                 }
             }
+
+
             .next-admin-image-card-small-1-1 {
                 @media (max-width: 1024px) {
-                    height:240px;
+                    height:28vw;
                 }
                 @media (max-width: 768px) {
-                    height:180px;
+                    height:42vw;
                 }
-                @media (max-width: 512px) {
-                    height:160px;
+                @media (max-width: 320px) {
+                    height:90vw;
                 }
             }
             .next-admin-image-card-small-4-3 {
                 @media (max-width: 1024px) {
-                    height:180px;
+                    height:21vw;
                 }
                 @media (max-width: 768px) {
-                    height:135px;
+                    height:31.5vw;
                 }
-                @media (max-width: 400px) {
-                    height:120px;
+                @media (max-width: 320px) {
+                    height:67vw;
                 }
             }
 
             .next-admin-image-card-small-3-4 {
                 @media (max-width: 1024px) {
-                    height:320px;
+                    height:37.24vw;
                 }
                 @media (max-width: 768px) {
-                    height:240px;
+                    height:55.86vw;
                 }
-                @media (max-width: 400px) {
-                    height:212px;
+                @media (max-width: 320px) {
+                    height:119.7vw;
                 }
             }
 
             .next-admin-image-card-small-9-16 {
                 @media (max-width: 1024px) {
-                    height:424px;
+                    height:49.56vw;
                 }
                 @media (max-width: 768px) {
-                    height:318px;
+                    height:74.34vw;
                 }
-                @media (max-width: 400px) {
-                    height:284px;
+                @media (max-width: 320px) {
+                    height:159.3vw;
                 }
             }
 
             .next-admin-image-card-medium-1-1 {
                 @media (max-width: 1024px) {
-                    height:300px;
+                    height:42vw;
                 }
-                @media (max-width: 768px) {
-                    height:240px;
-                }
-                @media (max-width: 400px) {
-                    height:180px;
+                @media (max-width: 320px) {
+                    height:90vw;
                 }
             }
 
             .next-admin-image-card-medium-4-3 {
                 @media (max-width: 1024px) {
-                    height:225px;
+                    height:31.5vw;
                 }
-                @media (max-width: 768px) {
-                    height:180px;
-                }
-                @media (max-width: 400px) {
-                    height:135px;
+                @media (max-width: 320px) {
+                    height:67.5vw;
                 }
             }
 
             .next-admin-image-card-medium-3-4 {
                 @media (max-width: 1024px) {
-                    height:400px;
+                    height:55.86vw;
                 }
-                @media (max-width: 768px) {
-                    height:320px;
-                }
-                @media (max-width: 400px) {
-                    height:240px;
+                @media (max-width: 320px) {
+                    height:119.7vw;
                 }
             }
 
             .next-admin-image-card-medium-9-16 {
                 @media (max-width: 1024px) {
-                    height:531px;
+                    height:74.63vw;
                 }
-                @media (max-width: 768px) {
-                    height:424px;
-                }
-                @media (max-width: 400px) {
-                    height:318px;
+                @media (max-width: 320px) {
+                    height:160vw;
                 }
             }
 
             .next-admin-image-card-large-1-1 {
                 @media (max-width: 1024px) {
-                    height:400px;
+                    height:42vw;
                 }
                 @media (max-width: 768px) {
-                    height:300px;
-                }
-                @media (max-width: 400px) {
-                    height:240px;
+                    height:90vw;
                 }
             }
 
             .next-admin-image-card-large-4-3 {
                 @media (max-width: 1024px) {
-                    height:300px;
+                    height:31.5vw;
                 }
                 @media (max-width: 768px) {
-                    height:225x;
-                }
-                @media (max-width: 400px) {
-                    height:180x;
+                    height:67.5vw;
                 }
             }
 
             .next-admin-image-card-large-3-4 {
                 @media (max-width: 1024px) {
-                    height:532px;
+                    height:55.86vw;
                 }
                 @media (max-width: 768px) {
-                    height:400px;
-                }
-                @media (max-width: 400px) {
-                    height:320px;
+                    height:119.7vw;
                 }
             }
 
             .next-admin-image-card-large-9-16 {
                 @media (max-width: 1024px) {
-                    height:708px;
+                    height:74.63vw;
                 }
                 @media (max-width: 768px) {
-                    height:531px;
-                }
-                @media (max-width: 400px) {
-                    height:425px;
+                    height:160vw;
                 }
             }
         }
+
+
+
         .next-admin-image-card-wrapper.selected{
             .next-admin-image-card{
                 box-sizing:border-box;
                 box-shadow:0px 0px 0px rgba(0,0,0,0.25);
                 border:1px solid ` + UI.DefaultStyle.BlueOne + `;
+            }
+        }
+
+        .next-admin-image-card-wrapper.hover-scale-up-image{
+            .next-admin-image-card-image{
+                transition: all 0.5s;
+            }
+            .next-admin-image-card-image:hover{
+                transform: scale(1.1);
+            }
+        }
+        .next-admin-image-card-wrapper.hover-scale-up-card{
+            .next-admin-image-card{
+                transition: all 0.5s;
+            }
+            .next-admin-image-card:hover{
+                transform: scale(1.05);
+                box-shadow:0px 0px 10px rgba(0,0,0,0.05);
             }
         }
 
@@ -1858,6 +1883,11 @@ var NextAdmin;
             ImageCardStyle[ImageCardStyle["imageShadowedBorderRadiusBTextLeft"] = 30] = "imageShadowedBorderRadiusBTextLeft";
             ImageCardStyle[ImageCardStyle["imageShadowedBorderRadiusBTextCenter"] = 31] = "imageShadowedBorderRadiusBTextCenter";
         })(ImageCardStyle = UI.ImageCardStyle || (UI.ImageCardStyle = {}));
+        let ImageCardHoverEffect;
+        (function (ImageCardHoverEffect) {
+            ImageCardHoverEffect[ImageCardHoverEffect["scaleUpImageInsideCard"] = 0] = "scaleUpImageInsideCard";
+            ImageCardHoverEffect[ImageCardHoverEffect["scaleUpCard"] = 1] = "scaleUpCard";
+        })(ImageCardHoverEffect = UI.ImageCardHoverEffect || (UI.ImageCardHoverEffect = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -2164,7 +2194,7 @@ var NextAdmin;
                 }
                 if (this.options.imageUrls) {
                     for (let imageUrl of this.options.imageUrls) {
-                        this.addImageItem({ url: imageUrl });
+                        this.addImageItem({ previewImageUrl: imageUrl });
                     }
                 }
             }
@@ -2178,7 +2208,7 @@ var NextAdmin;
                         imageMin.style.width = this.options.miniatureImageSize;
                         imageMin.style.height = this.options.miniatureImageSize;
                     }
-                    imageMin.setBackgroundImage(imageItem.url);
+                    imageMin.setBackgroundImage(imageItem.previewImageUrl);
                     imageMin.addEventListener('click', () => {
                         this.setActiveImage(imageId);
                     });
@@ -2190,8 +2220,8 @@ var NextAdmin;
                     this.setActiveImage(imageId);
                 }
             }
-            addImage(url) {
-                this.addImageItem({ url: url });
+            addImage(previewImageUrl, fullSizeImageUrl) {
+                this.addImageItem({ previewImageUrl: previewImageUrl, fullSizeImageUrl: fullSizeImageUrl ?? previewImageUrl });
             }
             addImages(urls) {
                 for (let url of urls) {
@@ -2212,11 +2242,11 @@ var NextAdmin;
                 this.mainImageContainer.body.innerHTML = '';
                 this.mainImageContainer.body.appendHTML('img', (mainImage) => {
                     mainImage.classList.add('image-viewer-main-image');
-                    mainImage.src = imageItem.url;
+                    mainImage.src = imageItem.previewImageUrl;
                     if (this.options.canOpenInFullScreen) {
                         mainImage.style.cursor = 'pointer';
                         mainImage.addEventListener('click', () => {
-                            new UI.ImageViewerModal({ imageUrls: [imageItem.url, ...this._images.getValues().select(a => a.url).where(a => a != imageItem.url)] }).open();
+                            new UI.ImageViewerModal({ imageUrls: [imageItem.fullSizeImageUrl, ...this._images.getValues().select(a => a.fullSizeImageUrl).where(a => a != imageItem.fullSizeImageUrl)] }).open();
                         });
                     }
                 });
@@ -2539,32 +2569,27 @@ var NextAdmin;
 (function (NextAdmin) {
     var UI;
     (function (UI) {
-        class PageContainer extends NextAdmin.UI.Control {
+        class PageSection extends NextAdmin.UI.Container {
             constructor(options) {
-                super('div', {
+                super({
                     hasPadding: true,
                     maxWidth: UI.FrontDefaultStyle.PageContentMaxWidth,
                     ...options
                 });
-                NextAdmin.Style.append('NextAdmin.UI.PageContainer', PageContainer.style);
-                this.element.classList.add('next-admin-page-container');
+                NextAdmin.Style.append('NextAdmin.UI.PageSection', PageSection.style);
+                this.body.classList.add('next-admin-page-section-body');
                 if (this.options?.hasPadding) {
-                    this.element.classList.add('padding');
-                }
-                if (this.options?.maxWidth) {
-                    this.element.style.maxWidth = this.options.maxWidth;
+                    this.body.classList.add('padding');
                 }
                 if (this.options?.minHeight) {
-                    this.element.style.minHeight = this.options.minHeight;
+                    this.body.style.minHeight = this.options.minHeight;
                 }
             }
         }
-        PageContainer.style = `
+        PageSection.style = `
 
-        .next-admin-page-container{
-            margin: 0 auto;
-        }
-        .next-admin-page-container.padding{
+
+        .next-admin-page-section-body.padding{
             padding:20px;
             @media (max-width: 1024px) {
                 padding:16px;
@@ -2578,7 +2603,7 @@ var NextAdmin;
         }
 
         `;
-        UI.PageContainer = PageContainer;
+        UI.PageSection = PageSection;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -2892,41 +2917,45 @@ var NextAdmin;
             constructor(options) {
                 super({
                     textColor: '#ffffff',
+                    textAlign: 'left',
+                    textContainerMaxWidth: '1280px',
                     ...options
                 });
-                this.element.appendControl(new UI.HorizontalFlexLayout(), (flexLayout) => {
-                    flexLayout.element.style.height = '100%';
-                    flexLayout.appendHTML('div', (emptyLeftArea) => {
-                        emptyLeftArea.style.width = '80px';
-                    });
-                    flexLayout.appendHTMLStretch('div', (centerArea) => {
-                        centerArea.appendHTML('a', (content) => {
-                            content.centerVertically();
-                            if (this.options.textColor) {
-                                content.style.color = this.options.textColor;
-                                content.style.textDecoration = 'none';
-                                content.style.textShadow = '0px 0px 2px rgba(0,0,0,0.75)';
-                            }
+                this.contentContainer = this.element.appendControl(new UI.Container({ maxWidth: this.options.textContainerMaxWidth }), (container) => {
+                    container.element.style.height = '100%';
+                    container.body.style.height = '100%';
+                    container.body.appendHTML('div', (content) => {
+                        content.centerVertically();
+                        content.style.textAlign = this.options.textAlign;
+                        content.appendHTML('a', (link) => {
+                            link.style.textDecoration = 'none';
+                            link.style.textShadow = '0px 0px 10px rgba(0,0,0,0.75)';
                             if (this.options.targetUrl) {
-                                content.href = this.options.targetUrl;
+                                link.href = this.options.targetUrl;
                             }
                             if (this.options.title) {
-                                content.appendHTML('div', (title) => {
-                                    title.style.fontSize = '34px';
-                                    title.innerHTML = this.options.title;
-                                });
+                                link.appendControl(new NextAdmin.UI.Title({
+                                    text: this.options.title,
+                                    size: NextAdmin.UI.TitleSize.ultraLarge,
+                                    css: { color: this.options.textColor },
+                                    htmlTag: 'span'
+                                }));
                             }
+                            link.appendHTML('br');
                             if (this.options.subTitle) {
-                                content.appendHTML('div', (title) => {
-                                    title.style.fontSize = '24px';
-                                    title.style.fontWeight = '100';
-                                    title.innerHTML = this.options.subTitle;
-                                });
+                                link.appendControl(new NextAdmin.UI.Title({
+                                    text: this.options.subTitle,
+                                    size: NextAdmin.UI.TitleSize.medium,
+                                    css: { color: this.options.textColor },
+                                    htmlTag: 'span'
+                                }));
                             }
                             if (this.options.hoverText) {
-                                content.appendControl(new UI.AnimatedHoverText({
+                                link.appendHTML('br');
+                                link.appendControl(new UI.AnimatedHoverText({
                                     text: this.options.hoverText,
                                     color: this.options.textColor,
+                                    css: { display: 'inline-block' }
                                 }), (hoverText) => {
                                     hoverText.element.style.width = 'fit-content';
                                     this.element.addEventListener('pointerenter', () => {
@@ -2939,9 +2968,46 @@ var NextAdmin;
                             }
                         });
                     });
-                    flexLayout.appendHTML('div', (emptyRightArea) => {
-                        emptyRightArea.style.width = '40px';
-                    });
+                    /*
+                    container.body.appendHTML('a', (content) => {
+                        content.centerVertically();
+                        if (this.options.textColor) {
+                            content.style.color = this.options.textColor;
+                            content.style.textDecoration = 'none';
+                            content.style.textShadow = '0px 0px 2px rgba(0,0,0,0.75)';
+                        }
+                        if (this.options.targetUrl) {
+                            content.href = this.options.targetUrl;
+                        }
+                        if (this.options.title) {
+                            content.appendControl(new NextAdmin.UI.Title({
+                                text: this.options.title,
+                                size: NextAdmin.UI.TitleSize.large,
+                                css: { color: this.options.textColor, textAlign: this.options.textAlign }
+                            }));
+                        }
+                        if (this.options.subTitle) {
+                            content.appendControl(new NextAdmin.UI.Title({
+                                text: this.options.subTitle,
+                                size: NextAdmin.UI.TitleSize.medium,
+                                css: { color: this.options.textColor, textAlign: this.options.textAlign }
+                            }));
+                        }
+                        if (this.options.hoverText) {
+                            content.appendControl(new AnimatedHoverText({
+                                text: this.options.hoverText,
+                                color: this.options.textColor,
+                            }), (hoverText) => {
+                                hoverText.element.style.width = 'fit-content';
+                                this.element.addEventListener('pointerenter', () => {
+                                    hoverText.animDisplayText();
+                                });
+                                this.element.addEventListener('pointerleave', () => {
+                                    hoverText.animHideText();
+                                });
+                            });
+                        }
+                    });*/
                 });
             }
         }
@@ -3507,11 +3573,14 @@ var NextAdmin;
                 }
             }
             appendContainer(options, configAction) {
-                return this.element.appendControl(new UI.PageContainer(options), (container) => {
+                return this.appendSection(options, (section) => {
                     if (configAction) {
-                        configAction(container.element);
+                        configAction(section.body);
                     }
                 });
+            }
+            appendSection(options, configAction) {
+                return this.element.appendControl(new UI.PageSection(options), configAction);
             }
         }
         FrontPage.style = `

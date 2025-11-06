@@ -1,5 +1,5 @@
 declare module Models {
-	interface AdminUser extends StrGuidEntity {
+	interface AdminUser extends StrGuidIdEntity {
 		userName: string;
 		password: string;
 		culture: string;

@@ -42,7 +42,7 @@ namespace NextAdmin.UI {
             }));
         }
 
-        appendSlide(control: Slide, configAction?: (control: Slide) => void): Slide {
+        appendSlide<TSlide extends Slide>(control: TSlide, configAction?: (control: TSlide) => void): TSlide {
             let slide = super.appendSlide(control, configAction);
             slide.element.classList.add('image-viewer-slide-image');
             if (this.options.isImageHoverZoomEnabled) {

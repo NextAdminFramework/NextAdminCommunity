@@ -84,7 +84,7 @@ namespace NextAdmin.UI {
             }
             if (this.options.imageUrls) {
                 for (let imageUrl of this.options.imageUrls) {
-                    this.addImageItem({ url: imageUrl });
+                    this.addImageItem({ previewImageUrl: imageUrl });
                 }
             }
         }
@@ -100,7 +100,7 @@ namespace NextAdmin.UI {
                     imageMin.style.width = this.options.miniatureImageSize;
                     imageMin.style.height = this.options.miniatureImageSize;
                 }
-                imageMin.setBackgroundImage(imageItem.url)
+                imageMin.setBackgroundImage(imageItem.previewImageUrl)
                 imageMin.addEventListener('click', () => {
                     this.setActiveImage(imageId)
                 });
@@ -113,8 +113,8 @@ namespace NextAdmin.UI {
             }
         }
 
-        addImage(url: string) {
-            this.addImageItem({ url: url })
+        addImage(previewImageUrl: string, fullSizeImageUrl?: string) {
+            this.addImageItem({ previewImageUrl: previewImageUrl, fullSizeImageUrl: fullSizeImageUrl ?? previewImageUrl })
         }
 
         addImages(urls: Array<string>) {
@@ -139,11 +139,11 @@ namespace NextAdmin.UI {
 
             this.mainImageContainer.body.appendHTML('img', (mainImage) => {
                 mainImage.classList.add('image-viewer-main-image');
-                mainImage.src = imageItem.url;
+                mainImage.src = imageItem.previewImageUrl;
                 if (this.options.canOpenInFullScreen) {
                     mainImage.style.cursor = 'pointer';
                     mainImage.addEventListener('click', () => {
-                        new ImageViewerModal({ imageUrls: [imageItem.url, ...this._images.getValues().select(a => a.url).where(a => a != imageItem.url)] }).open();
+                        new ImageViewerModal({ imageUrls: [imageItem.fullSizeImageUrl, ...this._images.getValues().select(a => a.fullSizeImageUrl).where(a => a != imageItem.fullSizeImageUrl)] }).open();
                     });
                 }
             });
@@ -181,7 +181,9 @@ namespace NextAdmin.UI {
 
     export interface MultiImageViwerImageItem {
 
-        url?: string;
+        previewImageUrl?: string;
+
+        fullSizeImageUrl?: string;
 
         description?: string;
     }

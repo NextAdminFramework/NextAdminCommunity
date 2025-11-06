@@ -65,7 +65,7 @@
             }
             let features = result.parseJson<GeoJSON.FeatureCollection>();
             let feature = features?.features?.firstOrDefault();
-            let coordinates = feature.properties?.coordinates;
+            let coordinates = feature?.properties?.coordinates;
             if (coordinates == null) {
                 return null;
             }

@@ -10,7 +10,7 @@ using System.Security.Claims;
 namespace NextAdminCommunity.Web.Models
 {
     [Label("AdminUser")]
-    public class AdminUser : StrGuidEntity, IUser
+    public class AdminUser : StrGuidIdEntity, IUser
     {
         public static string SuperAdminUserId = "61ff244a-21d5-4f07-b370-57cfb97273bd";
 
