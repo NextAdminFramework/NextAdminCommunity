@@ -686,10 +686,14 @@ namespace NextAdmin.Core.API.Controllers
                 DbContext.Parameters = args.Parameters;
                 var entityType = DbContext.Set(args.EntityName).ElementType;
                 object entityToAddOrUpdate = args.Entity.ToObject(entityType);
-                var entityId = EntityExtension.GetEntityPrimaryKeyValue(entityToAddOrUpdate);
-                var serializedEntity = DbContext.GetEntity(entityType, entityId);
+                var entityPrimaryKey = EntityExtension.GetEntityPrimaryKeyValue(entityToAddOrUpdate);
+                var serializedEntity = DbContext.GetEntity(entityType, entityPrimaryKey);
                 if (serializedEntity == null)
                 {
+                    if (entityPrimaryKey == null && entityToAddOrUpdate is IEntity)
+                    {
+                        ((IEntity)entityToAddOrUpdate).AssignPrimaryKey(DbContext);
+                    }
                     DbContext.Add(entityToAddOrUpdate);
                 }
                 else
@@ -793,10 +797,14 @@ namespace NextAdmin.Core.API.Controllers
                     foreach (var jsonEntityData in args.EntitiesToAddOrUpdate)
                     {
                         object entityToAddOrUpdate = jsonEntityData.ToObject(entityType);
-                        var entityPk = EntityExtension.GetEntityPrimaryKeyValue(entityToAddOrUpdate);
-                        var serializedEntity = DbContext.GetEntity(entityType, entityPk);
+                        var entityPrimaryKey = EntityExtension.GetEntityPrimaryKeyValue(entityToAddOrUpdate);
+                        var serializedEntity = DbContext.GetEntity(entityType, entityPrimaryKey);
                         if (serializedEntity == null)
                         {
+                            if (entityPrimaryKey == null && entityToAddOrUpdate is IEntity)
+                            {
+                                ((IEntity)entityToAddOrUpdate).AssignPrimaryKey(DbContext);
+                            }
                             DbContext.Add(entityToAddOrUpdate);
                             OnSaveEntity(entityToAddOrUpdate);
                             response.Entities.Add(entityToAddOrUpdate);
