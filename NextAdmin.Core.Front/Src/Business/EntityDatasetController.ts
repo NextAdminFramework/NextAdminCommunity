@@ -148,8 +148,8 @@ namespace NextAdmin.Business {
                 entityName: this.options.dataName,
                 whereQuery: where,
                 whereQueryArgs: whereValues,
-                orderColumnNames: this._orderBy,
-                columnToSelectNames: this._columnsToSelect?.length == 0 ? null : this._columnsToSelect,
+                orderByQueries: this._orderBy,
+                selectQueries: this._columnsToSelect?.length == 0 ? null : this._columnsToSelect,
                 skipRecordCount: this._skip,
                 takeRecordCount: this._take,
                 isSelectDistinctQuery: this._distinct
@@ -233,8 +233,8 @@ namespace NextAdmin.Business {
         }
 
         setQuery(queryData: Models.Query) {
-            this._columnsToSelect = queryData.columnToSelectNames;
-            this._orderBy = queryData.orderColumnNames;
+            this._columnsToSelect = queryData.selectQueries;
+            this._orderBy = queryData.orderByQueries;
             this._where = queryData.whereQuery;
             this._whereValues = queryData.whereQueryArgs;
             this._skip = queryData.skipRecordCount;
@@ -244,8 +244,8 @@ namespace NextAdmin.Business {
 
         getQuery(): Models.Query {
             return {
-                columnToSelectNames: this._columnsToSelect,
-                orderColumnNames: this._orderBy,
+                selectQueries: this._columnsToSelect,
+                orderByQueries: this._orderBy,
                 whereQuery: this._where,
                 whereQueryArgs: this._whereValues,
                 skipRecordCount: this._skip,

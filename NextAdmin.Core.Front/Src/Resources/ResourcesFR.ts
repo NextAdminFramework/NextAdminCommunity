@@ -318,6 +318,12 @@ namespace NextAdmin {
         recoverPasswordDefaultError = "Une erreur est survenue lors de l'envoi de l'email de récupération, cette erreur a été transmise à nos services techniques.";
 
         newData = "Nouvelle donnée";
+
+        restorDataTitle = "Rechargement des données";
+
+        restorDataMessage = "En poursuivant, les données seront rechargées dans leur dernière version enregistrée. Êtes-vous certain(e) de vouloir continuer ?";
+
+        clearDataMessage = "En poursuivant, les données seront réinitialisées, Êtes-vous certain(e) de vouloir continuer ?";
     }
 
 }

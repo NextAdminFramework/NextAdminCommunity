@@ -18,6 +18,10 @@
             return this[key];
         }
 
+        public containsKey(key: string): boolean {
+            return this[key] !== undefined;
+        }
+
         public add(key: string, value: T) {
             if (this[key] !== undefined) {
                 throw Error('Item already exist');

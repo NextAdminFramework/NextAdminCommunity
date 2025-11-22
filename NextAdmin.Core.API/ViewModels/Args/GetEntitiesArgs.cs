@@ -6,11 +6,11 @@
 
         public List<object>? WhereQueryArgs { get; set; }
 
-        public List<string>? ColumnToSelectNames { get; set; }
+        public List<string>? SelectQueries { get; set; }
 
         public bool IsSelectDistinctQuery { get; set; }
 
-        public List<string>? OrderColumnNames { get; set; }
+        public List<string>? OrderByQueries { get; set; }
 
         public int? SkipRecordCount { get; set; }
 

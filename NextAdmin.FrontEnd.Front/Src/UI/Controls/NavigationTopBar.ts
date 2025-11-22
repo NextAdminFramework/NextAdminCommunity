@@ -139,8 +139,8 @@ namespace NextAdmin.UI {
                         if (this.options.textLogoHtmlContent) {
                             logoLink.innerHTML = this.options.textLogoHtmlContent;
                         }
-                        if (this.options?.navigationController?.options?.defaultPage) {
-                            logoLink.href = this.options.navigationController.options.defaultPage;
+                        if (this.options?.navigationController?.options?.defaultPageName) {
+                            logoLink.href = this.options.navigationController.options.defaultPageName;
                         }
                         if (this.options.imageLogoUrl) {
                             this.logoImage = logoLink.appendHTML('img', (logoImage) => {

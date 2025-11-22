@@ -168,6 +168,14 @@ namespace NextAdmin.Core.Model
             }
         }
 
+        public bool TryRemoveLock(Lock _lock)
+        {
+            var locks = GetLockDictionary();
+            var removedItemCount = locks.RemoveValues(_lock);
+            return removedItemCount > 0;
+        }
+
+
         public Lock GetLock(string lockId)
         {
             var locks = GetLockDictionary();

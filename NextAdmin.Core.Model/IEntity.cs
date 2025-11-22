@@ -20,6 +20,8 @@ namespace NextAdmin.Core.Model
 
         void OnEndDelete(NextAdminDbContext dbContext, SavingArgs args);
 
+        void AssignPrimaryKey(NextAdminDbContext dbContext, bool force = false);
+
         event EventHandler<EntityArgs> OnCreating;
 
         event EventHandler<EntityArgs> OnLoading;

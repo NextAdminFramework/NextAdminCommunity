@@ -202,6 +202,13 @@ namespace NextAdmin.UI {
         getValue(): string {
             return this._value ?? this.quill.root.innerHTML.replace(new RegExp('<p><br/>', 'g'), '<p>');
         }
+
+        insertText(text?: string) {
+            let cursorIndex = this.quill.getSelection(true).index;
+            this.quill.insertText(cursorIndex, text)
+            this.onValueChanged.dispatch(this, { value: this.getValue() });
+        }
+
     }
 
 

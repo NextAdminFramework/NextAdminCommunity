@@ -7,6 +7,8 @@ namespace NextAdmin.Business {
 
         public static factory: (dataName: string) => DataController_;
 
+        public options: DataControllerOptions;
+
         public form: NextAdmin.UI.IForm;
 
         public bindedControls = new Dictionary<UI.FormControl>();
@@ -47,12 +49,15 @@ namespace NextAdmin.Business {
 
         public onReadOnlyChanged = new EventHandler<DataController_, boolean>();
 
-        _isReadOnlyEnabled?: boolean;
+        protected _isReadOnlyEnabled?: boolean;
 
-        _readOnlyMessage?: string;
+        protected _readOnlyMessage?: string;
 
-        constructor(options: DataControllerBaseOptions) {
-            super(options);
+        constructor(options: DataControllerOptions) {
+            super({
+                saveDataRequiredMessage: Resources.formSaveRequiredMessage,
+                ...options
+            } as DataControllerOptions);
             this.data = {} as T;
             this._originalData = {};
             DataStateHelper.setDataState(this.data, DataState.append);
@@ -192,7 +197,7 @@ namespace NextAdmin.Business {
             this.form = form;
             if (autoExecuteAction) {
                 this.form.cancelButton.action = () => {
-                    this.setData(this._originalData);
+                    this.cancel();
                 };
                 this.form.deleteButton.action = () => {
                     UI.MessageBox.createYesCancel(Resources.formDeleteMessageTitle, Resources.formDeleteMessage, () => {
@@ -350,13 +355,14 @@ namespace NextAdmin.Business {
 
 
         public cancel() {
-            if (this.cancelAction != null) {
-                this.cancelAction(this.data);
-            }
-            else {
-                this.setData(this._originalData);
-
-            }
+            NextAdmin.UI.MessageBox.createYesCancel(Resources.restorDataTitle, this.getDataState() == Business.DataState.append ? Resources.clearDataMessage : Resources.restorDataMessage, () => {
+                if (this.cancelAction != null) {
+                    this.cancelAction(this.data);
+                }
+                else {
+                    this.setData(this._originalData);
+                }
+            });
         }
 
         private _bindControl(formControl: UI.IFormControl, propertyName: string) {
@@ -655,7 +661,7 @@ namespace NextAdmin.Business {
                 return;
             }
             if (DataStateHelper.getDataState(this.data) == DataState.append) {
-                UI.MessageBox.createYesCancel(Resources.formSaveRequiredTitle, Resources.formSaveRequiredMessage, async () => {
+                UI.MessageBox.createYesCancel(Resources.formSaveRequiredTitle, this.options.saveDataRequiredMessage, async () => {
                     let result = await this.save();
                     if (result.success) {
                         action(this.data);
@@ -676,7 +682,7 @@ namespace NextAdmin.Business {
                 return;
             }
             if (DataStateHelper.getDataState(this.data) != DataState.serialized) {
-                UI.MessageBox.createYesCancel(Resources.formSaveRequiredTitle, Resources.formSaveRequiredMessage, async () => {
+                UI.MessageBox.createYesCancel(Resources.formSaveRequiredTitle, this.options.saveDataRequiredMessage, async () => {
                     let result = await this.save();
                     if (result.success) {
                         action(this.data);
@@ -712,6 +718,12 @@ namespace NextAdmin.Business {
 
     }
 
+    export interface DataControllerOptions extends DataControllerBaseOptions{
+
+        saveDataRequiredMessage?: string;
+
+    }
+
     export interface SaveDataArgs extends DataControllerActionArgs {
 
         onGetResponse?: (result: SaveDataResult) => void;
@@ -731,7 +743,6 @@ namespace NextAdmin.Business {
         onGetResponse?: (result: DeleteDataResult) => void;
 
     }
-
 
     export interface SaveDataEventArgs {
 

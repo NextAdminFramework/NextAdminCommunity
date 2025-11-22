@@ -37,7 +37,7 @@ namespace NextAdmin.Core.API.Controllers
                     return response;
                 }
                 var token = user.CreateAuthToken(DbContext, new AuthTokenSerializer(), AuthTokenIssuer, TokenDayValidity);
-                AppEvent.AddAppEvent(DbContext, user, "CREATE_USER_AUTH_TOKEN");
+                AppEvent.AddAppEvent(DbContext, user, "CREATE_USER_AUTH_TOKEN", Request.HttpContext.Connection.RemoteIpAddress?.ToString());
                 var saveResult = DbContext.ValidateAndSave();
                 if (!saveResult.Success)
                 {

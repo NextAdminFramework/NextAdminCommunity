@@ -213,10 +213,10 @@ namespace NextAdmin.Core.API.Controllers
                 }
                 else
                 {
-                    SQLSelectQueryBuilder query = DbContext.SQLQuery(args.EntityName).Select(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
+                    SQLSelectQueryBuilder query = DbContext.SQLQuery(args.EntityName).Select(args.SelectQueries != null && args.SelectQueries.Count > 0 ? args.SelectQueries.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
                     query = BuildSelectQuery(query, args);
 
-                    if (args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0)//user select columns, so we juste execute query with desired column
+                    if (args.SelectQueries != null && args.SelectQueries.Count > 0)//user select columns, so we juste execute query with desired column
                     {
                         var userEntityRight = GetUserEntityRight(args.EntityName);
                         if (userEntityRight != null && userEntityRight.GetSpecificRightFunc != null)
@@ -225,7 +225,7 @@ namespace NextAdmin.Core.API.Controllers
                         }
                         if (EntityRightDictionary.Count > 0)//Some entities has right, so we check that selected entities doesn't try to read data on theme
                         {
-                            foreach (var selectQuery in args.ColumnToSelectNames)
+                            foreach (var selectQuery in args.SelectQueries)
                             {
                                 foreach (var selectColumn in selectQuery.Split(','))
                                 {
@@ -327,7 +327,7 @@ namespace NextAdmin.Core.API.Controllers
                 return ApiResponse<long>.Error(ApiResponseCode.PermissionLevelError, "Access denied");
             }
 
-            var query = DbContext.SQLQuery(args.EntityName).SelectCount(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
+            var query = DbContext.SQLQuery(args.EntityName).SelectCount(args.SelectQueries != null && args.SelectQueries.Count > 0 ? args.SelectQueries.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
             query = BuildSelectQuery(query, args);
             var value = query.Execute().FirstOrDefault().FirstOrDefault().Value;
             if (value == null || value.Equals(DBNull.Value))
@@ -349,7 +349,7 @@ namespace NextAdmin.Core.API.Controllers
                 return ApiResponse<double>.Error(ApiResponseCode.PermissionLevelError, "Access denied");
             }
 
-            var query = DbContext.SQLQuery(args.EntityName).SelectSum(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
+            var query = DbContext.SQLQuery(args.EntityName).SelectSum(args.SelectQueries != null && args.SelectQueries.Count > 0 ? args.SelectQueries.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
             query = BuildSelectQuery(query, args);
             var value = query.Execute().FirstOrDefault().FirstOrDefault().Value;
             if (value == null || value.Equals(DBNull.Value))
@@ -372,7 +372,7 @@ namespace NextAdmin.Core.API.Controllers
                 return ApiResponse<double>.Error(ApiResponseCode.PermissionLevelError, "Access denied");
             }
 
-            var query = DbContext.SQLQuery(args.EntityName).SelectMin(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
+            var query = DbContext.SQLQuery(args.EntityName).SelectMin(args.SelectQueries != null && args.SelectQueries.Count > 0 ? args.SelectQueries.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
             query = BuildSelectQuery(query, args);
             var value = query.Execute().FirstOrDefault().FirstOrDefault().Value;
             if (value == null || value.Equals(DBNull.Value))
@@ -394,7 +394,7 @@ namespace NextAdmin.Core.API.Controllers
                 return ApiResponse<double>.Error(ApiResponseCode.PermissionLevelError, "Access denied");
             }
 
-            var query = DbContext.SQLQuery(args.EntityName).SelectMax(args.ColumnToSelectNames != null && args.ColumnToSelectNames.Count > 0 ? args.ColumnToSelectNames.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
+            var query = DbContext.SQLQuery(args.EntityName).SelectMax(args.SelectQueries != null && args.SelectQueries.Count > 0 ? args.SelectQueries.ToArray() : new string[] { DbContext.GetEntityInfo(args.EntityName).GetPrimaryKeyName() });
             query = BuildSelectQuery(query, args);
             var value = query.Execute().FirstOrDefault().FirstOrDefault().Value;
             if (value == null || value.Equals(DBNull.Value))
@@ -427,13 +427,13 @@ namespace NextAdmin.Core.API.Controllers
                     query = (TSelectQuery)query.Where(args.WhereQuery);
                 }
             }
-            if (args.OrderColumnNames != null && args.OrderColumnNames.Count > 0)
+            if (args.OrderByQueries != null && args.OrderByQueries.Count > 0)
             {
-                query = (TSelectQuery)query.OrderBy(args.OrderColumnNames.ToArray());
+                query = (TSelectQuery)query.OrderBy(args.OrderByQueries.ToArray());
             }
             if (args.SkipRecordCount.HasValue)
             {
-                if (args.OrderColumnNames == null || args.OrderColumnNames.Count == 0)
+                if (args.OrderByQueries == null || args.OrderByQueries.Count == 0)
                 {
                     query = (TSelectQuery)query.OrderBy(query.MainEntityInfo.GetPrimaryKeyName());
                 }
@@ -642,6 +642,14 @@ namespace NextAdmin.Core.API.Controllers
                 }
 
                 var saveResult = DbContext.ValidateAndSave();
+                if (saveResult.Success && entityToDelete != null)
+                {
+                    var entityLock = DbContext.GetEntityLock(args.EntityName, entityToDelete);
+                    if (entityLock != null)
+                    {
+                        DbContext.TryRemoveLock(entityLock);
+                    }
+                }
                 FillSaveResponse(saveResult, response);
             }
             catch (Exception ex)
@@ -689,7 +697,8 @@ namespace NextAdmin.Core.API.Controllers
                     if (!string.IsNullOrEmpty(args.LockKey))
                     {
                         var entityLock = DbContext.GetEntityLock(args.EntityName, serializedEntity);
-                        if (entityLock != null && entityLock.Key != args.LockKey)
+
+                        if (entityLock != null && !entityLock.IsExpired() && entityLock.Key != args.LockKey)
                         {
                             response.Code = ApiResponseCode.LockError.ToString();
                             return response;
@@ -825,6 +834,17 @@ namespace NextAdmin.Core.API.Controllers
                 if (saveResult.Success)
                 {
                     OnEndSaveEntities(saveResult);
+                    if (entitiesToDelete != null && entitiesToDelete.Count > 0)
+                    {
+                        foreach (var entityToDelete in entitiesToDelete)
+                        {
+                            var entityLock = DbContext.GetEntityLock(args.EntityName, entityToDelete);
+                            if (entityLock != null)
+                            {
+                                DbContext.TryRemoveLock(entityLock);
+                            }
+                        }
+                    }
                 }
                 FillSaveResponse(saveResult, response);
             }

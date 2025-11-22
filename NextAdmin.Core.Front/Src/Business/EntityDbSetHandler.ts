@@ -66,8 +66,8 @@ namespace NextAdmin.Business {
                 takeRecordCount: this.query.takeRecordCount,
                 whereQuery: this.query.whereQuery,
                 whereQueryArgs: this.query.whereQueryArgs,
-                columnToSelectNames: this.query.columnToSelectNames,
-                orderColumnNames: this.query.orderColumnNames,
+                selectQueries: this.query.selectQueries,
+                orderByQueries: this.query.orderByQueries,
                 isSelectDistinctQuery: this.query.isSelectDistinctQuery,
                 parameters: parameters
             });
@@ -81,8 +81,8 @@ namespace NextAdmin.Business {
                 takeRecordCount: 1,
                 whereQuery: this.query.whereQuery,
                 whereQueryArgs: this.query.whereQueryArgs,
-                columnToSelectNames: this.query.columnToSelectNames,
-                orderColumnNames: this.query.orderColumnNames,
+                selectQueries: this.query.selectQueries,
+                orderByQueries: this.query.orderByQueries,
                 parameters: parameters
             });
             if (result.entities != null && result.entities.length > 0) {
@@ -119,19 +119,19 @@ namespace NextAdmin.Business {
         }
 
         async count(): Promise<number> {
-            return (await this.entityClient.countEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: this.query.columnToSelectNames, orderColumnNames: this.query.orderColumnNames })).data;
+            return (await this.entityClient.countEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, selectQueries: this.query.selectQueries, orderByQueries: this.query.orderByQueries })).data;
         }
 
         async sum(member: string): Promise<number> {
-            return (await this.entityClient.sumEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: [member], orderColumnNames: this.query.orderColumnNames })).data;
+            return (await this.entityClient.sumEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, selectQueries: [member], orderByQueries: this.query.orderByQueries })).data;
         }
 
         async min(propertyName?: string): Promise<number> {
-            return (await this.entityClient.minEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: propertyName ? [propertyName] : this.query.columnToSelectNames, orderColumnNames: this.query.orderColumnNames })).data;
+            return (await this.entityClient.minEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, selectQueries: propertyName ? [propertyName] : this.query.selectQueries, orderByQueries: this.query.orderByQueries })).data;
         }
 
         async max(propertyName?: string): Promise<number> {
-            return (await this.entityClient.maxEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, columnToSelectNames: propertyName ? [propertyName] : this.query.columnToSelectNames, orderColumnNames: this.query.orderColumnNames })).data;
+            return (await this.entityClient.maxEntities({ entityName: this.entityName, skipRecordCount: this.query.skipRecordCount, takeRecordCount: this.query.takeRecordCount, whereQuery: this.query.whereQuery, whereQueryArgs: this.query.whereQueryArgs, selectQueries: propertyName ? [propertyName] : this.query.selectQueries, orderByQueries: this.query.orderByQueries })).data;
         }
     }
 

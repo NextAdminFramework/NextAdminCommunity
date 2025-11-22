@@ -120,7 +120,6 @@ namespace NextAdmin.Business {
                         }
                         return;
                     }
-
                     actionResult(saveResult);
                     if (saveResult.success) {
                         this.dispatchEntityChanged({ entityName: this.options.dataName, previousEntity: data, newEntity: saveResult.newData, previousEntityState: data['_state'], newEntityState: DataState.serialized });

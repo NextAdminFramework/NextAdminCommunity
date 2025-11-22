@@ -16,7 +16,7 @@ class AdminAppController extends NextAdmin.BackEndAppController {
 
     constructor(options?: AdminAppControllerOptions) {
         super({
-            defaultPage: 'login',
+            defaultPageName: 'login',
             afterLoginPage: AdminUserPage.pageName,
             appLogoUrl: '/Content/Images/logo.png',
             defaultFontUrl: '/Content/Dependencies/Fonts/OpenSans-Regular.ttf',

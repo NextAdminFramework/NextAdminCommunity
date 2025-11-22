@@ -493,7 +493,12 @@ namespace NextAdmin.Core.Model
                 var detailToAttachPrimaryKey = detailToAttach.GetPrimaryKeyValue();
                 if (detailToAttachPrimaryKey == null)
                 {
-                    throw new Exception("Primary key value required");
+                    detailToAttach.AssignPrimaryKey(dbContext);
+                    detailToAttachPrimaryKey = detailToAttach.GetPrimaryKeyValue();
+                    if (detailToAttachPrimaryKey == null)
+                    {
+                        throw new Exception("Primary key value required");
+                    }
                 }
                 toAttachDetailsDictionary.Add(detailToAttachPrimaryKey, detailToAttach);
             }

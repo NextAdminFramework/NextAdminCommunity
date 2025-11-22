@@ -306,6 +306,12 @@ namespace NextAdmin {
 
         newData = "New data";
 
+        restorDataTitle = "Data reload";
+
+        restorDataMessage = "If you proceed, the data will be reloaded to the last saved version. Are you sure you want to continue?";
+
+        clearDataMessage = "If you proceed, the data will be reset. Are you sure you want to continue?";
+
     }
 
     export var Resources = new ResourcesEn();

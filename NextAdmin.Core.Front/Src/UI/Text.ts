@@ -52,9 +52,12 @@ namespace NextAdmin.UI {
         .next-admin-text-medium {
             font-size:14px;
         }
-        .next-admin-text-medium-responsive {
+        .next-admin-text-medium.responsive {
             @media (max-width: 768px) {
                 font-size:12px;
+            }
+            @media (max-width: 430px) {
+                font-size:11px;
             }
         }
         .next-admin-text-large {
@@ -69,6 +72,9 @@ namespace NextAdmin.UI {
             }
             @media (max-width: 768px) {
                 font-size:14px;
+            }
+            @media (max-width: 430px) {
+                font-size:12px;
             }
         }
 

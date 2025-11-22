@@ -20,11 +20,11 @@
 
         whereQueryArgs?: Array<any>;
 
-        columnToSelectNames?: Array<string>;
+        selectQueries?: Array<string>;
 
         isSelectDistinctQuery?: boolean;
 
-        orderColumnNames?: Array<any>;
+        orderByQueries?: Array<any>;
 
         skipRecordCount?: number;
 

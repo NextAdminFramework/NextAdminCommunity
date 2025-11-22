@@ -212,10 +212,10 @@ namespace NextAdmin.UI {
 
         setPropertyInfo(propertyInfo: NextAdmin.Business.DataPropertyInfo) {
             super.setPropertyInfo(propertyInfo);
-            if (propertyInfo?.type == 'number' && this.input.type == 'text') {
+            if (propertyInfo?.type == 'number' && this.options.inputType === undefined) {
                 this.input.type = 'number';
             }
-            else if (propertyInfo?.type == 'date' && this.input.type == 'text') {
+            else if (propertyInfo?.type == 'date' && this.options.inputType === undefined) {
                 this.input.type = 'date';
             }
         }

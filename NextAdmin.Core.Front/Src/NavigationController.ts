@@ -20,18 +20,18 @@
 
         constructor(options?: NavigationControllerOptions) {
             this.options = {
-                pageContainer: document.body,
-                enableSpaLinkNavigation: true,
+                pagesContainer: document.body,
+                isSinglePageApplicationNavigationEnabled: true,
                 ...options
             };
-            this.pageContainer = this.options.pageContainer;
+            this.pageContainer = this.options.pagesContainer;
             if (NextAdmin.Navigation == null) {
                 NextAdmin.Navigation = this;
             }
             window.addEventListener('popstate', () => {
                 this.navigateToUrl();
             });
-            if (this.options.enableSpaLinkNavigation) {
+            if (this.options.isSinglePageApplicationNavigationEnabled) {
                 document.addEventListener('click', (e) => {
 
                     let element = e.srcElement as HTMLElement;
@@ -139,8 +139,8 @@
             let pageInfo = this.getPageInfoFromUrl(url);
             let page = await this.getPage(pageInfo.pageName);
             if (page == null) {//unable to find view, so navigate to default view
-                console.log('NavigationController.navigateToUrl:unable to find page:' + pageInfo.pageName + ', so navigate to default page:' + this.options.defaultPage);
-                this.navigateTo(this.options.defaultPage, null, updateNavigatorState);
+                console.log('NavigationController.navigateToUrl:unable to find page:' + pageInfo.pageName + ', so navigate to default page:' + this.options.defaultPageName);
+                this.navigateTo(this.options.defaultPageName, null, updateNavigatorState);
             }
             else {
                 console.log('NavigationController.navigateToUrl:navigate to:{' + pageInfo.pageName + '}');
@@ -197,7 +197,7 @@
             }
             else {
                 if (defaultPageName == null) {
-                    defaultPageName = this.options.defaultPage;
+                    defaultPageName = this.options.defaultPageName;
                 }
                 await this.navigateTo(defaultPageName, null, UpdateNavigatorState.replaceState);
             }
@@ -353,11 +353,11 @@
 
         pages?: PageInfo[];
 
-        defaultPage?: string;
+        defaultPageName?: string;
 
-        pageContainer?: HTMLElement;
+        pagesContainer?: HTMLElement;
 
-        enableSpaLinkNavigation?: boolean;
+        isSinglePageApplicationNavigationEnabled?: boolean;
 
     }
 

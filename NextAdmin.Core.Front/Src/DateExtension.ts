@@ -33,6 +33,8 @@ interface Date {
 
     toISODateString(): string;
 
+    toUTCDate(): Date;
+
     isToday(): boolean;
 }
 
@@ -142,6 +144,14 @@ try {
         let _this = this as Date;
         return _this.toISOString().substring(0, 10);
     };
+
+    Date.prototype.toUTCDate = function (): Date {
+        let _this = this as Date;
+        return new Date(Date.UTC(_this.getFullYear(), _this.getMonth(),
+            _this.getDate(), _this.getHours(),
+            _this.getMinutes(), _this.getSeconds()));
+    };
+
 
     Date.prototype.isToday = function (): boolean {
         let _this = this as Date;

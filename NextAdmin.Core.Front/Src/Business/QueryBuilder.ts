@@ -19,11 +19,11 @@ namespace NextAdmin.Business {
 
         orderBy(...fields: Array<string>): QueryBuilder {
             let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
-            if (_this.query.orderColumnNames?.length) {
-                _this.query.orderColumnNames.addRange(fields);
+            if (_this.query.orderByQueries?.length) {
+                _this.query.orderByQueries.addRange(fields);
             }
             else {
-                _this.query.orderColumnNames = fields;
+                _this.query.orderByQueries = fields;
             }
             return _this;
         }
@@ -42,11 +42,11 @@ namespace NextAdmin.Business {
 
         select(...fields: Array<string>): QueryBuilder {
             let _this = this.writeQueryMode == WriteQueryMode.keepOriginalQuery ? this : this.clone();
-            if (_this.query.columnToSelectNames?.length) {
-                _this.query.columnToSelectNames.addRange(fields);
+            if (_this.query.selectQueries?.length) {
+                _this.query.selectQueries.addRange(fields);
             }
             else {
-                _this.query.columnToSelectNames = fields;
+                _this.query.selectQueries = fields;
             }
             return _this;
         }

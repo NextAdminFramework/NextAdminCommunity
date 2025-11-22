@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Src\Business\EntityHelper.ts" />
+    <TypeScriptCompile Include="Src\CssDeclaration.ts" />
     <TypeScriptCompile Include="Src\Models\Query.ts" />
     <TypeScriptCompile Include="Src\FileExtension.ts" />
     <TypeScriptCompile Include="licence.ts" />
@@ -158,6 +159,7 @@
     <TypeScriptCompile Include="Src\UI\TabPanel.ts" />
     <TypeScriptCompile Include="Src\UI\TextArea.ts" />
     <TypeScriptCompile Include="Src\UI\Toolbar.ts" />
+    <TypeScriptCompile Include="Src\UI\Video.ts" />
     <TypeScriptCompile Include="Src\UI\View.ts" />
     <TypeScriptCompile Include="Src\Url.ts" />
     <TypeScriptCompile Include="Src\UserAgent.ts" />

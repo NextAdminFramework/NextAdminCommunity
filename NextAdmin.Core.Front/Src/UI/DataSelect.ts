@@ -24,6 +24,7 @@ namespace NextAdmin.UI {
                 lightButtons: true,
                 allowNullValue: true,
                 searchPropertiesNames: options?.displayPropertiesNames,
+                inputType: NextAdmin.UI.InputType.text,
                 searchAction: (searchValue, seacrhResultAction) => {
                     this.options.datasetController.take(this.options.searchItemsCount ?? null);
                     if (this.options.orderBy) {

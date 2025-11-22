@@ -16,6 +16,21 @@
             return dictionary;
         }
 
+        public static int RemoveValues<TKey, TValue>(this Dictionary<TKey, TValue> _this, TValue value)
+            where TValue : class
+        {
+            var removeItemCount = 0;
+            foreach (var keyValue in _this.ToList())
+            {
+                if (keyValue.Value == value)
+                {
+                    _this.Remove(keyValue.Key);
+                    removeItemCount++;
+                }
+            }
+            return removeItemCount;
+        }
+
         public static TValue? GetOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue))
         {
             if (dictionary.TryGetValue(key, out TValue value))

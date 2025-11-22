@@ -146,7 +146,7 @@ namespace NextAdmin {
                 await this.logUser(user);
             }
             else {
-                await this.navigateTo(this.options.defaultPage);
+                await this.navigateTo(this.options.defaultPageName);
             }
         }
 
@@ -193,7 +193,7 @@ namespace NextAdmin {
         }
 
         async navigateTo(pageName: string, parameters?: any, updateNavigatorState?: UpdateNavigatorState, force?: boolean): Promise<NextAdmin.UI.Page> {
-            if (pageName == this.options.defaultPage && this.user != null) {
+            if (pageName == this.options.defaultPageName && this.user != null) {
                 return super.navigateTo(this.options.afterLoginPage, null, UpdateNavigatorState.none);
             }
             return await super.navigateTo(pageName, parameters, updateNavigatorState, force);

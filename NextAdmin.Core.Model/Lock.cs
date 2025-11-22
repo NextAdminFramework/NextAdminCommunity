@@ -36,5 +36,10 @@ namespace NextAdmin.Core.Model
             OwnerName = ownerName;
         }
 
+        public bool IsExpired()
+        {
+            return ExpirationDate < DateTime.Now;
+        }
+
     }
 }

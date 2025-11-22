@@ -68,6 +68,10 @@ interface HTMLElement {
 
     getControl(): NextAdmin.UI.Control;
 
+    addScreenMaxWidthStyle(screenMaxSize: number, style: NextAdmin.CssDeclaration);
+
+    addScreenMinWidthStyle(screenMaxSize: number, style: NextAdmin.CssDeclaration);
+
 }
 
 interface Node {
@@ -459,6 +463,23 @@ try {
     HTMLElement.prototype.getControl = function () {
         return this['_control'];
     };
+
+    HTMLElement.prototype.addScreenMaxWidthStyle = function (screenMaxSize: number, style: NextAdmin.CssDeclaration) {
+        let tmpElement = document.createElement('div');
+        NextAdmin.Copy.copyTo(style, tmpElement.style);
+        let className = 'dynamic-media-query-screen-max-width-' + screenMaxSize + '-' + NextAdmin.Guid.createStrGuid();
+        (this as HTMLElement).classList.add(className);
+        NextAdmin.Style.append(className, '@media (max-width: ' + screenMaxSize + 'px) { .' + className + '{' + tmpElement.style.cssText + '}}');
+    };
+
+    HTMLElement.prototype.addScreenMinWidthStyle = function (screenMaxSize: number, style: NextAdmin.CssDeclaration) {
+        let tmpElement = document.createElement('div');
+        NextAdmin.Copy.copyTo(style, tmpElement.style);
+        let className = 'dynamic-media-query-screen-min-width-' + screenMaxSize + '-' + NextAdmin.Guid.createStrGuid();
+        (this as HTMLElement).classList.add(className);
+        NextAdmin.Style.append(className, '@media (min-width: ' + screenMaxSize + 'px) { .' + className + '{' + tmpElement.style.cssText + '}}');
+    };
+
 
     Node.prototype.addEventsListener = function (eventsNames, listener, options) {
 
