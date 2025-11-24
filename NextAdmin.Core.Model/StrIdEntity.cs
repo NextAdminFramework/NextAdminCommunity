@@ -59,7 +59,7 @@ namespace NextAdmin.Core.Model
                 }
                 else if (_this.PrimaryKeyAssignationMode == PrimaryKeyAssignationMode.TimeUniqueId)
                 {
-                    _this.Id = DateTime.Now.Ticks.ToString() + "-" + Guid.NewGuid().ToString().Substring(0, 8);
+                    _this.Id = TimeId.NewTimeId();
                 }
                 else if (_this.PrimaryKeyAssignationMode == PrimaryKeyAssignationMode.AutoIncrement)
                 {

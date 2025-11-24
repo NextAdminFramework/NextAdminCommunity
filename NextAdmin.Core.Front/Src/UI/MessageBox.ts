@@ -298,6 +298,30 @@ namespace NextAdmin.UI {
             return messageBox;
         }
 
+        public static createUnknownError(okAction?: any, parentContainer = document.body): MessageBox {
+            let messageBox = new MessageBox({
+                title: Resources.error,
+                text: Resources.unknownError,
+                parentContainer: parentContainer,
+                displayMode: MessageBoxDisplayMode.desktop,
+                buttons: [
+                    new Button({
+                        text: 'OK', action: () => {
+                            if (okAction != null) {
+                                okAction();
+                            }
+                            messageBox.close();
+                        }
+                    })
+                ]
+            });
+            if (parentContainer != null) {
+                messageBox.open();
+            }
+            return messageBox;
+        }
+
+
 
         public static createToast(title: string, message: string, parentContainer = document.body): MessageBox {
             let messageBox = new MessageBox({

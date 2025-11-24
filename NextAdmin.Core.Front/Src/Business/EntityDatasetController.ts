@@ -82,7 +82,7 @@ namespace NextAdmin.Business {
 
                 Business.EntityHelper.getLinkedEntities(this.options.entityClient, this.options.dataInfos, this.options.dataName, dataset[0][this.options.dataPrimaryKeyName]).then((linkedEntitiesInfos) => {
                     if (linkedEntitiesInfos?.length) {
-                        messageBox.body.appendHTML('div', (container) => {
+                        messageBox.text.appendHTML('div', (container) => {
 
                             container.appendHTML('h3', 'Données liées :');
                             for (let linkedEntitiesInfo of linkedEntitiesInfos) {

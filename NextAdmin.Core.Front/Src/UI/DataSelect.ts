@@ -23,6 +23,7 @@ namespace NextAdmin.UI {
                 searchItemsCount: 100,
                 lightButtons: true,
                 allowNullValue: true,
+                fireChangeOnInput: false,
                 searchPropertiesNames: options?.displayPropertiesNames,
                 inputType: NextAdmin.UI.InputType.text,
                 searchAction: (searchValue, seacrhResultAction) => {

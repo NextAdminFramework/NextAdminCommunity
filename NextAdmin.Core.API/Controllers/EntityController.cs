@@ -504,7 +504,7 @@ namespace NextAdmin.Core.API.Controllers
                         return response;
                     }
 
-                    if (args.DetailToLoadNames != null)
+                    if (args.DetailToLoadNames != null && args.DetailToLoadNames.Count > 0)//24/11/2025: previously, if array was empty (not null) all details was loaded...
                     {
                         EntityExtension.LoadEntityDetails(response.Entity, DbContext, args.DetailToLoadNames.ToArray());
                     }

@@ -460,28 +460,22 @@ namespace NextAdmin.UI {
                     text: Resources.standardListExport, items: [
                         {
                             text: Resources.printAll,
-                            action: () => {
-                                this.generateReportButton.closeDropDown();
-                                this.exportData({
-                                    exportFormat: 'print',
-                                    exportSelectedDataOnly: false,
-                                    exportVisibleColumnOnly: true,
-                                    exportColumnsDisplayNames: true,
-                                    exportFormatedValues: true
-                                });
+                            action: async () => {
+                                this.startSpin();
+                                let dataset = this.datasetController == null ? this.getDataset() : await this.getDatasetFromServer();
+                                this.stopSpin();
+                                if (dataset == null) {
+                                    NextAdmin.UI.MessageBox.createUnknownError();
+                                    return;
+                                }
+                                this.print(dataset);
                             }
                         },
                         {
                             text: Resources.printSelection,
                             action: () => {
                                 this.generateReportButton.closeDropDown();
-                                this.exportData({
-                                    exportFormat: 'print',
-                                    exportSelectedDataOnly: true,
-                                    exportVisibleColumnOnly: true,
-                                    exportColumnsDisplayNames: true,
-                                    exportFormatedValues: true
-                                });
+                                this.print(this.getSelectedDataRows().select(e => e.data));
                             }
                         }
                     ]
@@ -2119,13 +2113,7 @@ namespace NextAdmin.UI {
                         text: Resources.standardListExport,
                         action: () => {
                             dropDownMenu.close();
-                            this.exportData({
-                                exportFormat: 'print',
-                                exportSelectedDataOnly: true,
-                                exportVisibleColumnOnly: true,
-                                exportColumnsDisplayNames: true,
-                                exportFormatedValues: true
-                            });
+                            this.print(this.getSelectedDataRows().select(e => e.data));
                         }
                     });
 
@@ -2306,122 +2294,110 @@ namespace NextAdmin.UI {
         public fireChange() {
             if (this._suspendChanging)
                 return;
+            if (this.buttonSave) {
+                this.buttonSave.enable();
+            }
             this.onValueChanged.dispatch(this, null);
         }
 
-        public exportData(options?: DataGridExportOptions) {
+        public async export(options?: DataGridExportOptions) {
             options = {
                 exportFormat: 'csv',
-                exportSelectedDataOnly: true,
-                exportVisibleColumnOnly: true,
-                exportColumnsDisplayNames: true,
+                exportSelectedRows: true,
+                exportVisibleColumns: true,
+                exportColumnLabels: true,
                 exportFormatedValues: true,
                 ...options
             }
+            let dataset: Array<T>;
+            if ((options.exportSelectedRows && options.exportVisibleColumns)) {
+                dataset = this.getSelectedDataRows().select(e => e.data);
+            }
+            else {
+                dataset = this.datasetController == null ? this.getDataset() : await this.getDatasetFromServer();
+            }
+            this.exportDataset(dataset, options.exportFormat, options.exportVisibleColumns, options.exportColumnLabels, options.exportFormatedValues);
+        }
 
-            let exportAction = (dataset?: Array<any>) => {
-                let dataInfo = this.datasetController.getDataInfo();
-                var allPropertiesInfo = this.datasetController.getDataPropertyInfos().where(e => e.displayName != null || e.isPrimaryKey);
-                let columns = this.columns.where(e => e != this.actionColumn);
+        public exportDataset(dataset: Array<T>, exportFormat: 'csv' | 'json', exportVisibleColumns = true, exportColumnLabels = true, exportFormatedValues = true) {
+            let dataInfo = this.datasetController.getDataInfo();
+            var allPropertiesInfo = this.datasetController.getDataPropertyInfos().where(e => e.displayName != null || e.isPrimaryKey);
+            let columns = this.columns.where(e => e != this.actionColumn);
 
-                let exportFileDefaultName = (dataInfo.displayName == null ? dataInfo.name : dataInfo.displayName) + '_' + new Date().toISOString() + '.' + options.exportFormat;
-                if (options.exportFormat == 'csv') {
-                    let csvString = '';
-                    if (options.exportVisibleColumnOnly) {
-                        csvString += columns.select(e => options.exportColumnsDisplayNames ? e.headerColumnCaptionElement.textContent :
-                            (e.options.selectQuery != null ? e.options.selectQuery : e.options.propertyName)).join(',') + "\r\n";
-                        for (let dataItem of dataset) {
-                            csvString += columns.select(e => JSON.stringify(dataItem[e.options.propertyName] == null ? null : (options.exportFormatedValues ? Helper.getDefaultPropertyDisplayValue(e.tryGetPropertyInfo(), dataItem[e.options.propertyName]) : dataItem[e.options.propertyName]))).join(',') + "\r\n";
+            let exportFileDefaultName = (dataInfo.displayName == null ? dataInfo.name : dataInfo.displayName) + '_' + new Date().toISOString() + '.' + exportFormat;
+            if (exportFormat == 'csv') {
+                let csvString = '';
+                if (exportVisibleColumns) {
+                    csvString += columns.select(e => exportColumnLabels ? e.headerColumnCaptionElement.textContent :
+                        (e.options.selectQuery != null ? e.options.selectQuery : e.options.propertyName)).join(',') + "\r\n";
+                    for (let dataItem of dataset) {
+                        csvString += columns.select(e => JSON.stringify(dataItem[e.options.propertyName] == null ? null : (exportFormatedValues ? Helper.getDefaultPropertyDisplayValue(e.tryGetPropertyInfo(), dataItem[e.options.propertyName]) : dataItem[e.options.propertyName]))).join(',') + "\r\n";
+                    }
+                }
+                else {
+                    csvString += allPropertiesInfo.select(e => exportColumnLabels && e.displayName ? e.displayName : e.name) + "\r\n";
+                    for (let dataItem of dataset) {
+                        csvString += allPropertiesInfo.select(e => JSON.stringify(dataItem[e.name] == null ? null : (exportFormatedValues ? Helper.getDefaultPropertyDisplayValue(e, dataItem[e.name]) : dataItem[e.name]))).join(',') + "\r\n";
+                    }
+                }
+                let url = URL.createObjectURL(new Blob([csvString], { type: "text/csv" }));
+                let linkElement = document.createElement('a');
+                linkElement.setAttribute('href', url);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            }
+            else if (exportFormat == 'json') {
+                let formatedDataset = [];
+                for (let dataItem of dataset) {
+                    let formatedItem = {};
+                    if (exportVisibleColumns) {
+                        for (let column of columns) {
+                            formatedItem[exportColumnLabels ? column.headerColumnCaptionElement.textContent : column.options.propertyName] = (exportFormatedValues ? Helper.getDefaultPropertyDisplayValue(column.tryGetPropertyInfo(), dataItem[column.options.propertyName]) : dataItem[column.options.propertyName]);
                         }
                     }
                     else {
-                        csvString += allPropertiesInfo.select(e => options.exportColumnsDisplayNames && e.displayName ? e.displayName : e.name) + "\r\n";
-                        for (let dataItem of dataset) {
-                            csvString += allPropertiesInfo.select(e => JSON.stringify(dataItem[e.name] == null ? null : (options.exportFormatedValues ? Helper.getDefaultPropertyDisplayValue(e, dataItem[e.name]) : dataItem[e.name]))).join(',') + "\r\n";
+                        for (let propertyInfo of allPropertiesInfo) {
+                            formatedItem[exportColumnLabels && propertyInfo.displayName != null ? propertyInfo.displayName : propertyInfo.name] = (exportFormatedValues ? Helper.getDefaultPropertyDisplayValue(propertyInfo, dataItem[propertyInfo.name]) : dataItem[propertyInfo.name]);
                         }
                     }
-                    let url = URL.createObjectURL(new Blob([csvString], { type: "text/csv" }));
-                    let linkElement = document.createElement('a');
-                    linkElement.setAttribute('href', url);
-                    linkElement.setAttribute('download', exportFileDefaultName);
-                    linkElement.click();
+                    formatedDataset.push(formatedItem);
                 }
-                if (options.exportFormat == 'json') {
-                    let formatedDataset = [];
-                    for (let dataItem of dataset) {
-                        let formatedItem = {};
-                        if (options.exportVisibleColumnOnly) {
-                            for (let column of columns) {
-                                formatedItem[options.exportColumnsDisplayNames ? column.headerColumnCaptionElement.textContent : column.options.propertyName] = (options.exportFormatedValues ? Helper.getDefaultPropertyDisplayValue(column.tryGetPropertyInfo(), dataItem[column.options.propertyName]) : dataItem[column.options.propertyName]);
-                            }
-                        }
-                        else {
-                            for (let propertyInfo of allPropertiesInfo) {
-                                formatedItem[options.exportColumnsDisplayNames && propertyInfo.displayName != null ? propertyInfo.displayName : propertyInfo.name] = (options.exportFormatedValues ? Helper.getDefaultPropertyDisplayValue(propertyInfo, dataItem[propertyInfo.name]) : dataItem[propertyInfo.name]);
-                            }
-                        }
-                        formatedDataset.push(formatedItem);
-                    }
-                    let url = URL.createObjectURL(new Blob([JSON.stringify(formatedDataset)], { type: "application/json" }));
-                    let linkElement = document.createElement('a');
-                    linkElement.setAttribute('href', url);
-                    linkElement.setAttribute('download', exportFileDefaultName);
-                    linkElement.click();
-                }
-                if (options.exportFormat == 'print') {
-                    this.print({ dataset: dataset });
-                }
-
-            };
-
-            if ((options.exportSelectedDataOnly && options.exportVisibleColumnOnly)) {
-                exportAction(this.getSelectedDataRows().select(e => e.data));
-            }
-            else {
-                if (options.exportVisibleColumnOnly) {
-                    let dataset = this.getDataset();
-                    if (this.options.paginItemCount == null || dataset.length < this.options.paginItemCount) {
-                        exportAction(dataset);
-                        return;
-                    }
-                }
-                if (this._bindedPropertyName != null) {
-                    exportAction(this.getDataset());
-                }
-                else {
-                    this.getFullDataset((dataset) => {
-                        exportAction(dataset);
-                    }, !options.exportVisibleColumnOnly, options.exportSelectedDataOnly)
-                }
+                let url = URL.createObjectURL(new Blob([JSON.stringify(formatedDataset)], { type: "application/json" }));
+                let linkElement = document.createElement('a');
+                linkElement.setAttribute('href', url);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
             }
         }
 
-        public getFullDataset(response: (dataset: Array<any>) => void, loadAllColumns = false, loadSelectedRow = false) {
 
-            let tempDataController = this.datasetController.clone();
-            tempDataController.take(null);
-            tempDataController.skip(null);
-            if (loadAllColumns) {
-                tempDataController.select();
+
+
+        public async getDatasetFromServer(selectAllColumns = false, loadSelectedRow = false): Promise<Array<T>> {
+            if (this.datasetController == null) {
+                throw Error('DatasetController is required');
+            }
+            let tempDatasetController = this.datasetController.clone();
+            tempDatasetController.take(null);
+            tempDatasetController.skip(null);
+            if (selectAllColumns) {
+                tempDatasetController.select();
             }
             if (loadSelectedRow) {
                 let ids = this.getSelectedDataRows().select(e => e.data[this.datasetController.options.dataPrimaryKeyName]);
-                tempDataController.where(this.datasetController.options.dataPrimaryKeyName + ' IN(' + ids.select(e => '?') + ')', ...ids);
+                tempDatasetController.where(this.datasetController.options.dataPrimaryKeyName + ' IN(' + ids.select(e => '?') + ')', ...ids);
             }
-            tempDataController.load({
-                onGetResponse: () => (result) => {
-                    if (result.success) {
-                        response(result.dataset);
-                    }
-                }
-            });
-
+            let response = await tempDatasetController.load();
+            if (!response?.success) {
+                return null;
+            }
+            return response.dataset;
         }
 
 
 
 
-        public print(options = {} as DataGridPrintOptions) {
+        public print(dataset?: Array<T>) {
             let iFrameModal = new NextAdmin.UI.Modal({ title: Resources.printIcon + ' ' + Resources.print });
             iFrameModal.body.style.background = '#fff';
             iFrameModal.body.style.overflow = 'hidden';
@@ -2436,7 +2412,7 @@ namespace NextAdmin.UI {
                     style.textContent = 'body{font-family:callibri,sans-serif;}';
                     iframe.contentWindow.document.head.append(style);
 
-                    iframe.contentWindow.document.body.append(this.getPrintableElement(options));
+                    iframe.contentWindow.document.body.append(this.getPrintableElement(dataset));
                     iframe.contentWindow.focus();
                     let images = iframe.contentWindow.document.querySelectorAll('img');
                     if (images.length > 0) {
@@ -2479,14 +2455,15 @@ namespace NextAdmin.UI {
         }
 
 
-        getPrintableElement(options = {} as DataGridPrintOptions): HTMLElement {
+        getPrintableElement(dataset?: Array<T>): HTMLElement {
+            if (dataset == null) {
+                dataset = this.getDataset();
+            }
             let table = new Table();
             table.element.style.fontSize = '11px';
             table.element.style.width = '100%';
             let columns = this.columns.where(e => e != this.actionColumn);
             table.addHeaderRow(...columns.select(e => e.headerColumnCaptionElement.textContent));
-
-            let dataset = options.dataset != null ? options.dataset : this.getDataset();
             let rowNotFound = false;
             for (let dataItem of dataset) {
                 let row = rowNotFound ? null : this.getRowByData(dataItem);//si une ligne n'a déjà pas été trouvé on ne fait pas de nouveau la recherche
@@ -3382,7 +3359,6 @@ namespace NextAdmin.UI {
                     }
                     this.row.data[this.column.options.propertyName] = control.getValue();
                     this.grid.fireChange();
-                    this.grid.buttonSave.enable();
                 });
             }
             else {
@@ -3480,11 +3456,11 @@ namespace NextAdmin.UI {
                 this.rightFooter.appendControl(new Button({
                     text: Resources.downloadIcon + ' ' + Resources.export, style: ButtonStyle.blue, action: () => {
                         this.close();
-                        grid.exportData({
+                        grid.export({
                             exportFormat: formatSelect.getValue(),
-                            exportSelectedDataOnly: dataSelect.getValue() == 'selected',
-                            exportVisibleColumnOnly: columnsSelect.getValue() == 'visible',
-                            exportColumnsDisplayNames: fieldNameFormatSelect.getValue() == 'label',
+                            exportSelectedRows: dataSelect.getValue() == 'selected',
+                            exportVisibleColumns: columnsSelect.getValue() == 'visible',
+                            exportColumnLabels: fieldNameFormatSelect.getValue() == 'label',
                             exportFormatedValues: valueFormatSelect.getValue() == 'display'
                         });
                     }
@@ -4001,25 +3977,16 @@ namespace NextAdmin.UI {
 
     export interface DataGridExportOptions {
 
-        exportFormat?: string;
+        exportFormat?: 'csv' | 'json';
 
-        exportSelectedDataOnly?: boolean;
+        exportSelectedRows?: boolean;
 
-        exportVisibleColumnOnly?: boolean;
+        exportVisibleColumns?: boolean;
 
-        exportColumnsDisplayNames?: boolean;
+        exportColumnLabels?: boolean;
 
         exportFormatedValues?: boolean;
 
-
-    }
-
-
-    export interface DataGridPrintOptions {
-
-        dataset?: Array<any>;
-
-        useControlDisplayValue?: boolean;
 
     }
 

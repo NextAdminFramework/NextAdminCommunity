@@ -174,8 +174,7 @@ namespace NextAdmin.Business {
             if (action == DataControllerActionType.delete && messageBox && this.data[this.options.dataPrimaryKeyName]) {
                 Business.EntityHelper.getLinkedEntities(this.options.entityClient, this.options.dataInfos, this.options.dataName, this.data[this.options.dataPrimaryKeyName]).then((linkedEntitiesInfos) => {
                     if (linkedEntitiesInfos?.length) {
-                        messageBox.body.appendHTML('div', (container) => {
-                            console.log('Coucou 3');
+                        messageBox.text.appendHTML('div', (container) => {
                             container.appendHTML('h3', 'Données liées :');
                             for (let linkedEntitiesInfo of linkedEntitiesInfos) {
                                 container.appendHTML('div', (title) => {

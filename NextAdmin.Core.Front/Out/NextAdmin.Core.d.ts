@@ -2291,6 +2291,7 @@ declare namespace NextAdmin.UI {
         protected _propertyInfo: NextAdmin.Business.DataPropertyInfo;
         setPropertyInfo(propertyInfo?: NextAdmin.Business.DataPropertyInfo): void;
         getPropertyInfo(): NextAdmin.Business.DataPropertyInfo;
+        dispose(): void;
     }
     interface FormControlOptions extends ControlOptions {
         onValueChanged?: (control: FormControl, args: ValueChangeEventArgs) => void;
@@ -2386,6 +2387,7 @@ declare namespace NextAdmin.UI {
         size?: InputSize;
         inlineGrid?: boolean;
         outputNullIfEmpty?: boolean;
+        fireChangeOnInput?: boolean;
     }
     enum InputType {
         button = "button",
@@ -2850,10 +2852,11 @@ declare namespace NextAdmin.UI {
         getValue(): T[];
         private _suspendChanging;
         fireChange(): void;
-        exportData(options?: DataGridExportOptions): void;
-        getFullDataset(response: (dataset: Array<any>) => void, loadAllColumns?: boolean, loadSelectedRow?: boolean): void;
-        print(options?: DataGridPrintOptions): void;
-        getPrintableElement(options?: DataGridPrintOptions): HTMLElement;
+        export(options?: DataGridExportOptions): Promise<void>;
+        exportDataset(dataset: Array<T>, exportFormat: 'csv' | 'json', exportVisibleColumns?: boolean, exportColumnLabels?: boolean, exportFormatedValues?: boolean): void;
+        getDatasetFromServer(selectAllColumns?: boolean, loadSelectedRow?: boolean): Promise<Array<T>>;
+        print(dataset?: Array<T>): void;
+        getPrintableElement(dataset?: Array<T>): HTMLElement;
         getPropertyName(dataDefPropertyAction: (dataDef: T) => any): string;
     }
     export class DataGrid_ extends DataGrid<any> {
@@ -3074,15 +3077,11 @@ declare namespace NextAdmin.UI {
         all = 2
     }
     export interface DataGridExportOptions {
-        exportFormat?: string;
-        exportSelectedDataOnly?: boolean;
-        exportVisibleColumnOnly?: boolean;
-        exportColumnsDisplayNames?: boolean;
+        exportFormat?: 'csv' | 'json';
+        exportSelectedRows?: boolean;
+        exportVisibleColumns?: boolean;
+        exportColumnLabels?: boolean;
         exportFormatedValues?: boolean;
-    }
-    export interface DataGridPrintOptions {
-        dataset?: Array<any>;
-        useControlDisplayValue?: boolean;
     }
     export interface DataGridReportOptions {
         label: string;
@@ -5720,6 +5719,7 @@ declare namespace NextAdmin.UI {
         open(): Promise<void>;
         openToast(displayDuration?: number): Promise<void>;
         static createOk(title: string, message: string, okAction?: any, parentContainer?: HTMLElement): MessageBox;
+        static createUnknownError(okAction?: any, parentContainer?: HTMLElement): MessageBox;
         static createToast(title: string, message: string, parentContainer?: HTMLElement): MessageBox;
         static createLoadingBox(title?: string, message?: string, cancelAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
         static createYesNo(title: string, message: string, yesAction?: (msgBox: MessageBox) => void, noAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;

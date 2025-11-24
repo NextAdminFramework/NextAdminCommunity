@@ -110,6 +110,7 @@ namespace NextAdmin.UI {
         constructor(options?: InputOptions) {
             super({
                 style: Input.defaultStyle,
+                fireChangeOnInput: true,
                 ...options
             });
 
@@ -147,7 +148,9 @@ namespace NextAdmin.UI {
                     value = Number(Number(value).toFixed(this.options.decimalCount));
                     this.setValue(value);
                 }
-                this.onValueChanged.dispatch(this, { value: value } as ValueChangeEventArgs);
+                if (this.options.fireChangeOnInput) {
+                    this.onValueChanged.dispatch(this, { value: value } as ValueChangeEventArgs);
+                }
             });
             if (this.options.placeholder != null) {
                 this.setPlaceholder(this.options.placeholder);
@@ -306,6 +309,8 @@ namespace NextAdmin.UI {
         inlineGrid?: boolean;
 
         outputNullIfEmpty?: boolean;
+
+        fireChangeOnInput?: boolean;
 
     }
 

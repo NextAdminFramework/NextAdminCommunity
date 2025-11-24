@@ -163,6 +163,14 @@ namespace NextAdmin.UI {
             return this._propertyInfo;
         }
 
+        dispose() {
+            super.dispose();
+            if (this._dataController && this._bindedPropertyName) {
+                this._dataController.unbindControl(this);
+            }
+        }
+
+
     }
 
     export interface FormControlOptions extends ControlOptions {

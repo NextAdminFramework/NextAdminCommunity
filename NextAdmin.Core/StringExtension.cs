@@ -157,6 +157,35 @@ namespace NextAdmin.Core
         }
 
 
+        public static int? ExtractInt(this string str)
+        {
+            string numericString = "";
+            foreach (char c in str)
+            {
+                if (char.IsDigit(c))
+                {
+                    numericString += c;
+                }
+                else if (!string.IsNullOrEmpty(numericString))
+                {
+                    break;
+                }
+            }
+            if (!string.IsNullOrEmpty(numericString))
+            {
+                try
+                {
+                    return int.Parse(numericString);
+                }
+                catch
+                {
+
+                }
+            }
+            return null;
+        }
+
+
 
     }
 }
