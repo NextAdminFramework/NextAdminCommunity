@@ -187,14 +187,14 @@ namespace NextAdmin {
                     await this.navigateToUrl();
                 }
                 else {
-                    await this.navigateTo(this.options.afterLoginPage);
+                    await this.navigateTo(this.options.afterLoginPageName);
                 }
             }
         }
 
         async navigateTo(pageName: string, parameters?: any, updateNavigatorState?: UpdateNavigatorState, force?: boolean): Promise<NextAdmin.UI.Page> {
             if (pageName == this.options.defaultPageName && this.user != null) {
-                return super.navigateTo(this.options.afterLoginPage, null, UpdateNavigatorState.none);
+                return super.navigateTo(this.options.afterLoginPageName, null, UpdateNavigatorState.none);
             }
             return await super.navigateTo(pageName, parameters, updateNavigatorState, force);
         }
@@ -367,7 +367,7 @@ namespace NextAdmin {
 
         appName?: string;
 
-        afterLoginPage?: string;
+        afterLoginPageName?: string;
 
         appLogoUrl?: string;
 

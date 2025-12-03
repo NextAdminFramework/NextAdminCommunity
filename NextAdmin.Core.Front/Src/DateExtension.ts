@@ -7,11 +7,11 @@ interface Date {
 
     getWeek();
 
-    truncateToDate();
+    truncateToDate(): Date;
 
-    truncateToHour();
+    truncateToHour(): Date;
 
-    truncateToMinute();
+    truncateToMinute(): Date;
 
     addSeconds(seconds: number): Date;
 

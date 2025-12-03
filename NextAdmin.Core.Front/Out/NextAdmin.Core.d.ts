@@ -416,9 +416,9 @@ interface Date {
     /**Retourne le nombre total de jour depuis l'an 0*/
     getTotalDays(): any;
     getWeek(): any;
-    truncateToDate(): any;
-    truncateToHour(): any;
-    truncateToMinute(): any;
+    truncateToDate(): Date;
+    truncateToHour(): Date;
+    truncateToMinute(): Date;
     addSeconds(seconds: number): Date;
     addMinutes(minutes: number): Date;
     addHours(hours: number): Date;
@@ -5718,12 +5718,12 @@ declare namespace NextAdmin.UI {
         close(): Promise<void>;
         open(): Promise<void>;
         openToast(displayDuration?: number): Promise<void>;
-        static createOk(title: string, message: string, okAction?: any, parentContainer?: HTMLElement): MessageBox;
+        static createOk(title: string, message?: string, okAction?: any, parentContainer?: HTMLElement): MessageBox;
         static createUnknownError(okAction?: any, parentContainer?: HTMLElement): MessageBox;
         static createToast(title: string, message: string, parentContainer?: HTMLElement): MessageBox;
         static createLoadingBox(title?: string, message?: string, cancelAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
-        static createYesNo(title: string, message: string, yesAction?: (msgBox: MessageBox) => void, noAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
-        static createYesCancel(title: string, message: string, yesAction?: (msgBox: MessageBox) => void, cancelAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
+        static createYesNo(title: string, message?: string, yesAction?: (msgBox: MessageBox) => void, noAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
+        static createYesCancel(title: string, message?: string, yesAction?: (msgBox: MessageBox) => void, cancelAction?: (msgBox: MessageBox) => void, parentContainer?: HTMLElement): MessageBox;
     }
     interface MessageBoxOptions extends ControlOptions {
         title?: string;

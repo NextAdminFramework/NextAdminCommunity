@@ -275,7 +275,7 @@ namespace NextAdmin.UI {
         }
 
 
-        public static createOk(title: string, message: string, okAction?: any, parentContainer = document.body): MessageBox {
+        public static createOk(title: string, message?: string, okAction?: any, parentContainer = document.body): MessageBox {
             let messageBox = new MessageBox({
                 title: title,
                 text: message,
@@ -362,7 +362,7 @@ namespace NextAdmin.UI {
             return messageBox;
         }
 
-        public static createYesNo(title: string, message: string, yesAction?: (msgBox: MessageBox) => void, noAction?: (msgBox: MessageBox) => void, parentContainer = document.body): MessageBox {
+        public static createYesNo(title: string, message?: string, yesAction?: (msgBox: MessageBox) => void, noAction?: (msgBox: MessageBox) => void, parentContainer = document.body): MessageBox {
             let messageBox = new MessageBox({
                 title: title,
                 text: message,
@@ -394,7 +394,7 @@ namespace NextAdmin.UI {
         }
 
 
-        public static createYesCancel(title: string, message: string, yesAction?: (msgBox: MessageBox) => void, cancelAction?: (msgBox: MessageBox) => void, parentContainer = document.body): MessageBox {
+        public static createYesCancel(title: string, message?: string, yesAction?: (msgBox: MessageBox) => void, cancelAction?: (msgBox: MessageBox) => void, parentContainer = document.body): MessageBox {
             let messageBox = new MessageBox({
                 title: title,
                 text: message,

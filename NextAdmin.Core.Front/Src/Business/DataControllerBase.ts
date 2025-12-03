@@ -72,6 +72,9 @@ namespace NextAdmin.Business {
             if (this.options.dataInfos == null)
                 return defaultPropertyInfo;
             let dataInfo = this.getDataInfo(dataName);
+            if (dataInfo?.propertyInfos == null) {
+                return defaultPropertyInfo;
+            }
             let propertyInfo = dataInfo.propertyInfos[propertyName];
             if (propertyInfo == null) {
                 return defaultPropertyInfo;

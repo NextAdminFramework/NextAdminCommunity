@@ -58,7 +58,7 @@ var NextAdmin;
                 await this.logUser(user);
             }
             else {
-                await this.navigateTo(this.options.defaultPage);
+                await this.navigateTo(this.options.defaultPageName);
             }
         }
         initializeResources(language) {
@@ -100,7 +100,7 @@ var NextAdmin;
             }
         }
         async navigateTo(pageName, parameters, updateNavigatorState, force) {
-            if (pageName == this.options.defaultPage && this.user != null) {
+            if (pageName == this.options.defaultPageName && this.user != null) {
                 return super.navigateTo(this.options.afterLoginPage, null, NextAdmin.UpdateNavigatorState.none);
             }
             return await super.navigateTo(pageName, parameters, updateNavigatorState, force);
