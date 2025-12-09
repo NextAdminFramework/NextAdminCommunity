@@ -81,7 +81,7 @@ interface Array<T> {
     count(predicate: (value?: T, index?: number, list?: T[]) => boolean): number;
     count(predicate?: (value?: T, index?: number, list?: T[]) => boolean): number;
     toFlatArray(action: (element: T) => Array<T>): Array<T>;
-    toDictionary(key: ((data: T) => string) | string): NextAdmin.Dictionary<T>;
+    toDictionary(key: ((data: T) => string) | string, ignorDuplicatedValue?: boolean): NextAdmin.Dictionary<T>;
 }
 declare namespace NextAdmin {
     class CSV {
@@ -808,6 +808,7 @@ interface String {
     replaceAllRegExp(regExp: RegExp, replace: string): string;
     firstCharToLower(): string;
     firstCharToUpper(): string;
+    firstWorldsCharToUpper(): string;
     contains(search: string): boolean;
     extractTags(startDelimiter: string, endDelimiter: string): Array<string>;
     removeTags(startDelimiter: string, endDelimiter: string): string;
@@ -1088,15 +1089,14 @@ declare namespace NextAdmin.Business {
         onStartRequest: EventHandler<DatasetController_, any[]>;
         onEndRequest: EventHandler<DatasetController_, any[]>;
         onStartLoadData: AsyncEventHandler<DatasetController_, any[]>;
-        onDataLoaded: EventHandler<DatasetController_, LoadDatasetResult>;
-        onDataAdded: EventHandler<DatasetController_, LoadDatasetResult>;
+        onDataLoaded: AsyncEventHandler<DatasetController_, DatasetChangedArgs>;
         onStartSaveData: EventHandler<DatasetController_, any[]>;
         onDataSaved: EventHandler<DatasetController_, SaveDatasetResult>;
         onDataDeleted: EventHandler<DatasetController_, SaveDatasetResult>;
         onStartAppeningData: EventHandler<DatasetController_, any[]>;
         onDataAppened: EventHandler<DatasetController_, LoadDataResult>;
         onDataCleared: EventHandler<DatasetController_, any[]>;
-        onDataChanged: EventHandler<DatasetController_, DataChangedArgs>;
+        onDataChanged: EventHandler<DatasetController_, DatasetChangedArgs>;
         options: DataControllerOptions;
         constructor(options: DataControllerOptions);
         displayDataErrors(dataset: Array<T>, action: DataControllerActionType, resultError: ResultErrors, defaultErrorMessage?: string, okAction?: () => void): UI.MessageBox;
@@ -1126,9 +1126,10 @@ declare namespace NextAdmin.Business {
     }
     class DatasetController_ extends DatasetController<any> {
     }
-    interface DataChangedArgs {
+    interface DatasetChangedArgs {
         previousDataset?: Array<any>;
         newDataset?: Array<any>;
+        loadResult?: LoadDatasetResult;
     }
     interface DataControllerOptions extends DataControllerBaseOptions {
         columnsToSelect?: Array<string>;
@@ -2854,7 +2855,7 @@ declare namespace NextAdmin.UI {
         fireChange(): void;
         export(options?: DataGridExportOptions): Promise<void>;
         exportDataset(dataset: Array<T>, exportFormat: 'csv' | 'json', exportVisibleColumns?: boolean, exportColumnLabels?: boolean, exportFormatedValues?: boolean): void;
-        getDatasetFromServer(selectAllColumns?: boolean, loadSelectedRow?: boolean): Promise<Array<T>>;
+        getDatasetFromServer(selectAllColumns?: boolean, loadSelectedRowsOnly?: boolean, beforeLoad?: (datasetController: Business.DatasetController<T>) => void): Promise<Array<T>>;
         print(dataset?: Array<T>): void;
         getPrintableElement(dataset?: Array<T>): HTMLElement;
         getPropertyName(dataDefPropertyAction: (dataDef: T) => any): string;
@@ -2906,7 +2907,7 @@ declare namespace NextAdmin.UI {
         setData(data: any, fireChange?: boolean): void;
         setDataPropertyValue(dataDefPropertyAction: (dataDef: T) => any, value?: any, fireChange?: boolean): void;
         getControl(propertyName: string): UI.FormControl;
-        getDataPKValue(): any;
+        getDataPrimaryKeyValue(): any;
         getCellByIndex(index: number): DataGridCell_;
         getCellByPropertyName(name: string): DataGridCell_;
     }
@@ -2992,6 +2993,7 @@ declare namespace NextAdmin.UI {
         }) => void;
         onSelectedRowsChanged?: (grid: DataGrid<T>, args: DataGridRow<T>[]) => void;
         onUpdateWhereQuery?: (grid: DataGrid<T>, args: Business.QueryBuilder) => void;
+        onDataLoaded?: (grid: DataGrid<T>, args: Business.DatasetChangedArgs) => Promise<void>;
         style?: TableStyle | any;
         displayNoDataMessage?: boolean;
         minHeight?: string;
@@ -3605,7 +3607,7 @@ declare namespace NextAdmin.UI {
         constructor(options?: MapboxMapOptions);
         initializeMap(): Promise<void>;
         getLocationFromAddress(address: string): Promise<LatLng>;
-        addMarker(location: LatLng): mapboxgl.Marker;
+        addMarker(location: LatLng, options?: mapboxgl.MarkerOptions): mapboxgl.Marker;
     }
     interface MapboxMapOptions extends ControlOptions {
         mapboxAccessToken?: string;
@@ -3616,6 +3618,9 @@ declare namespace NextAdmin.UI {
         initialLocationAddress?: string;
         hasMarkerToInitialLocation?: boolean;
         initialZoom?: number;
+        minZoom?: number;
+        maxZoom?: number;
+        initialzeMap?: boolean;
     }
     interface LatLng {
         lat: number;

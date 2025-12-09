@@ -59,6 +59,8 @@ interface String {
 
     firstCharToUpper(): string;
 
+    firstWorldsCharToUpper(): string;
+
     contains(search: string): boolean;
 
     extractTags(startDelimiter: string, endDelimiter: string): Array<string>;
@@ -148,6 +150,11 @@ try {
     String.prototype.firstCharToUpper = function () {
         let str = this as string;
         return str.charAt(0).toLocaleUpperCase() + str.slice(1);
+    };
+
+    String.prototype.firstWorldsCharToUpper = function () {
+        let str = this as string;
+        return str.toLocaleLowerCase().split(' ').select(word => word.firstCharToUpper()).join(' ');
     };
 
     String.prototype.hexColorToRGBA = function (alpha: number) {

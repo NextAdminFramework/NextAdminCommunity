@@ -35,7 +35,7 @@ declare namespace NextAdmin {
     }
     interface BackEndAppControllerOptions extends NextAdmin.NavigationControllerOptions {
         appName?: string;
-        afterLoginPage?: string;
+        afterLoginPageName?: string;
         appLogoUrl?: string;
         defaultFontUrl?: string;
     }

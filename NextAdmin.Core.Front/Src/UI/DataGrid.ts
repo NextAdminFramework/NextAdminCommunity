@@ -623,14 +623,17 @@ namespace NextAdmin.UI {
                     this.buttonRefresh.stopSpin();
                     this.stopSpin();
                 });
-                this.datasetController.onDataLoaded.subscribe((sender, result) => {
+                this.datasetController.onDataLoaded.subscribe(async (sender, args) => {
                     if (!this._suspendUpdateDataFromDataController) {
-                        this.setDataset(result.dataset, NextAdmin.Business.DataState.serialized, false);
+                        if (this.options.onDataLoaded) {
+                            await this.options.onDataLoaded(this, args);
+                        }
+                        if ((this.datasetController.dataset?.length ?? 0) > (args.loadResult.dataset?.length ?? 0)) {
+                            this.addDataset(args.loadResult.dataset, NextAdmin.Business.DataState.serialized);
+                        } else {
+                            this.setDataset(args.loadResult.dataset, NextAdmin.Business.DataState.serialized, false);
+                        }
                     }
-                });
-
-                this.datasetController.onDataAdded.subscribe((sender, result) => {
-                    this.addDataset(result.dataset, NextAdmin.Business.DataState.serialized);
                 });
 
                 this.datasetController.onDataSaved.subscribe((sender, result) => {
@@ -2373,7 +2376,7 @@ namespace NextAdmin.UI {
 
 
 
-        public async getDatasetFromServer(selectAllColumns = false, loadSelectedRow = false): Promise<Array<T>> {
+        public async getDatasetFromServer(selectAllColumns = false, loadSelectedRowsOnly = false, beforeLoad?: (datasetController: Business.DatasetController<T>)=>void): Promise<Array<T>> {
             if (this.datasetController == null) {
                 throw Error('DatasetController is required');
             }
@@ -2383,9 +2386,12 @@ namespace NextAdmin.UI {
             if (selectAllColumns) {
                 tempDatasetController.select();
             }
-            if (loadSelectedRow) {
+            if (loadSelectedRowsOnly) {
                 let ids = this.getSelectedDataRows().select(e => e.data[this.datasetController.options.dataPrimaryKeyName]);
                 tempDatasetController.where(this.datasetController.options.dataPrimaryKeyName + ' IN(' + ids.select(e => '?') + ')', ...ids);
+            }
+            if (beforeLoad) {
+                beforeLoad(tempDatasetController);
             }
             let response = await tempDatasetController.load();
             if (!response?.success) {
@@ -3258,7 +3264,7 @@ namespace NextAdmin.UI {
             return this.getCellByPropertyName(propertyName)?.control;
         }
 
-        public getDataPKValue() {
+        public getDataPrimaryKeyValue() {
             if (this.grid.datasetController == null) {
                 throw new Error('unbale to get data PK value without datasetform');
             }
@@ -3821,6 +3827,8 @@ namespace NextAdmin.UI {
         onSelectedRowsChanged?: (grid: DataGrid<T>, args: DataGridRow<T>[]) => void;
 
         onUpdateWhereQuery?: (grid: DataGrid<T>, args: Business.QueryBuilder) => void;
+
+        onDataLoaded?: (grid: DataGrid<T>, args: Business.DatasetChangedArgs) => Promise<void>;
 
         style?: TableStyle | any;
 

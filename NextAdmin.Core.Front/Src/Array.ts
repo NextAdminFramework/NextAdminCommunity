@@ -86,7 +86,7 @@ interface Array<T> {
 
     toFlatArray(action: (element: T) => Array<T>): Array<T>;
 
-    toDictionary(key: ((data: T) => string) | string): NextAdmin.Dictionary<T>;
+    toDictionary(key: ((data: T) => string) | string, ignorDuplicatedValue?: boolean): NextAdmin.Dictionary<T>;
 
 }
 try {
@@ -342,17 +342,25 @@ try {
     };
 
 
-    Array.prototype.toDictionary = function (key: (data: any) => string | string): NextAdmin.Dictionary<any> {
+    Array.prototype.toDictionary = function (key: (data: any) => string | string, ignorDuplicatedValue = false): NextAdmin.Dictionary<any> {
 
         let dictionary = new NextAdmin.Dictionary();
         if (typeof key === 'string') {
             for (let item of this) {
-                dictionary.add(item[key] + '', item);
+                if (ignorDuplicatedValue) {
+                    dictionary.set(item[key] + '', item);
+                } else {
+                    dictionary.add(item[key] + '', item);
+                }
             }
         }
         else {
             for (let item of this) {
-                dictionary.add(key(item), item);
+                if (ignorDuplicatedValue) {
+                    dictionary.set(key(item), item);
+                } else {
+                    dictionary.add(key(item), item);
+                }
             }
         }
         return dictionary;

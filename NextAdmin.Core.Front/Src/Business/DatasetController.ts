@@ -22,9 +22,7 @@ namespace NextAdmin.Business {
 
         onStartLoadData = new AsyncEventHandler<DatasetController_, Array<any>>();
 
-        onDataLoaded = new EventHandler<DatasetController_, LoadDatasetResult>();
-
-        onDataAdded = new EventHandler<DatasetController_, LoadDatasetResult>();
+        onDataLoaded = new AsyncEventHandler<DatasetController_, DatasetChangedArgs>();
 
         onStartSaveData = new EventHandler<DatasetController_, Array<any>>();
 
@@ -38,7 +36,7 @@ namespace NextAdmin.Business {
 
         onDataCleared = new EventHandler<DatasetController_, Array<any>>();
 
-        onDataChanged = new EventHandler<DatasetController_, DataChangedArgs>();
+        onDataChanged = new EventHandler<DatasetController_, DatasetChangedArgs>();
 
         options: DataControllerOptions;
 
@@ -110,7 +108,7 @@ namespace NextAdmin.Business {
             return new Promise<LoadDatasetResult>((resolve) => {
 
                 this.onStartRequest.dispatch(this, this.dataset);
-                this.loadAction((result) => {
+                this.loadAction(async (result) => {
                     if (args.onGetResponse) {
                         args.onGetResponse(result);
                     }
@@ -122,8 +120,13 @@ namespace NextAdmin.Business {
                                 data['_state'] = args.dataState;
                             }
                         }
-                        this.onDataLoaded.dispatch(this, result);
-                        this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
+                        let dataChangedArgs = {
+                            previousDataset: previousDataset,
+                            newDataset: this.dataset,
+                            loadResult: result
+                        } as DatasetChangedArgs;
+                        await this.onDataLoaded.dispatch(this, dataChangedArgs);
+                        this.onDataChanged.dispatch(this, dataChangedArgs);
                     }
                     else {
                         if (args.displayErrors) {
@@ -145,7 +148,7 @@ namespace NextAdmin.Business {
             await this.onStartLoadData.dispatch(this, this.dataset);
             return new Promise<LoadDatasetResult>((resolve) => {
                 this.onStartRequest.dispatch(this, this.dataset);
-                this.loadAction((result) => {
+                this.loadAction(async (result) => {
                     if (args.onGetResponse) {
                         args.onGetResponse(result);
                     }
@@ -157,8 +160,13 @@ namespace NextAdmin.Business {
                             }
                             this.dataset.add(data);
                         }
-                        this.onDataAdded.dispatch(this, result);
-                        this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
+                        let dataChangedArgs = {
+                            previousDataset: previousDataset,
+                            newDataset: this.dataset,
+                            loadResult: result
+                        } as DatasetChangedArgs;
+                        await this.onDataLoaded.dispatch(this, dataChangedArgs);
+                        this.onDataChanged.dispatch(this, dataChangedArgs);
                     }
                     else {
                         if (args.displayErrors) {
@@ -369,11 +377,13 @@ namespace NextAdmin.Business {
 
 
 
-    export interface DataChangedArgs {
+    export interface DatasetChangedArgs {
 
         previousDataset?: Array<any>;
 
         newDataset?: Array<any>;
+
+        loadResult?: LoadDatasetResult;
 
     }
 

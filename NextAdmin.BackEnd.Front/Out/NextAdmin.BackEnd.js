@@ -95,13 +95,13 @@ var NextAdmin;
                     await this.navigateToUrl();
                 }
                 else {
-                    await this.navigateTo(this.options.afterLoginPage);
+                    await this.navigateTo(this.options.afterLoginPageName);
                 }
             }
         }
         async navigateTo(pageName, parameters, updateNavigatorState, force) {
             if (pageName == this.options.defaultPageName && this.user != null) {
-                return super.navigateTo(this.options.afterLoginPage, null, NextAdmin.UpdateNavigatorState.none);
+                return super.navigateTo(this.options.afterLoginPageName, null, NextAdmin.UpdateNavigatorState.none);
             }
             return await super.navigateTo(pageName, parameters, updateNavigatorState, force);
         }

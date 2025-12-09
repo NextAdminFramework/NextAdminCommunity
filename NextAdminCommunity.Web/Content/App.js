@@ -2565,6 +2565,9 @@ var NextAdmin;
                 if (this.options.dataInfos == null)
                     return defaultPropertyInfo;
                 let dataInfo = this.getDataInfo(dataName);
+                if (dataInfo?.propertyInfos == null) {
+                    return defaultPropertyInfo;
+                }
                 let propertyInfo = dataInfo.propertyInfos[propertyName];
                 if (propertyInfo == null) {
                     return defaultPropertyInfo;
@@ -3402,7 +3405,7 @@ var NextAdmin;
                 this.onEndRequest = new NextAdmin.EventHandler();
                 this.onStartLoadData = new NextAdmin.AsyncEventHandler();
                 this.onDataLoaded = new NextAdmin.EventHandler();
-                this.onDataAdded = new NextAdmin.EventHandler();
+                this.onDataAdded = new NextAdmin.AsyncEventHandler();
                 this.onStartSaveData = new NextAdmin.EventHandler();
                 this.onDataSaved = new NextAdmin.EventHandler();
                 this.onDataDeleted = new NextAdmin.EventHandler();
@@ -3469,7 +3472,7 @@ var NextAdmin;
                 await this.onStartLoadData.dispatch(this, this.dataset);
                 return new Promise((resolve) => {
                     this.onStartRequest.dispatch(this, this.dataset);
-                    this.loadAction((result) => {
+                    this.loadAction(async (result) => {
                         if (args.onGetResponse) {
                             args.onGetResponse(result);
                         }
@@ -3482,7 +3485,13 @@ var NextAdmin;
                                 }
                             }
                             this.onDataLoaded.dispatch(this, result);
-                            this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
+                            let dataChangedArgs = {
+                                previousDataset: previousDataset,
+                                newDataset: this.dataset,
+                                loadResult: result
+                            };
+                            await this.onDataAdded.dispatch(this, dataChangedArgs);
+                            this.onDataChanged.dispatch(this, dataChangedArgs);
                         }
                         else {
                             if (args.displayErrors) {
@@ -3503,7 +3512,7 @@ var NextAdmin;
                 await this.onStartLoadData.dispatch(this, this.dataset);
                 return new Promise((resolve) => {
                     this.onStartRequest.dispatch(this, this.dataset);
-                    this.loadAction((result) => {
+                    this.loadAction(async (result) => {
                         if (args.onGetResponse) {
                             args.onGetResponse(result);
                         }
@@ -3515,8 +3524,13 @@ var NextAdmin;
                                 }
                                 this.dataset.add(data);
                             }
-                            this.onDataAdded.dispatch(this, result);
-                            this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
+                            let dataChangedArgs = {
+                                previousDataset: previousDataset,
+                                newDataset: this.dataset,
+                                loadResult: result
+                            };
+                            await this.onDataAdded.dispatch(this, dataChangedArgs);
+                            this.onDataChanged.dispatch(this, dataChangedArgs);
                         }
                         else {
                             if (args.displayErrors) {
@@ -9299,13 +9313,15 @@ var NextAdmin;
                         this.buttonRefresh.stopSpin();
                         this.stopSpin();
                     });
-                    this.datasetController.onDataLoaded.subscribe((sender, result) => {
+                    this.datasetController.onDataAdded.subscribe(async (sender, args) => {
                         if (!this._suspendUpdateDataFromDataController) {
-                            this.setDataset(result.dataset, NextAdmin.Business.DataState.serialized, false);
+                            if ((this.datasetController.dataset?.length ?? 0) > (args.loadResult.dataset?.length ?? 0)) {
+                                this.addDataset(args.loadResult.dataset, NextAdmin.Business.DataState.serialized);
+                            }
+                            else {
+                                this.setDataset(args.loadResult.dataset, NextAdmin.Business.DataState.serialized, false);
+                            }
                         }
-                    });
-                    this.datasetController.onDataAdded.subscribe((sender, result) => {
-                        this.addDataset(result.dataset, NextAdmin.Business.DataState.serialized);
                     });
                     this.datasetController.onDataSaved.subscribe((sender, result) => {
                         if (result.success) {
@@ -18563,13 +18579,13 @@ var NextAdmin;
                     await this.navigateToUrl();
                 }
                 else {
-                    await this.navigateTo(this.options.afterLoginPage);
+                    await this.navigateTo(this.options.afterLoginPageName);
                 }
             }
         }
         async navigateTo(pageName, parameters, updateNavigatorState, force) {
             if (pageName == this.options.defaultPageName && this.user != null) {
-                return super.navigateTo(this.options.afterLoginPage, null, NextAdmin.UpdateNavigatorState.none);
+                return super.navigateTo(this.options.afterLoginPageName, null, NextAdmin.UpdateNavigatorState.none);
             }
             return await super.navigateTo(pageName, parameters, updateNavigatorState, force);
         }

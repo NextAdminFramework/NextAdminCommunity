@@ -17,6 +17,7 @@
                 mapboxMapStyle: MapboxMapStyle.streets,
                 initialLocation: { lat: 47, lng: 2 },
                 initialZoom: 8,
+                initialzeMap: true,
                 ...options
             } as MapboxMapOptions);
             if (NextAdmin.String.isNullOrEmpty(this.options.mapboxAccessToken)) {
@@ -26,7 +27,9 @@
                 throw new Error("Dependencies URL are required");
             }
             this.element.style.height = this.options.height;
-            this.initializeMap();
+            if (this.options.initialzeMap) {
+                this.initializeMap();
+            }
         }
 
         async initializeMap() {
@@ -43,7 +46,9 @@
                 container: this.element, // container ID
                 style: this.options.mapboxMapStyle, // style URL
                 center: this.initialLocation, // starting position [lng, lat]
-                zoom: this.options.initialZoom // starting zoom
+                zoom: this.options.initialZoom,// starting zoom
+                minZoom: this.options.minZoom,
+                maxZoom: this.options.maxZoom,
             });
             this.map.addControl(new mapboxgl.NavigationControl({
                 showCompass: false
@@ -75,8 +80,8 @@
             };
         }
 
-        public addMarker(location: LatLng): mapboxgl.Marker {
-            let marker = new mapboxgl.Marker().setLngLat(location);
+        public addMarker(location: LatLng, options?: mapboxgl.MarkerOptions): mapboxgl.Marker {
+            let marker = new mapboxgl.Marker(options).setLngLat(location);
             marker.addTo(this.map);
             return marker;
         }
@@ -101,6 +106,12 @@
         hasMarkerToInitialLocation?: boolean;
 
         initialZoom?: number;
+
+        minZoom?: number;
+
+        maxZoom?: number;
+
+        initialzeMap?: boolean;
 
     }
 
@@ -127,10 +138,10 @@
 
 declare namespace GeoJSON {
 
- /**
- * The valid values for the "type" property of GeoJSON geometry objects.
- * https://tools.ietf.org/html/rfc7946#section-1.4
- */
+    /**
+    * The valid values for the "type" property of GeoJSON geometry objects.
+    * https://tools.ietf.org/html/rfc7946#section-1.4
+    */
     export type GeoJsonGeometryTypes = "Point" | "LineString" | "MultiPoint" | "Polygon" | "MultiLineString" |
         "MultiPolygon" | "GeometryCollection";
 

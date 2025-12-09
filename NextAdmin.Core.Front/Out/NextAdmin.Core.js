@@ -344,16 +344,26 @@ try {
         }
         return finalArray;
     };
-    Array.prototype.toDictionary = function (key) {
+    Array.prototype.toDictionary = function (key, ignorDuplicatedValue = false) {
         let dictionary = new NextAdmin.Dictionary();
         if (typeof key === 'string') {
             for (let item of this) {
-                dictionary.add(item[key] + '', item);
+                if (ignorDuplicatedValue) {
+                    dictionary.set(item[key] + '', item);
+                }
+                else {
+                    dictionary.add(item[key] + '', item);
+                }
             }
         }
         else {
             for (let item of this) {
-                dictionary.add(key(item), item);
+                if (ignorDuplicatedValue) {
+                    dictionary.set(key(item), item);
+                }
+                else {
+                    dictionary.add(key(item), item);
+                }
             }
         }
         return dictionary;
@@ -2132,6 +2142,10 @@ try {
         let str = this;
         return str.charAt(0).toLocaleUpperCase() + str.slice(1);
     };
+    String.prototype.firstWorldsCharToUpper = function () {
+        let str = this;
+        return str.toLocaleLowerCase().split(' ').select(word => word.firstCharToUpper()).join(' ');
+    };
     String.prototype.hexColorToRGBA = function (alpha) {
         let hexaColor = this;
         var r = parseInt(hexaColor.slice(1, 3), 16), g = parseInt(hexaColor.slice(3, 5), 16), b = parseInt(hexaColor.slice(5, 7), 16);
@@ -3404,8 +3418,7 @@ var NextAdmin;
                 this.onStartRequest = new NextAdmin.EventHandler();
                 this.onEndRequest = new NextAdmin.EventHandler();
                 this.onStartLoadData = new NextAdmin.AsyncEventHandler();
-                this.onDataLoaded = new NextAdmin.EventHandler();
-                this.onDataAdded = new NextAdmin.EventHandler();
+                this.onDataLoaded = new NextAdmin.AsyncEventHandler();
                 this.onStartSaveData = new NextAdmin.EventHandler();
                 this.onDataSaved = new NextAdmin.EventHandler();
                 this.onDataDeleted = new NextAdmin.EventHandler();
@@ -3472,7 +3485,7 @@ var NextAdmin;
                 await this.onStartLoadData.dispatch(this, this.dataset);
                 return new Promise((resolve) => {
                     this.onStartRequest.dispatch(this, this.dataset);
-                    this.loadAction((result) => {
+                    this.loadAction(async (result) => {
                         if (args.onGetResponse) {
                             args.onGetResponse(result);
                         }
@@ -3484,8 +3497,13 @@ var NextAdmin;
                                     data['_state'] = args.dataState;
                                 }
                             }
-                            this.onDataLoaded.dispatch(this, result);
-                            this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
+                            let dataChangedArgs = {
+                                previousDataset: previousDataset,
+                                newDataset: this.dataset,
+                                loadResult: result
+                            };
+                            await this.onDataLoaded.dispatch(this, dataChangedArgs);
+                            this.onDataChanged.dispatch(this, dataChangedArgs);
                         }
                         else {
                             if (args.displayErrors) {
@@ -3506,7 +3524,7 @@ var NextAdmin;
                 await this.onStartLoadData.dispatch(this, this.dataset);
                 return new Promise((resolve) => {
                     this.onStartRequest.dispatch(this, this.dataset);
-                    this.loadAction((result) => {
+                    this.loadAction(async (result) => {
                         if (args.onGetResponse) {
                             args.onGetResponse(result);
                         }
@@ -3518,8 +3536,13 @@ var NextAdmin;
                                 }
                                 this.dataset.add(data);
                             }
-                            this.onDataAdded.dispatch(this, result);
-                            this.onDataChanged.dispatch(this, { previousDataset: previousDataset, newDataset: this.dataset });
+                            let dataChangedArgs = {
+                                previousDataset: previousDataset,
+                                newDataset: this.dataset,
+                                loadResult: result
+                            };
+                            await this.onDataLoaded.dispatch(this, dataChangedArgs);
+                            this.onDataChanged.dispatch(this, dataChangedArgs);
                         }
                         else {
                             if (args.displayErrors) {
@@ -9302,13 +9325,18 @@ var NextAdmin;
                         this.buttonRefresh.stopSpin();
                         this.stopSpin();
                     });
-                    this.datasetController.onDataLoaded.subscribe((sender, result) => {
+                    this.datasetController.onDataLoaded.subscribe(async (sender, args) => {
                         if (!this._suspendUpdateDataFromDataController) {
-                            this.setDataset(result.dataset, NextAdmin.Business.DataState.serialized, false);
+                            if (this.options.onDataLoaded) {
+                                await this.options.onDataLoaded(this, args);
+                            }
+                            if ((this.datasetController.dataset?.length ?? 0) > (args.loadResult.dataset?.length ?? 0)) {
+                                this.addDataset(args.loadResult.dataset, NextAdmin.Business.DataState.serialized);
+                            }
+                            else {
+                                this.setDataset(args.loadResult.dataset, NextAdmin.Business.DataState.serialized, false);
+                            }
                         }
-                    });
-                    this.datasetController.onDataAdded.subscribe((sender, result) => {
-                        this.addDataset(result.dataset, NextAdmin.Business.DataState.serialized);
                     });
                     this.datasetController.onDataSaved.subscribe((sender, result) => {
                         if (result.success) {
@@ -10870,7 +10898,7 @@ var NextAdmin;
                     linkElement.click();
                 }
             }
-            async getDatasetFromServer(selectAllColumns = false, loadSelectedRow = false) {
+            async getDatasetFromServer(selectAllColumns = false, loadSelectedRowsOnly = false, beforeLoad) {
                 if (this.datasetController == null) {
                     throw Error('DatasetController is required');
                 }
@@ -10880,9 +10908,12 @@ var NextAdmin;
                 if (selectAllColumns) {
                     tempDatasetController.select();
                 }
-                if (loadSelectedRow) {
+                if (loadSelectedRowsOnly) {
                     let ids = this.getSelectedDataRows().select(e => e.data[this.datasetController.options.dataPrimaryKeyName]);
                     tempDatasetController.where(this.datasetController.options.dataPrimaryKeyName + ' IN(' + ids.select(e => '?') + ')', ...ids);
+                }
+                if (beforeLoad) {
+                    beforeLoad(tempDatasetController);
                 }
                 let response = await tempDatasetController.load();
                 if (!response?.success) {
@@ -11672,7 +11703,7 @@ var NextAdmin;
             getControl(propertyName) {
                 return this.getCellByPropertyName(propertyName)?.control;
             }
-            getDataPKValue() {
+            getDataPrimaryKeyValue() {
                 if (this.grid.datasetController == null) {
                     throw new Error('unbale to get data PK value without datasetform');
                 }
@@ -14310,6 +14341,7 @@ var NextAdmin;
                     mapboxMapStyle: MapboxMapStyle.streets,
                     initialLocation: { lat: 47, lng: 2 },
                     initialZoom: 8,
+                    initialzeMap: true,
                     ...options
                 });
                 this.onMapInitialized = new NextAdmin.EventHandler();
@@ -14320,7 +14352,9 @@ var NextAdmin;
                     throw new Error("Dependencies URL are required");
                 }
                 this.element.style.height = this.options.height;
-                this.initializeMap();
+                if (this.options.initialzeMap) {
+                    this.initializeMap();
+                }
             }
             async initializeMap() {
                 this.element.startSpin();
@@ -14336,7 +14370,9 @@ var NextAdmin;
                     container: this.element,
                     style: this.options.mapboxMapStyle,
                     center: this.initialLocation,
-                    zoom: this.options.initialZoom // starting zoom
+                    zoom: this.options.initialZoom,
+                    minZoom: this.options.minZoom,
+                    maxZoom: this.options.maxZoom,
                 });
                 this.map.addControl(new mapboxgl.NavigationControl({
                     showCompass: false
@@ -14365,8 +14401,8 @@ var NextAdmin;
                     lng: coordinates['longitude']
                 };
             }
-            addMarker(location) {
-                let marker = new mapboxgl.Marker().setLngLat(location);
+            addMarker(location, options) {
+                let marker = new mapboxgl.Marker(options).setLngLat(location);
                 marker.addTo(this.map);
                 return marker;
             }
