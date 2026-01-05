@@ -12,6 +12,18 @@
             }
         }
 
+        public static setClassStyle(className: string, style: NextAdmin.CssDeclaration) {
+            let styleElement = DependenciesController.registeredDependencies[className] as HTMLStyleElement;
+            if (styleElement) {
+                styleElement.remove();
+                delete DependenciesController.registeredDependencies[className];
+            }
+            let tmpElement = document.createElement('div');
+            NextAdmin.Copy.copyTo(style, tmpElement.style);
+            let cssValue = '.' + className + '{ ' + tmpElement.style.cssText + ' }';
+            Style.append(className, cssValue);
+        }
+
         public static load(url: string, key?: string): Promise<HTMLLinkElement> {
             if (key == null) {
                 key = url;

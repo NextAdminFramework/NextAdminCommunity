@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace NextAdmin.Core.Model
 {
@@ -74,6 +75,18 @@ namespace NextAdmin.Core.Model
 
         }
 
+        public static string CreatePassword(int length = 12)
+        {
+            const string valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+            StringBuilder res = new StringBuilder();
+            Random rnd = new Random();
+            while (0 < length--)
+            {
+                res.Append(valid[rnd.Next(valid.Length)]);
+            }
+            return res.ToString();
+        }
+
 
         /// <summary>
         /// Encrypt given password into EncryptedPassword field, if null, use entity Password Field
@@ -93,14 +106,12 @@ namespace NextAdmin.Core.Model
             return encryptedPassword;
         }
 
-
         public static TUser FindUser<TUser>(this NextAdminDbContext model, string login, string password)
           where TUser : class, IUser
         {
             string encryptedPassword = Encryption.HashString(password);
             return model.Set<TUser>().FirstOrDefault(e => e.UserName == login && e.EncryptedPassword == encryptedPassword);
         }
-
 
         public static IUser FindUser(this NextAdminDbContext model, string userType, string login, string password)
         {

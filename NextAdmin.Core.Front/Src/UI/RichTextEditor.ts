@@ -67,6 +67,8 @@ namespace NextAdmin.UI {
 
         public quillContainer: HTMLDivElement;
 
+        public textContainer: HTMLDivElement;
+
         public options: RichTextEditorOptions;
 
         public static onCreated = new EventHandler<RichTextEditor, RichTextEditorOptions>();
@@ -122,6 +124,10 @@ namespace NextAdmin.UI {
                 placeholder: this.options.placeHolder,
                 theme: 'snow'
             });
+            this.textContainer = this.quillContainer.children.item(0) as HTMLDivElement;
+            if (this.options.minTextContainerHeight) {
+                this.textContainer.style.minHeight = this.options.minTextContainerHeight;
+            }
             this.quill.on('text-change', () => {
                 if (this.suspendChange) {
                     return;
@@ -223,6 +229,8 @@ namespace NextAdmin.UI {
         style?: RichTextEditorStyle;
 
         inlineGrid?: boolean;
+
+        minTextContainerHeight?: string;
 
     }
 

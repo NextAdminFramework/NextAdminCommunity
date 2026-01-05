@@ -99,11 +99,13 @@ namespace NextAdmin.UI {
             this.caret.innerHTML = NextAdmin.Resources.iconCaretLeft;
 
             //2023-12-10:Big hack to solve chrome bug, that cause blanck inputs inside container, so we force the rerender...
-            this.collapsableContainer.style.width = '95%';
             if (animate) {
+                this.collapsableContainer.style.width = '95%';
                 await NextAdmin.Timer.sleep(20);
                 this.collapsableContainer.style.width = '100%';
                 await NextAdmin.Timer.sleep(280);
+            } else {
+                this.collapsableContainer.style.width = '100%';
             }
 
             this.collapsableContainer.style.height = 'unset';

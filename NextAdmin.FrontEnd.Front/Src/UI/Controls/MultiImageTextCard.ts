@@ -19,6 +19,7 @@ namespace NextAdmin.UI {
 
                 border-radius:20px;
                 box-shadow: 0px 0px 50px rgba(0,0,0,0.05);
+
                 background:#fff;
                 position:relative;
 

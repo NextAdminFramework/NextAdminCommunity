@@ -156,6 +156,7 @@ declare namespace NextAdmin.UI {
         footer: HTMLDivElement;
         options: CardOptions;
         constructor(options?: CardOptions);
+        setStyle(style: CardStyle): void;
     }
     interface CardOptions extends ControlOptions {
         imageUrl?: string;
@@ -165,6 +166,11 @@ declare namespace NextAdmin.UI {
         text?: string;
         content?: HTMLElement;
         isResponsive?: boolean;
+        style?: CardStyle;
+    }
+    enum CardStyle {
+        default = 0,
+        largePaddingShadowRadius = 1
     }
 }
 declare namespace NextAdmin.UI {
@@ -438,16 +444,19 @@ declare namespace NextAdmin.UI {
         logoLink: HTMLAnchorElement;
         leftToolbar: Toolbar;
         rightToolbar: Toolbar;
+        mobileDropDownMenuButton: NextAdmin.UI.DropDownButton;
         stretchArea: HTMLDivElement;
         pageLinks: Dictionary<NavigationLink>;
         static style: string;
         constructor(options?: NavigationTopBarOptions);
         setStyle(style: NavigationTopBarStyle): void;
-        addLeftNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink;
-        addRightNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink;
         private addNavigationLink;
+        appendLeftNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink;
+        appendRightNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink;
         appendRightLink(text: string, action?: () => void, style?: LinkStyle): NavigationLink;
+        appendRightButton(button: NextAdmin.UI.Button): NextAdmin.UI.Button;
         getDefaultLinkStyle(): LinkStyle;
+        getDefaultButtonStyle(): NextAdmin.UI.ButtonStyle;
     }
     class NavigationLink extends Link {
         static style: string;
@@ -458,15 +467,23 @@ declare namespace NextAdmin.UI {
         isFixed?: boolean;
         maxContainerWidth?: string;
         imageLogoUrl?: string;
+        logoTargetUrl?: string;
         textLogoHtmlContent?: string;
         navigationController?: NavigationController;
         style?: NavigationTopBarStyle;
+        stickyBarCss?: NextAdmin.CssDeclaration;
+        defaultLinkStyle?: LinkStyle;
+        defaultButtonStyle?: NextAdmin.UI.ButtonStyle;
+        hasMobileMenu?: boolean;
+        mobileMenuToggleScreenWidth?: number;
+        mobileMenuItems?: Array<MenuItem | Button | HTMLElement>;
     }
     enum NavigationTopBarStyle {
         white = 0,
         noBackgroundStickyWhiteScroll = 1,
         noBackgroundStickyDarkBlueScroll = 2,
-        noBackgroundStickyDarkBlue = 3
+        noBackgroundStickyDarkBlue = 3,
+        noBackgroundStickyScroll = 4
     }
 }
 declare namespace NextAdmin.UI {
@@ -545,6 +562,7 @@ declare namespace NextAdmin.UI {
     class HeadingSlide extends Slide {
         options: HeadingSlideOptions;
         contentContainer?: Container;
+        link: HTMLAnchorElement;
         constructor(options?: HeadingSlideOptions);
     }
     interface HeadingSlideOptions extends SlideOptions {

@@ -25,7 +25,7 @@ namespace NextAdmin.UI {
             this.element.style.paddingTop = '6px';
             this.element.style.paddingLeft = '6px';
             this.element.style.paddingRight = '6px';
-            this.element.appendControl(new Collapsible({ title: this.options.title, isOpen: this.options.isOpen }), (collapsible) => {
+            this.collapsible = this.element.appendControl(new Collapsible({ title: this.options.title, isOpen: this.options.isOpen }), (collapsible) => {
                 collapsible.header.style.color = '#105ABE';
                 collapsible.header.style.borderBottom = '1px solid #eee';
                 collapsible.body.style.paddingTop = '0px';
@@ -64,20 +64,15 @@ namespace NextAdmin.UI {
             return control;
         }
 
-        updateSearch(throttle = this.options.throttle) {
+        async updateSearch(throttle = this.options.throttle): Promise<NextAdmin.Business.LoadDatasetResult> {
             if (!this.grid) {
                 return;
             }
             if (throttle) {
-                this.timer.throttle(() => {
-                    this.grid.updateWhereQuery();
-                    this.grid.datasetController.load();
-                }, throttle);
+                await this.timer.throttleAsync(throttle);
             }
-            else {
-                this.grid.updateWhereQuery();
-                this.grid.datasetController.load();
-            }
+            this.grid.updateWhereQuery();
+            return await this.grid.datasetController.load();
         }
 
         updateQuery(queryBuilder: Business.QueryBuilder): Business.QueryBuilder {

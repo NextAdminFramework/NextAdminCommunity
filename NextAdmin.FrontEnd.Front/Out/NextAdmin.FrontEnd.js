@@ -575,6 +575,7 @@ var NextAdmin;
                     imageSize: 'cover',
                     imagePosition: 'center center',
                     isResponsive: true,
+                    style: CardStyle.default,
                     ...options
                 });
                 NextAdmin.Style.append('NextAdmin.UI.Card', Card.style);
@@ -617,6 +618,18 @@ var NextAdmin;
                         });
                     });
                 });
+                this.setStyle(this.options.style);
+            }
+            setStyle(style) {
+                switch (style) {
+                    default:
+                    case CardStyle.default:
+                        this.element.classList.add('default');
+                        break;
+                    case CardStyle.largePaddingShadowRadius:
+                        this.element.classList.add('large-padding-shaow-radius');
+                        break;
+                }
             }
         }
         Card.style = `
@@ -626,8 +639,6 @@ var NextAdmin;
             min-height:50px;
             margin-top:20px;
             margin-bottom:20px;
-            box-shadow: 0px 0px 2px rgba(0,0,0,0.25);
-            border-radius:10px;
 
             .card-image{
                 height:100%;
@@ -636,9 +647,19 @@ var NextAdmin;
                 min-width:200px;
                 max-width:200px;
             }
-
+        }
+        .next-admin-card.default{
+            box-shadow: 0px 0px 2px rgba(0,0,0,0.25);
+            border-radius:10px;
             .card-body{
                 padding:10px;
+            }
+        }
+        .next-admin-card.large-padding-shaow-radius{
+            box-shadow: 0px 0px 50px rgba(0,0,0,0.05);
+            border-radius:20px;
+            .card-body{
+                padding:40px;
             }
         }
         .next-admin-card.responsive{
@@ -657,6 +678,11 @@ var NextAdmin;
 
         `;
         UI.Card = Card;
+        let CardStyle;
+        (function (CardStyle) {
+            CardStyle[CardStyle["default"] = 0] = "default";
+            CardStyle[CardStyle["largePaddingShadowRadius"] = 1] = "largePaddingShadowRadius";
+        })(CardStyle = UI.CardStyle || (UI.CardStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -2103,6 +2129,7 @@ var NextAdmin;
 
                 border-radius:20px;
                 box-shadow: 0px 0px 50px rgba(0,0,0,0.05);
+
                 background:#fff;
                 position:relative;
 
@@ -2311,6 +2338,9 @@ var NextAdmin;
                     isFixed: true,
                     style: NavigationTopBarStyle.white,
                     maxContainerWidth: UI.FrontDefaultStyle.PageContentMaxWidth,
+                    logoTargetUrl: options?.navigationController?.options?.defaultPageName,
+                    hasMobileMenu: options?.mobileMenuItems?.length,
+                    mobileMenuToggleScreenWidth: 768,
                     ...options
                 });
                 this.pageLinks = new NextAdmin.Dictionary();
@@ -2318,6 +2348,9 @@ var NextAdmin;
                 this.element.classList.add('next-admin-top-bar');
                 if (this.options.isFixed) {
                     this.element.style.position = 'fixed';
+                }
+                if (this.options.stickyBarCss) {
+                    NextAdmin.Style.setClassStyle('top-bar-sticky', this.options.stickyBarCss);
                 }
                 this.container = this.element.appendHTML('div', (container) => {
                     container.classList.add('next-admin-top-bar-container');
@@ -2332,8 +2365,8 @@ var NextAdmin;
                             if (this.options.textLogoHtmlContent) {
                                 logoLink.innerHTML = this.options.textLogoHtmlContent;
                             }
-                            if (this.options?.navigationController?.options?.defaultPageName) {
-                                logoLink.href = this.options.navigationController.options.defaultPageName;
+                            if (this.options.logoTargetUrl) {
+                                logoLink.href = this.options.logoTargetUrl;
                             }
                             if (this.options.imageLogoUrl) {
                                 this.logoImage = logoLink.appendHTML('img', (logoImage) => {
@@ -2345,6 +2378,23 @@ var NextAdmin;
                         this.leftToolbar = layout.appendControl(new UI.Toolbar());
                         this.stretchArea = layout.appendHTMLStretch('div');
                         this.rightToolbar = layout.appendControl(new UI.Toolbar());
+                        if (this.options.hasMobileMenu) {
+                            layout.appendControl(new UI.Toolbar(), (tb) => {
+                                this.mobileDropDownMenuButton = tb.appendControl(new NextAdmin.UI.DropDownButton({
+                                    text: NextAdmin.Resources.menuIcon,
+                                    size: NextAdmin.UI.ButtonSize.large,
+                                    style: this.getDefaultButtonStyle(),
+                                    items: options.mobileMenuItems,
+                                    dropDownPosition: NextAdmin.UI.DropDownPosition.downLeft,
+                                }));
+                                this.rightToolbar.element.addScreenMaxWidthStyle(this.options.mobileMenuToggleScreenWidth, {
+                                    display: 'none'
+                                });
+                                this.mobileDropDownMenuButton.element.addScreenMinWidthStyle(this.options.mobileMenuToggleScreenWidth, {
+                                    display: 'none'
+                                });
+                            });
+                        }
                     });
                 });
                 if (this.options.navigationController) {
@@ -2368,10 +2418,12 @@ var NextAdmin;
                             if (window.scrollY > 50) {
                                 if (!this.element.classList.contains('scroll')) {
                                     this.element.classList.add('scroll');
+                                    this.element.classList.add('top-bar-sticky');
                                 }
                             }
                             else {
                                 this.element.classList.remove('scroll');
+                                this.element.classList.remove('top-bar-sticky');
                             }
                         });
                         break;
@@ -2384,20 +2436,31 @@ var NextAdmin;
                             if (window.scrollY > 50) {
                                 if (!this.element.classList.contains('scroll')) {
                                     this.element.classList.add('scroll');
+                                    this.element.classList.add('top-bar-sticky');
                                 }
                             }
                             else {
                                 this.element.classList.remove('scroll');
+                                this.element.classList.remove('top-bar-sticky');
+                            }
+                        });
+                        break;
+                    case NavigationTopBarStyle.noBackgroundStickyScroll:
+                        this.element.classList.add('next-admin-top-bar-no-background');
+                        window.addEventListener('scroll', (ev) => {
+                            if (window.scrollY > 50) {
+                                if (!this.element.classList.contains('scroll')) {
+                                    this.element.classList.add('scroll');
+                                    this.element.classList.add('top-bar-sticky');
+                                }
+                            }
+                            else {
+                                this.element.classList.remove('scroll');
+                                this.element.classList.remove('top-bar-sticky');
                             }
                         });
                         break;
                 }
-            }
-            addLeftNavigationLink(url, label, style) {
-                return this.leftToolbar.appendControl(this.addNavigationLink(url, label, style));
-            }
-            addRightNavigationLink(url, label, style) {
-                return this.rightToolbar.appendControl(this.addNavigationLink(url, label, style));
             }
             addNavigationLink(url, label, style) {
                 let link = new NavigationLink({
@@ -2409,14 +2472,28 @@ var NextAdmin;
                 this.pageLinks.add(url, link);
                 return link;
             }
+            appendLeftNavigationLink(url, label, style) {
+                return this.leftToolbar.appendControl(this.addNavigationLink(url, label, style));
+            }
+            appendRightNavigationLink(url, label, style) {
+                return this.rightToolbar.appendControl(this.addNavigationLink(url, label, style));
+            }
             appendRightLink(text, action, style) {
                 return this.rightToolbar.appendControl(new NavigationLink({
                     text: text,
                     action: action,
                     style: style ?? this.getDefaultLinkStyle()
                 }));
+                ;
+            }
+            appendRightButton(button) {
+                return this.rightToolbar.appendControl(button);
+                ;
             }
             getDefaultLinkStyle() {
+                if (this.options.defaultLinkStyle) {
+                    return this.options.defaultLinkStyle;
+                }
                 switch (this.options.style) {
                     default:
                     case NavigationTopBarStyle.noBackgroundStickyWhiteScroll:
@@ -2425,6 +2502,24 @@ var NextAdmin;
                     case NavigationTopBarStyle.noBackgroundStickyDarkBlueScroll:
                     case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
                         return UI.LinkStyle.white;
+                    case NavigationTopBarStyle.noBackgroundStickyScroll:
+                        return UI.LinkStyle.dark;
+                }
+            }
+            getDefaultButtonStyle() {
+                if (this.options.defaultButtonStyle) {
+                    return this.options.defaultButtonStyle;
+                }
+                switch (this.options.style) {
+                    default:
+                    case NavigationTopBarStyle.noBackgroundStickyWhiteScroll:
+                    case NavigationTopBarStyle.white:
+                        return NextAdmin.UI.ButtonStyle.noBgDarkBlue;
+                    case NavigationTopBarStyle.noBackgroundStickyDarkBlueScroll:
+                    case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
+                        return NextAdmin.UI.ButtonStyle.noBgWhite;
+                    case NavigationTopBarStyle.noBackgroundStickyScroll:
+                        return NextAdmin.UI.ButtonStyle.noBgDarkBlue;
                 }
             }
         }
@@ -2516,6 +2611,23 @@ var NextAdmin;
             }
         }
 
+        .next-admin-top-bar-no-background{
+            .next-admin-top-bar-center-container{
+                padding-top:10px;
+                padding-bottom:10px;
+                border-bottom:1px solid rgba(255,255,255,0.1)
+            }
+        }
+
+        .next-admin-top-bar-no-background.scroll {
+            box-shadow:0px 0px 2px rgba(0,0,0,0.25);
+            .next-admin-top-bar-center-container{
+                padding-top:0px;
+                padding-bottom:0px;
+                border-bottom:0px;
+            }
+        }
+
         `;
         UI.NavigationTopBar = NavigationTopBar;
         class NavigationLink extends UI.Link {
@@ -2562,6 +2674,7 @@ var NextAdmin;
             NavigationTopBarStyle[NavigationTopBarStyle["noBackgroundStickyWhiteScroll"] = 1] = "noBackgroundStickyWhiteScroll";
             NavigationTopBarStyle[NavigationTopBarStyle["noBackgroundStickyDarkBlueScroll"] = 2] = "noBackgroundStickyDarkBlueScroll";
             NavigationTopBarStyle[NavigationTopBarStyle["noBackgroundStickyDarkBlue"] = 3] = "noBackgroundStickyDarkBlue";
+            NavigationTopBarStyle[NavigationTopBarStyle["noBackgroundStickyScroll"] = 4] = "noBackgroundStickyScroll";
         })(NavigationTopBarStyle = UI.NavigationTopBarStyle || (UI.NavigationTopBarStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
@@ -2927,7 +3040,7 @@ var NextAdmin;
                     container.body.appendHTML('div', (content) => {
                         content.centerVertically();
                         content.style.textAlign = this.options.textAlign;
-                        content.appendHTML('a', (link) => {
+                        this.link = content.appendHTML('a', (link) => {
                             link.style.textDecoration = 'none';
                             link.style.textShadow = '0px 0px 10px rgba(0,0,0,0.75)';
                             if (this.options.targetUrl) {

@@ -9,8 +9,6 @@ namespace NextAdmin.UI {
             min-height:50px;
             margin-top:20px;
             margin-bottom:20px;
-            box-shadow: 0px 0px 2px rgba(0,0,0,0.25);
-            border-radius:10px;
 
             .card-image{
                 height:100%;
@@ -19,9 +17,19 @@ namespace NextAdmin.UI {
                 min-width:200px;
                 max-width:200px;
             }
-
+        }
+        .next-admin-card.default{
+            box-shadow: 0px 0px 2px rgba(0,0,0,0.25);
+            border-radius:10px;
             .card-body{
                 padding:10px;
+            }
+        }
+        .next-admin-card.large-padding-shaow-radius{
+            box-shadow: 0px 0px 50px rgba(0,0,0,0.05);
+            border-radius:20px;
+            .card-body{
+                padding:40px;
             }
         }
         .next-admin-card.responsive{
@@ -55,8 +63,9 @@ namespace NextAdmin.UI {
                 imageSize: 'cover',
                 imagePosition: 'center center',
                 isResponsive: true,
+                style: CardStyle.default,
                 ...options
-            } as PinsCardOptions);
+            } as CardOptions);
             Style.append('NextAdmin.UI.Card', Card.style);
             this.element.classList.add('next-admin-card');
             if (this.options.isResponsive) {
@@ -106,11 +115,24 @@ namespace NextAdmin.UI {
                     });
 
                 });
-
             });
+
+            this.setStyle(this.options.style);
 
         }
 
+        setStyle(style: CardStyle) {
+            switch (style) {
+                default:
+                case CardStyle.default:
+                    this.element.classList.add('default');
+                    break;
+                case CardStyle.largePaddingShadowRadius:
+                    this.element.classList.add('large-padding-shaow-radius');
+                    break;
+
+            }
+        }
     }
 
     export interface CardOptions extends ControlOptions {
@@ -129,6 +151,14 @@ namespace NextAdmin.UI {
 
         isResponsive?: boolean;
 
+        style?: CardStyle;
+
+    }
+
+
+    export enum CardStyle {
+        default,
+        largePaddingShadowRadius
     }
 
 }

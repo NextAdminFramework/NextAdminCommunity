@@ -45,6 +45,17 @@ var NextAdmin;
                 document.head.appendChild(style);
             }
         }
+        static setClassStyle(className, style) {
+            let styleElement = NextAdmin.DependenciesController.registeredDependencies[className];
+            if (styleElement) {
+                styleElement.remove();
+                delete NextAdmin.DependenciesController.registeredDependencies[className];
+            }
+            let tmpElement = document.createElement('div');
+            NextAdmin.Copy.copyTo(style, tmpElement.style);
+            let cssValue = '.' + className + '{ ' + tmpElement.style.cssText + ' }';
+            Style.append(className, cssValue);
+        }
         static load(url, key) {
             if (key == null) {
                 key = url;
@@ -2343,6 +2354,17 @@ var NextAdmin;
                 callBack();
                 this.stop();
             }, true);
+        }
+        throttleAsync(delay, restartTimer) {
+            return new Promise((resolve) => {
+                if (restartTimer || !this.isRuning()) {
+                    this.start(delay);
+                }
+                this.executeAtNextTick(() => {
+                    this.stop();
+                    resolve();
+                }, true);
+            });
         }
         start(delay) {
             this.stop();
@@ -7895,11 +7917,14 @@ var NextAdmin;
                 this.collapsableContainer.style.height = this.body.clientHeight + 'px';
                 this.caret.innerHTML = NextAdmin.Resources.iconCaretLeft;
                 //2023-12-10:Big hack to solve chrome bug, that cause blanck inputs inside container, so we force the rerender...
-                this.collapsableContainer.style.width = '95%';
                 if (animate) {
+                    this.collapsableContainer.style.width = '95%';
                     await NextAdmin.Timer.sleep(20);
                     this.collapsableContainer.style.width = '100%';
                     await NextAdmin.Timer.sleep(280);
+                }
+                else {
+                    this.collapsableContainer.style.width = '100%';
                 }
                 this.collapsableContainer.style.height = 'unset';
                 this.collapsableContainer.style.overflow = '';
@@ -7968,7 +7993,7 @@ var NextAdmin;
                 this.element.style.paddingTop = '6px';
                 this.element.style.paddingLeft = '6px';
                 this.element.style.paddingRight = '6px';
-                this.element.appendControl(new UI.Collapsible({ title: this.options.title, isOpen: this.options.isOpen }), (collapsible) => {
+                this.collapsible = this.element.appendControl(new UI.Collapsible({ title: this.options.title, isOpen: this.options.isOpen }), (collapsible) => {
                     collapsible.header.style.color = '#105ABE';
                     collapsible.header.style.borderBottom = '1px solid #eee';
                     collapsible.body.style.paddingTop = '0px';
@@ -8003,20 +8028,15 @@ var NextAdmin;
                 }
                 return control;
             }
-            updateSearch(throttle = this.options.throttle) {
+            async updateSearch(throttle = this.options.throttle) {
                 if (!this.grid) {
                     return;
                 }
                 if (throttle) {
-                    this.timer.throttle(() => {
-                        this.grid.updateWhereQuery();
-                        this.grid.datasetController.load();
-                    }, throttle);
+                    await this.timer.throttleAsync(throttle);
                 }
-                else {
-                    this.grid.updateWhereQuery();
-                    this.grid.datasetController.load();
-                }
+                this.grid.updateWhereQuery();
+                return await this.grid.datasetController.load();
             }
             updateQuery(queryBuilder) {
                 if (this.options.onUpdateQuery) {
@@ -9326,10 +9346,10 @@ var NextAdmin;
                         this.stopSpin();
                     });
                     this.datasetController.onDataLoaded.subscribe(async (sender, args) => {
+                        if (this.options.onDataLoaded) {
+                            await this.options.onDataLoaded(this, args);
+                        }
                         if (!this._suspendUpdateDataFromDataController) {
-                            if (this.options.onDataLoaded) {
-                                await this.options.onDataLoaded(this, args);
-                            }
                             if ((this.datasetController.dataset?.length ?? 0) > (args.loadResult.dataset?.length ?? 0)) {
                                 this.addDataset(args.loadResult.dataset, NextAdmin.Business.DataState.serialized);
                             }
@@ -13128,6 +13148,9 @@ var NextAdmin;
             }
             closeDropDown() {
                 this.dropDown.close();
+                if (this.options.onCloseDropDown) {
+                    this.options.onCloseDropDown(this);
+                }
             }
         }
         DropDownButton.onCreated = new NextAdmin.EventHandler();
@@ -15952,12 +15975,13 @@ var NextAdmin;
     (function (UI) {
         class ResisingContainer extends UI.Control {
             //exemple : (16,9), will produce a div that allway stretch with conbtainer and respect 16/9 ratio
-            constructor() {
-                super('div');
+            constructor(options) {
+                super('div', options);
                 this.onSizeChanged = new NextAdmin.EventHandler();
                 this.element.style.width = '100%';
                 this.element.style.height = '100%';
                 this.element.style.position = 'relative';
+                this.element.style.overflow = 'hidden';
                 let iframe = document.createElement('iframe');
                 this.element.appendChild(iframe);
                 this.container = document.createElement('div');
@@ -15973,7 +15997,10 @@ var NextAdmin;
                 iframe.style.height = '100%';
                 let onsizeChanged = () => {
                     let bounding = iframe.getBoundingClientRect();
-                    this.onSizeChanged.dispatch(this.container, bounding);
+                    this.onSizeChanged.dispatch(this, bounding);
+                    if (this.options.onSizeChanged) {
+                        this.options.onSizeChanged(this, bounding);
+                    }
                 };
                 iframe.addEventListener('load', () => {
                     onsizeChanged();
@@ -15981,10 +16008,8 @@ var NextAdmin;
                         onsizeChanged();
                     });
                 });
-                ResisingContainer.onCreated.dispatch(this, this.options);
             }
         }
-        ResisingContainer.onCreated = new NextAdmin.EventHandler();
         UI.ResisingContainer = ResisingContainer;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
@@ -16037,6 +16062,10 @@ var NextAdmin;
                     placeholder: this.options.placeHolder,
                     theme: 'snow'
                 });
+                this.textContainer = this.quillContainer.children.item(0);
+                if (this.options.minTextContainerHeight) {
+                    this.textContainer.style.minHeight = this.options.minTextContainerHeight;
+                }
                 this.quill.on('text-change', () => {
                     if (this.suspendChange) {
                         return;

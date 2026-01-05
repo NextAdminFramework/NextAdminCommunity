@@ -300,6 +300,8 @@ namespace NextAdmin.UI {
 
         contentContainer?: Container;
 
+        link: HTMLAnchorElement;
+
         constructor(options?: HeadingSlideOptions) {
             super({
                 textColor: '#ffffff',
@@ -314,7 +316,7 @@ namespace NextAdmin.UI {
                 container.body.appendHTML('div', (content) => {
                     content.centerVertically();
                     content.style.textAlign = this.options.textAlign;
-                    content.appendHTML('a', (link) => {
+                    this.link = content.appendHTML('a', (link) => {
                         link.style.textDecoration = 'none';
                         link.style.textShadow = '0px 0px 10px rgba(0,0,0,0.75)';
 

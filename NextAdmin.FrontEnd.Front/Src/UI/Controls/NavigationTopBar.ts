@@ -17,6 +17,8 @@ namespace NextAdmin.UI {
 
         rightToolbar: Toolbar;
 
+        mobileDropDownMenuButton: NextAdmin.UI.DropDownButton;
+
         stretchArea: HTMLDivElement;
 
         pageLinks = new Dictionary<NavigationLink>();
@@ -109,6 +111,23 @@ namespace NextAdmin.UI {
             }
         }
 
+        .next-admin-top-bar-no-background{
+            .next-admin-top-bar-center-container{
+                padding-top:10px;
+                padding-bottom:10px;
+                border-bottom:1px solid rgba(255,255,255,0.1)
+            }
+        }
+
+        .next-admin-top-bar-no-background.scroll {
+            box-shadow:0px 0px 2px rgba(0,0,0,0.25);
+            .next-admin-top-bar-center-container{
+                padding-top:0px;
+                padding-bottom:0px;
+                border-bottom:0px;
+            }
+        }
+
         `;
 
         constructor(options?: NavigationTopBarOptions) {
@@ -116,12 +135,18 @@ namespace NextAdmin.UI {
                 isFixed: true,
                 style: NavigationTopBarStyle.white,
                 maxContainerWidth: FrontDefaultStyle.PageContentMaxWidth,
+                logoTargetUrl: options?.navigationController?.options?.defaultPageName,
+                hasMobileMenu: options?.mobileMenuItems?.length,
+                mobileMenuToggleScreenWidth: 768,
                 ...options
             } as NavigationTopBarOptions);
             Style.append('NextAdmin.UI.Topbar', NavigationTopBar.style);
             this.element.classList.add('next-admin-top-bar');
             if (this.options.isFixed) {
                 this.element.style.position = 'fixed';
+            }
+            if (this.options.stickyBarCss) {
+                NextAdmin.Style.setClassStyle('top-bar-sticky', this.options.stickyBarCss)
             }
 
             this.container = this.element.appendHTML('div', (container) => {
@@ -139,8 +164,8 @@ namespace NextAdmin.UI {
                         if (this.options.textLogoHtmlContent) {
                             logoLink.innerHTML = this.options.textLogoHtmlContent;
                         }
-                        if (this.options?.navigationController?.options?.defaultPageName) {
-                            logoLink.href = this.options.navigationController.options.defaultPageName;
+                        if (this.options.logoTargetUrl) {
+                            logoLink.href = this.options.logoTargetUrl;
                         }
                         if (this.options.imageLogoUrl) {
                             this.logoImage = logoLink.appendHTML('img', (logoImage) => {
@@ -152,6 +177,24 @@ namespace NextAdmin.UI {
                     this.leftToolbar = layout.appendControl(new Toolbar());
                     this.stretchArea = layout.appendHTMLStretch('div');
                     this.rightToolbar = layout.appendControl(new Toolbar());
+                    if (this.options.hasMobileMenu) {
+                        layout.appendControl(new Toolbar(), (tb) => {
+                            this.mobileDropDownMenuButton = tb.appendControl(new NextAdmin.UI.DropDownButton({
+                                text: NextAdmin.Resources.menuIcon,
+                                size: NextAdmin.UI.ButtonSize.large,
+                                style: this.getDefaultButtonStyle(),
+                                items: options.mobileMenuItems,
+                                dropDownPosition: NextAdmin.UI.DropDownPosition.downLeft,
+                            }));
+                            this.rightToolbar.element.addScreenMaxWidthStyle(this.options.mobileMenuToggleScreenWidth, {
+                                display: 'none'
+                            });
+                            this.mobileDropDownMenuButton.element.addScreenMinWidthStyle(this.options.mobileMenuToggleScreenWidth, {
+                                display: 'none'
+                            });
+                        })
+
+                    }
                 });
 
             });
@@ -181,15 +224,17 @@ namespace NextAdmin.UI {
                         if (window.scrollY > 50) {
                             if (!this.element.classList.contains('scroll')) {
                                 this.element.classList.add('scroll');
+                                this.element.classList.add('top-bar-sticky');
                             }
                         }
                         else {
                             this.element.classList.remove('scroll');
+                            this.element.classList.remove('top-bar-sticky');
                         }
                     });
                     break;
                 case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
-                    this.element.classList.add('next-admin-top-bar-glass','scroll');
+                    this.element.classList.add('next-admin-top-bar-glass', 'scroll');
                     break;
                 case NavigationTopBarStyle.noBackgroundStickyDarkBlueScroll:
                     this.element.classList.add('next-admin-top-bar-glass');
@@ -197,23 +242,32 @@ namespace NextAdmin.UI {
                         if (window.scrollY > 50) {
                             if (!this.element.classList.contains('scroll')) {
                                 this.element.classList.add('scroll');
+                                this.element.classList.add('top-bar-sticky');
                             }
                         }
                         else {
                             this.element.classList.remove('scroll');
+                            this.element.classList.remove('top-bar-sticky');
+                        }
+                    });
+                    break;
+                case NavigationTopBarStyle.noBackgroundStickyScroll:
+                    this.element.classList.add('next-admin-top-bar-no-background');
+                    window.addEventListener('scroll', (ev) => {
+                        if (window.scrollY > 50) {
+                            if (!this.element.classList.contains('scroll')) {
+                                this.element.classList.add('scroll');
+                                this.element.classList.add('top-bar-sticky');
+                            }
+                        }
+                        else {
+                            this.element.classList.remove('scroll');
+                            this.element.classList.remove('top-bar-sticky');
                         }
                     });
                     break;
             }
 
-        }
-
-        addLeftNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink {
-            return this.leftToolbar.appendControl(this.addNavigationLink(url, label, style));
-        }
-
-        addRightNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink {
-            return this.rightToolbar.appendControl(this.addNavigationLink(url, label, style));
         }
 
         private addNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink {
@@ -227,15 +281,32 @@ namespace NextAdmin.UI {
             return link;
         }
 
+        appendLeftNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink {
+            return this.leftToolbar.appendControl(this.addNavigationLink(url, label, style));
+        }
+
+
+        appendRightNavigationLink(url: string, label: string, style?: LinkStyle): NavigationLink {
+            return this.rightToolbar.appendControl(this.addNavigationLink(url, label, style));
+        }
+
         appendRightLink(text: string, action?: () => void, style?: LinkStyle): NavigationLink {
             return this.rightToolbar.appendControl(new NavigationLink({
                 text: text,
                 action: action,
                 style: style ?? this.getDefaultLinkStyle()
-            }));
+            }));;
         }
 
+        appendRightButton(button: NextAdmin.UI.Button): NextAdmin.UI.Button {
+            return this.rightToolbar.appendControl(button);;
+        }
+
+
         public getDefaultLinkStyle(): LinkStyle {
+            if (this.options.defaultLinkStyle) {
+                return this.options.defaultLinkStyle;
+            }
             switch (this.options.style) {
                 default:
                 case NavigationTopBarStyle.noBackgroundStickyWhiteScroll:
@@ -244,10 +315,28 @@ namespace NextAdmin.UI {
                 case NavigationTopBarStyle.noBackgroundStickyDarkBlueScroll:
                 case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
                     return LinkStyle.white;
-
+                case NavigationTopBarStyle.noBackgroundStickyScroll:
+                    return LinkStyle.dark;
             }
-
         }
+
+        public getDefaultButtonStyle(): NextAdmin.UI.ButtonStyle {
+            if (this.options.defaultButtonStyle) {
+                return this.options.defaultButtonStyle;
+            }
+            switch (this.options.style) {
+                default:
+                case NavigationTopBarStyle.noBackgroundStickyWhiteScroll:
+                case NavigationTopBarStyle.white:
+                    return NextAdmin.UI.ButtonStyle.noBgDarkBlue;
+                case NavigationTopBarStyle.noBackgroundStickyDarkBlueScroll:
+                case NavigationTopBarStyle.noBackgroundStickyDarkBlue:
+                    return NextAdmin.UI.ButtonStyle.noBgWhite;
+                case NavigationTopBarStyle.noBackgroundStickyScroll:
+                    return NextAdmin.UI.ButtonStyle.noBgDarkBlue;
+            }
+        }
+
 
     }
 
@@ -305,11 +394,25 @@ namespace NextAdmin.UI {
 
         imageLogoUrl?: string;
 
+        logoTargetUrl?: string;
+
         textLogoHtmlContent?: string;
 
         navigationController?: NavigationController;
 
         style?: NavigationTopBarStyle;
+
+        stickyBarCss?: NextAdmin.CssDeclaration;
+
+        defaultLinkStyle?: LinkStyle;
+
+        defaultButtonStyle?: NextAdmin.UI.ButtonStyle;
+
+        hasMobileMenu?: boolean;
+
+        mobileMenuToggleScreenWidth?: number;
+
+        mobileMenuItems?: Array<MenuItem | Button | HTMLElement>;
 
     }
 
@@ -318,7 +421,8 @@ namespace NextAdmin.UI {
         white,
         noBackgroundStickyWhiteScroll,
         noBackgroundStickyDarkBlueScroll,
-        noBackgroundStickyDarkBlue
+        noBackgroundStickyDarkBlue,
+        noBackgroundStickyScroll,
     }
 
 }

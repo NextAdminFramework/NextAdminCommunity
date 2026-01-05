@@ -196,6 +196,9 @@ namespace NextAdmin.UI {
 
         closeDropDown() {
             this.dropDown.close();
+            if (this.options.onCloseDropDown) {
+                this.options.onCloseDropDown(this);
+            }
         }
 
     }
@@ -217,6 +220,8 @@ namespace NextAdmin.UI {
         dropDownParentContainer?: HTMLElement;
 
         onOpeningDropDown?: (dropDown: DropDownButton, args: OpeningDropDownArgs) => void;
+
+        onCloseDropDown?: (dropDown: DropDownButton) => void;
 
     }
 

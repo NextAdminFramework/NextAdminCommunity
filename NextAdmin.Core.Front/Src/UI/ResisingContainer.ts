@@ -8,18 +8,19 @@ namespace NextAdmin.UI {
 
         container: HTMLDivElement;
 
-        onSizeChanged = new NextAdmin.EventHandler<HTMLDivElement, DOMRect>();
+        onSizeChanged = new NextAdmin.EventHandler<ResisingContainer, DOMRect>();
 
-        public static onCreated = new EventHandler<ResisingContainer, ControlOptions>();
+        options: ResisingContainerOptions;
 
 
         //exemple : (16,9), will produce a div that allway stretch with conbtainer and respect 16/9 ratio
-        constructor() {
-            super('div');
+        constructor(options?: ResisingContainerOptions) {
+            super('div', options);
 
             this.element.style.width = '100%';
             this.element.style.height = '100%';
             this.element.style.position = 'relative';
+            this.element.style.overflow = 'hidden';
 
             let iframe = document.createElement('iframe');
             this.element.appendChild(iframe);
@@ -40,7 +41,10 @@ namespace NextAdmin.UI {
 
             let onsizeChanged = () => {
                 let bounding = iframe.getBoundingClientRect();
-                this.onSizeChanged.dispatch(this.container, bounding);
+                this.onSizeChanged.dispatch(this, bounding);
+                if (this.options.onSizeChanged) {
+                    this.options.onSizeChanged(this, bounding);
+                }
             };
 
             iframe.addEventListener('load', () => {
@@ -49,16 +53,14 @@ namespace NextAdmin.UI {
                     onsizeChanged();
                 });
             });
-
-            ResisingContainer.onCreated.dispatch(this, this.options);
         }
-
-
-
-
 
     }
 
+    export interface ResisingContainerOptions extends ControlOptions{
 
+        onSizeChanged?: (sender: ResisingContainer, args: DOMRect) => void;
+
+    }
 
 }

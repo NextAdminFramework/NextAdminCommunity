@@ -624,10 +624,10 @@ namespace NextAdmin.UI {
                     this.stopSpin();
                 });
                 this.datasetController.onDataLoaded.subscribe(async (sender, args) => {
+                    if (this.options.onDataLoaded) {
+                        await this.options.onDataLoaded(this, args);
+                    }
                     if (!this._suspendUpdateDataFromDataController) {
-                        if (this.options.onDataLoaded) {
-                            await this.options.onDataLoaded(this, args);
-                        }
                         if ((this.datasetController.dataset?.length ?? 0) > (args.loadResult.dataset?.length ?? 0)) {
                             this.addDataset(args.loadResult.dataset, NextAdmin.Business.DataState.serialized);
                         } else {

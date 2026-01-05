@@ -1,6 +1,7 @@
 declare namespace NextAdmin {
     class Style {
         static append(key: string, value: string): void;
+        static setClassStyle(className: string, style: NextAdmin.CssDeclaration): void;
         static load(url: string, key?: string): Promise<HTMLLinkElement>;
         static exist(key: string): boolean;
     }
@@ -826,6 +827,7 @@ declare namespace NextAdmin {
         private _onExecute;
         executeAtNextTick(callBack: () => void, replaceOtherCallBack?: boolean): void;
         throttle(callBack: () => void, delay: number, restartTimer?: boolean): void;
+        throttleAsync(delay: number, restartTimer?: boolean): Promise<void>;
         start(delay: number): void;
         stop(): void;
         isRuning(): boolean;
@@ -2467,7 +2469,7 @@ declare namespace NextAdmin.UI {
         constructor(options?: CollapsibleFilterOptions);
         addView(viewName: string, items?: Array<FormLayoutViewItem>, active?: boolean): FormLayoutView;
         addItem<TElement extends Control | HTMLElement>(item: FormLayoutControlItem<TElement>): TElement;
-        updateSearch(throttle?: number): void;
+        updateSearch(throttle?: number): Promise<NextAdmin.Business.LoadDatasetResult>;
         updateQuery(queryBuilder: Business.QueryBuilder): Business.QueryBuilder;
     }
     interface CollapsibleFilterOptions extends ControlOptions {
@@ -3239,6 +3241,7 @@ declare namespace NextAdmin.UI {
         openOnHover?: boolean;
         dropDownParentContainer?: HTMLElement;
         onOpeningDropDown?: (dropDown: DropDownButton, args: OpeningDropDownArgs) => void;
+        onCloseDropDown?: (dropDown: DropDownButton) => void;
     }
     interface MenuItem {
         text?: string;
@@ -5950,9 +5953,12 @@ declare namespace NextAdmin.UI {
 declare namespace NextAdmin.UI {
     class ResisingContainer extends Control {
         container: HTMLDivElement;
-        onSizeChanged: EventHandler<HTMLDivElement, DOMRect>;
-        static onCreated: EventHandler<ResisingContainer, ControlOptions>;
-        constructor();
+        onSizeChanged: EventHandler<ResisingContainer, DOMRect>;
+        options: ResisingContainerOptions;
+        constructor(options?: ResisingContainerOptions);
+    }
+    interface ResisingContainerOptions extends ControlOptions {
+        onSizeChanged?: (sender: ResisingContainer, args: DOMRect) => void;
     }
 }
 declare namespace NextAdmin.UI {
@@ -5964,6 +5970,7 @@ declare namespace NextAdmin.UI {
         quill: Quill;
         editorContainer: HTMLDivElement;
         quillContainer: HTMLDivElement;
+        textContainer: HTMLDivElement;
         options: RichTextEditorOptions;
         static onCreated: EventHandler<RichTextEditor, RichTextEditorOptions>;
         constructor(options?: RichTextEditorOptions);
@@ -5984,6 +5991,7 @@ declare namespace NextAdmin.UI {
         displayToolbar?: boolean;
         style?: RichTextEditorStyle;
         inlineGrid?: boolean;
+        minTextContainerHeight?: string;
     }
     enum RichTextEditorStyle {
         default = 0,

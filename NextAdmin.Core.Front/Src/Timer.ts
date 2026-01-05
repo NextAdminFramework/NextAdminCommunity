@@ -46,6 +46,18 @@
             }, true);
         }
 
+        public throttleAsync(delay: number, restartTimer?: boolean): Promise<void> {
+            return new Promise((resolve) => {
+                if (restartTimer || !this.isRuning()) {
+                    this.start(delay);
+                }
+                this.executeAtNextTick(() => {
+                    this.stop();
+                    resolve();
+                }, true);
+            });
+        }
+
 
         public start(delay: number) {
             this.stop();
