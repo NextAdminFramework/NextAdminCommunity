@@ -12,7 +12,7 @@ namespace NextAdmin.UI {
 
             .card-image{
                 height:100%;
-                min-height:100px;
+                min-height:200px;
                 width:200px;
                 min-width:200px;
                 max-width:200px;

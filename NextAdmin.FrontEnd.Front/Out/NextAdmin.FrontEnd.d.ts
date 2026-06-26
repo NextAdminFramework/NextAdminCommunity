@@ -206,24 +206,6 @@ declare namespace NextAdmin.UI {
     interface CardsGridOptions extends NextAdmin.UI.ControlOptions {
         isItemsCentered?: boolean;
     }
-    class CardsDataGrid<TData> extends CardsGrid {
-        protected dataset: TData[];
-        options: CardsDataGridOptions;
-        private _isFullyLoaded;
-        constructor(options?: CardsDataGridOptions);
-        cardFactory(data: TData): NextAdmin.UI.Control;
-        protected retrieveDataset(take?: number, skip?: number): Promise<Array<TData>>;
-        clear(): void;
-        setDataset(dataset?: Array<TData>): void;
-        getDataset(): TData[];
-        addDataset(dataset?: Array<TData>): void;
-        private _isLoading;
-        load(take?: number, skip?: number): Promise<Array<TData>>;
-        enableScrollLoading(scrollElement?: HTMLElement): void;
-    }
-    interface CardsDataGridOptions extends CardsGridOptions {
-        paginItemCount?: number;
-    }
 }
 declare namespace NextAdmin.UI {
     class ContactCard extends HorizontalFlexLayout {
@@ -240,6 +222,30 @@ declare namespace NextAdmin.UI {
         contactPhone?: string;
         mapboxAccessToken?: string;
         mapboxDependencyRootUrl?: string;
+    }
+}
+declare namespace NextAdmin.UI {
+    class DataCardsGrid<TData> extends CardsGrid {
+        protected dataset: TData[];
+        options: DataCardsGridOptions<TData>;
+        private _isFullyLoaded;
+        constructor(options?: DataCardsGridOptions<TData>);
+        cardFactory(data: TData): NextAdmin.UI.Control;
+        protected retrieveDataset(take?: number, skip?: number): Promise<Array<TData>>;
+        clear(): void;
+        setDataset(dataset?: Array<TData>): void;
+        getDataset(): TData[];
+        addDataset(dataset?: Array<TData>): void;
+        private _isLoading;
+        load(take?: number, skip?: number): Promise<Array<TData>>;
+        enableScrollLoading(scrollElement?: HTMLElement): void;
+    }
+    interface DataCardsGridOptions<TData> extends CardsGridOptions {
+        paginItemCount?: number;
+        cardFactory?: (data: TData) => NextAdmin.UI.Control;
+        retrieveDatasetFunc?: (take?: number, skip?: number) => Promise<Array<TData>>;
+    }
+    interface DataCardsGridOptions_ extends DataCardsGridOptions<any> {
     }
 }
 declare namespace NextAdmin.UI {

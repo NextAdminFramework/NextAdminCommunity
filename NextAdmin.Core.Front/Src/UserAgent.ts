@@ -3,43 +3,79 @@
     export class UserAgent {
 
         public static isSafari(): boolean {
-            return navigator.userAgent.search("Safari") >= 0 && navigator.userAgent.search("Chrome") < 0;
+            try {
+                return navigator?.userAgent?.search("Safari") >= 0 && navigator?.userAgent?.search("Chrome") < 0;
+            } catch {
+                return false;
+            }
         }
 
         public static isChrome(): boolean {
-            return window['chrome'] != null;
+            try {
+                return window['chrome'] != null;
+            } catch {
+                return false;
+            }
         }
 
         public static isFireFox(): boolean {
-            return navigator.userAgent.indexOf("Firefox") > -1;
+            try {
+                return navigator?.userAgent?.indexOf("Firefox") > -1;
+            } catch {
+                return false;
+            }
         }
 
         public static isEdge(): boolean {
-            return navigator.userAgent.indexOf("Edge") > -1;
+            try {
+                return navigator?.userAgent?.indexOf("Edge") > -1;
+            } catch {
+                return false;
+            }
         }
 
         public static isIE11(): boolean {
-            return navigator.userAgent.indexOf("Trident/") > -1;
+            try {
+                return navigator?.userAgent?.indexOf("Trident/") > -1;
+            } catch {
+                return false;
+            }
         }
 
         public static isIE10OrOlder(): boolean {
-            return navigator.userAgent.indexOf("MSIE ") > -1;
+            try {
+                return navigator?.userAgent?.indexOf("MSIE ") > -1;
+            } catch {
+                return false;
+            }
         }
 
         public static isAndroid(): boolean {
-            return navigator.userAgent.match(/Android/i) != null;
+            try {
+                return navigator?.userAgent?.match(/Android/i) != null;
+            } catch {
+                return false;
+            }
+        }
+
+        public static isIPad(): boolean {
+            try {
+                return navigator?.userAgent?.match(/iPad/i) != null;
+            } catch {
+                return false;
+            }
+        }
+
+        public static isIPhone(): boolean {
+            try {
+                return navigator?.userAgent?.match(/iPhone/i) != null;
+            } catch {
+                return false;
+            }
         }
 
         public static isIOS(): boolean {
             return UserAgent.isIPad() || UserAgent.isIPhone();
-        }
-
-        public static isIPad(): boolean {
-            return navigator.userAgent.match(/iPad/i) != null;
-        }
-
-        public static isIPhone(): boolean {
-            return navigator.userAgent.match(/iPhone/i) != null;
         }
 
         public static isMobile(): boolean {

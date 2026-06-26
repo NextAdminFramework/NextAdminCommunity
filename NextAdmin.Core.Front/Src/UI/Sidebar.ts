@@ -50,7 +50,7 @@ namespace NextAdmin.UI {
         }
 
         .sidebar-wrapper .menu .sidebar-link {
-            font-size:14px;
+            font-size:13px;
             align-items:center;
             border-radius:.5rem;
             color:#25396f;
@@ -237,7 +237,8 @@ namespace NextAdmin.UI {
                     body.classList.add('menu');
                 });
             });
-            this.element.appendPerfectScrollbar();
+            this.element.hideScrollbar();
+            //this.element.appendPerfectScrollbar();
         }
 
         public updateActivePage(activePageName: string, previousPageName?: string) {

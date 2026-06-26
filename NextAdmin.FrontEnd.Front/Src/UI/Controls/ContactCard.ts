@@ -41,6 +41,7 @@ namespace NextAdmin.UI {
                 this.appendHTML('div', (mapContainer) => {
                     mapContainer.classList.add('map-container');
                     mapContainer.appendControl(new NextAdmin.UI.MapboxMap({
+                        mapStyle: NextAdmin.UI.MapboxMapStyle.mapBox_streets,
                         mapboxAccessToken: this.options.mapboxAccessToken,
                         mapboxDependencyRootUrl: this.options.mapboxDependencyRootUrl,
                         initialLocationAddress: this.options.contactAddress,

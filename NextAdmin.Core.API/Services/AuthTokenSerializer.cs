@@ -12,7 +12,7 @@ namespace NextAdmin.Core.API.Services
 
         public AuthTokenSerializer(string? privateKey = null)
         {
-            PrivateKey = privateKey ?? NextAdminHelper.AuthTokenPrivateKey;
+            PrivateKey = privateKey ?? NextAdminServices.AuthTokenPrivateKey;
             if (PrivateKey == null)
             {
                 throw new Exception("Not private key");
@@ -32,7 +32,7 @@ namespace NextAdmin.Core.API.Services
         {
             if (issuer == null)
             {
-                issuer = NextAdminHelper.AppName;
+                issuer = NextAdminServices.AppName;
             }
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(PrivateKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

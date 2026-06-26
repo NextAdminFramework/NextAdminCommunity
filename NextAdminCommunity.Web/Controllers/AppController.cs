@@ -21,11 +21,11 @@ namespace NextAdminCommunity.Web.Controllers
             return View("~/Views/Admin/Index.cshtml", new AdminAppOptions
             {
                 RequestUrl = url,
-                AppName = NextAdminHelper.AppName,
-                AdminAuthTokenName = NextAdminHelper.AdminAuthTokenName,
-                AdminUserControllerUrl = NextAdminHelper.Configuration?["AdminUserControllerUrl"],
-                AdminServiceControllerUrl = NextAdminHelper.Configuration?["AdminServiceControllerUrl"],
-                AdminEntityControllerUrl = NextAdminHelper.Configuration?["AdminEntityControllerUrl"]
+                AppName = NextAdminServices.AppName,
+                AdminAuthTokenName = NextAdminServices.AdminAuthTokenName,
+                AdminUserControllerUrl = NextAdminServices.AppConfiguration?["AdminUserControllerUrl"],
+                AdminServiceControllerUrl = NextAdminServices.AppConfiguration?["AdminServiceControllerUrl"],
+                AdminEntityControllerUrl = NextAdminServices.AppConfiguration?["AdminEntityControllerUrl"]
             });
         }
 

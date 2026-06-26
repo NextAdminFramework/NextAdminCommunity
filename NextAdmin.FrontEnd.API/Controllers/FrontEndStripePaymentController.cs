@@ -9,7 +9,7 @@ using NextAdmin.FrontEnd.Model;
 namespace NextAdmin.FrontEnd.API.Controllers
 {
     [ApiController, Route("/api/stripe/payment/{action}/{id?}")]
-    public abstract class FrontEndStripePaymentController<TUser, TStripePaymentSession, TStripePaymentEvent> : Controller<TUser>
+    public abstract class FrontEndStripePaymentController<TUser, TStripePaymentSession, TStripePaymentEvent> : ApiController<TUser>
         where TUser : class, IUser
         where TStripePaymentSession : StripePaymentSession
         where TStripePaymentEvent : StripeEvent

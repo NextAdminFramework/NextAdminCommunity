@@ -29,6 +29,8 @@ namespace NextAdmin.Core.Model
 
         public DateTime? CreationDate { get; set; }
 
+        public DateTime? LastAuthDate { get; set; }
+
         public bool Disabled { get; set; }
 
         public User()
@@ -52,7 +54,12 @@ namespace NextAdmin.Core.Model
                 new Claim("userId", Id.ToString()),
                 new Claim("userType", this.GetType().Name)
             };
-            return tokenSerilizer.CreateTokenString(this.GetType().ToString().ToString(), DateTime.Now.AddDays(duration), issuer, claims);
+            string token = tokenSerilizer.CreateTokenString(this.GetType().ToString().ToString(), DateTime.Now.AddDays(duration), issuer, claims);
+            if (!string.IsNullOrEmpty(token))
+            {
+                LastAuthDate = DateTime.Now;
+            }
+            return token;
         }
 
         public virtual object GetId()

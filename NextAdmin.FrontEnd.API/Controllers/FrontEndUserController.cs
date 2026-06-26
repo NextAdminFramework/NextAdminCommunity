@@ -31,6 +31,11 @@ namespace NextAdmin.FrontEnd.API.Controllers
         {
             try
             {
+                if (!AppEvent.EnsureBruteForce(DbContext, Request.HttpContext.Connection.RemoteIpAddress?.ToString(), "SIGN_UP_FRONT_END_USER", signUpUserArgs, 4))
+                {
+                    return ApiResponse<object>.Error(ApiResponseCode.MaxRequestReachedError);
+                }
+
                 var user = DbContext.Set<TUser>().FirstOrDefault(e => e.UserName == signUpUserArgs.Email);
                 if (user != null && !string.IsNullOrEmpty(signUpUserArgs.VerificationCode))//try to sign up existing user already created by administrator
                 {

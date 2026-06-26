@@ -1478,7 +1478,8 @@ var NextAdmin;
             this.onPageChanged = new NextAdmin.EventHandler();
             this.options = {
                 pagesContainer: document.body,
-                isSinglePageApplicationNavigationEnabled: true,
+                singlePageApplicationNavigationEnabled: true,
+                urlRewritingEnabled: true,
                 ...options
             };
             this.pageContainer = this.options.pagesContainer;
@@ -1488,7 +1489,7 @@ var NextAdmin;
             window.addEventListener('popstate', () => {
                 this.navigateToUrl();
             });
-            if (this.options.isSinglePageApplicationNavigationEnabled) {
+            if (this.options.singlePageApplicationNavigationEnabled) {
                 document.addEventListener('click', (e) => {
                     let element = e.srcElement;
                     while (true) {
@@ -1696,7 +1697,7 @@ var NextAdmin;
             return nextPage;
         }
         updateNavigatorHistory(pageName, parameters, psuhState = true) {
-            if (!window?.history?.pushState) {
+            if (!window?.history?.pushState || !this.options?.urlRewritingEnabled) {
                 return;
             }
             let url = pageName;
@@ -2457,14 +2458,21 @@ var NextAdmin;
 var NextAdmin;
 (function (NextAdmin) {
     class Url {
-        constructor(src) {
-            this.raw = src;
-            this.isHttps = src.startsWith('https');
-            this.strPath = this.isHttps ? src.replace('https://', '') : src.replace('http://', '');
+        constructor(url) {
+            this.parse(url);
+        }
+        static parse(url) {
+            return new Url(url ?? window.location.href);
+        }
+        parse(url) {
+            this.raw = url;
+            this.isHttps = url.startsWith('https');
+            this.strPath = this.isHttps ? url.replace('https://', '') : url.replace('http://', '');
             this.path = this.strPath.split('/');
             this.domain = this.path.firstOrDefault();
             let lastPathPart = this.path.lastOrDefault();
             this.parameters = new NextAdmin.Dictionary();
+            this.queryString = null;
             if (lastPathPart.contains('?')) {
                 this.path[this.path.length - 1] = lastPathPart.split('?')[0];
                 this.queryString = lastPathPart.split('?')[1];
@@ -2478,6 +2486,9 @@ var NextAdmin;
                 }
             }
         }
+        toString() {
+            return this.raw;
+        }
         getParameter(key) {
             return this.getParameters(key).firstOrDefault();
         }
@@ -2487,8 +2498,22 @@ var NextAdmin;
             }
             return this.parameters.get(key) ?? [];
         }
-        static parse(url) {
-            return new Url(url ?? window.location.href);
+        removeParamter(parameter) {
+            //prefer to use l.search if you have a location/link object
+            var urlparts = this.raw.split('?');
+            if (urlparts.length >= 2) {
+                var prefix = encodeURIComponent(parameter) + '=';
+                var pars = urlparts[1].split(/[&;]/g);
+                //reverse iteration as may be destructive
+                for (var i = pars.length; i-- > 0;) {
+                    //idiom for string.startsWith
+                    if (pars[i].lastIndexOf(prefix, 0) !== -1) {
+                        pars.splice(i, 1);
+                    }
+                }
+                let newUrl = urlparts[0] + (pars.length > 0 ? '?' + pars.join('&') : '');
+                this.parse(newUrl);
+            }
         }
     }
     NextAdmin.Url = Url;
@@ -2497,34 +2522,79 @@ var NextAdmin;
 (function (NextAdmin) {
     class UserAgent {
         static isSafari() {
-            return navigator.userAgent.search("Safari") >= 0 && navigator.userAgent.search("Chrome") < 0;
+            try {
+                return navigator?.userAgent?.search("Safari") >= 0 && navigator?.userAgent?.search("Chrome") < 0;
+            }
+            catch {
+                return false;
+            }
         }
         static isChrome() {
-            return window['chrome'] != null;
+            try {
+                return window['chrome'] != null;
+            }
+            catch {
+                return false;
+            }
         }
         static isFireFox() {
-            return navigator.userAgent.indexOf("Firefox") > -1;
+            try {
+                return navigator?.userAgent?.indexOf("Firefox") > -1;
+            }
+            catch {
+                return false;
+            }
         }
         static isEdge() {
-            return navigator.userAgent.indexOf("Edge") > -1;
+            try {
+                return navigator?.userAgent?.indexOf("Edge") > -1;
+            }
+            catch {
+                return false;
+            }
         }
         static isIE11() {
-            return navigator.userAgent.indexOf("Trident/") > -1;
+            try {
+                return navigator?.userAgent?.indexOf("Trident/") > -1;
+            }
+            catch {
+                return false;
+            }
         }
         static isIE10OrOlder() {
-            return navigator.userAgent.indexOf("MSIE ") > -1;
+            try {
+                return navigator?.userAgent?.indexOf("MSIE ") > -1;
+            }
+            catch {
+                return false;
+            }
         }
         static isAndroid() {
-            return navigator.userAgent.match(/Android/i) != null;
+            try {
+                return navigator?.userAgent?.match(/Android/i) != null;
+            }
+            catch {
+                return false;
+            }
+        }
+        static isIPad() {
+            try {
+                return navigator?.userAgent?.match(/iPad/i) != null;
+            }
+            catch {
+                return false;
+            }
+        }
+        static isIPhone() {
+            try {
+                return navigator?.userAgent?.match(/iPhone/i) != null;
+            }
+            catch {
+                return false;
+            }
         }
         static isIOS() {
             return UserAgent.isIPad() || UserAgent.isIPhone();
-        }
-        static isIPad() {
-            return navigator.userAgent.match(/iPad/i) != null;
-        }
-        static isIPhone() {
-            return navigator.userAgent.match(/iPhone/i) != null;
         }
         static isMobile() {
             return UserAgent.isAndroid() || UserAgent.isIOS();
@@ -5642,13 +5712,6 @@ var NextAdmin;
                 let userResponse = httpResponse.parseJson();
                 return userResponse?.user;
             }
-            async getUserByLogin(userName, password) {
-                let httpResponse = await this.get('getUser', { userName: userName, password: password });
-                if (httpResponse == null || !httpResponse.success) {
-                    return null;
-                }
-                return httpResponse.parseJson();
-            }
             async setUserCulture(culture, authToken) {
                 if (authToken == null) {
                     authToken = this.getCurrentAuthToken();
@@ -6028,7 +6091,7 @@ var NextAdmin;
             + ".next-admin-btn-medium-responsive{height:34px;font-size:14px;font-weight:500;padding-left:5px;padding-right:5px; @media (max-width: 768px) { height:24px;font-size:12px; } @media (max-width: 512px) { height:24px;font-size:10px;padding-left:2px;padding-right:2px; }} "
             + ".next-admin-btn-large{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px}"
             + ".next-admin-btn-large-responsive{height:40px;font-size:18px;font-weight:500;padding-left:7px;padding-right:7px; @media (max-width: 768px) { height:34px;font-size:14px; } @media (max-width: 512px) { padding-left:4px;padding-right:4px; }}"
-            + ".next-admin-btn-default{background:#FFF;color:#444;}.next-admin-btn-default:hover,.next-admin-btn-white.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
+            + ".next-admin-btn-default{background:#FFF;color:#444;}.next-admin-btn-default:hover,.next-admin-btn-default.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-red{background:#FFF;color:" + UI.DefaultStyle.RedOne + ";}.next-admin-btn-red:hover,.next-admin-btn-red.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-green{background:#FFF;color:" + UI.DefaultStyle.GreenOne + ";}.next-admin-btn-green:hover,.next-admin-btn-green.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
             + ".next-admin-btn-light-green{background:#FFF;color:" + UI.DefaultStyle.GreenTwo + ";}.next-admin-btn-light-green:hover,.next-admin-btn-light-green.next-admin-btn-pressed{background:#f0f0f0;box-shadow:inset 0px 0px 2px #444}"
@@ -14361,28 +14424,27 @@ var NextAdmin;
             constructor(options) {
                 super('div', {
                     height: '400px',
-                    mapboxMapStyle: MapboxMapStyle.streets,
+                    mapStyle: MapboxMapStyle.mapBox_streets,
                     initialLocation: { lat: 47, lng: 2 },
                     initialZoom: 8,
-                    initialzeMap: true,
+                    initializeMap: true,
                     ...options
                 });
                 this.onMapInitialized = new NextAdmin.EventHandler();
                 if (NextAdmin.String.isNullOrEmpty(this.options.mapboxAccessToken)) {
-                    throw new Error("API key is required to init GoogleMap");
-                }
-                if (NextAdmin.String.isNullOrEmpty(this.options.mapboxDependencyRootUrl)) {
-                    throw new Error("Dependencies URL are required");
+                    throw new Error("Mapbox Access Token is required to use mapbox map style");
                 }
                 this.element.style.height = this.options.height;
-                if (this.options.initialzeMap) {
+                if (this.options.initializeMap) {
                     this.initializeMap();
                 }
             }
             async initializeMap() {
                 this.element.startSpin();
-                await NextAdmin.DependenciesController.load([this.options.mapboxDependencyRootUrl + '/mapbox-gl.css', this.options.mapboxDependencyRootUrl + '/mapbox-gl.js']);
                 this.initialLocation = this.options.initialLocation;
+                if (!NextAdmin.String.isNullOrEmpty(this.options.mapboxDependencyRootUrl)) {
+                    await NextAdmin.DependenciesController.load([this.options.mapboxDependencyRootUrl + '/mapbox-gl.css', this.options.mapboxDependencyRootUrl + '/mapbox-gl.js']);
+                }
                 if (!NextAdmin.String.isNullOrEmpty(this.options.initialLocationAddress)) {
                     this.initialLocation = await this.getLocationFromAddress(this.options.initialLocationAddress);
                 }
@@ -14391,7 +14453,7 @@ var NextAdmin;
                 mapboxgl.accessToken = this.options.mapboxAccessToken;
                 this.map = new mapboxgl.Map({
                     container: this.element,
-                    style: this.options.mapboxMapStyle,
+                    style: this.options.mapStyle,
                     center: this.initialLocation,
                     zoom: this.options.initialZoom,
                     minZoom: this.options.minZoom,
@@ -14433,15 +14495,75 @@ var NextAdmin;
         UI.MapboxMap = MapboxMap;
         let MapboxMapStyle;
         (function (MapboxMapStyle) {
-            MapboxMapStyle["streets"] = "mapbox://styles/mapbox/streets-v11";
-            MapboxMapStyle["satellite_streets"] = "mapbox://styles/mapbox/satellite-streets-v11";
-            MapboxMapStyle["outdoors"] = "mapbox://styles/mapbox/outdoors-v11";
-            MapboxMapStyle["light"] = "mapbox://styles/mapbox/light-v11";
-            MapboxMapStyle["dark"] = "mapbox://styles/mapbox/dark-v11";
-            MapboxMapStyle["satellite"] = "mapbox://styles/mapbox/satellite-v9";
-            MapboxMapStyle["navigation"] = "mapbox://styles/mapbox/navigation-day-v1";
-            MapboxMapStyle["navigation_night"] = "mapbox://styles/mapbox/navigation-night-v1";
+            MapboxMapStyle["mapBox_streets"] = "mapbox://styles/mapbox/streets-v11";
+            MapboxMapStyle["mapBox_satellite_streets"] = "mapbox://styles/mapbox/satellite-streets-v11";
+            MapboxMapStyle["mapBox_outdoors"] = "mapbox://styles/mapbox/outdoors-v11";
+            MapboxMapStyle["mapBox_light"] = "mapbox://styles/mapbox/light-v11";
+            MapboxMapStyle["mapBox_dark"] = "mapbox://styles/mapbox/dark-v11";
+            MapboxMapStyle["mapBox_satellite"] = "mapbox://styles/mapbox/satellite-v9";
+            MapboxMapStyle["mapBox_navigation"] = "mapbox://styles/mapbox/navigation-day-v1";
+            MapboxMapStyle["mapBox_navigation_night"] = "mapbox://styles/mapbox/navigation-night-v1";
         })(MapboxMapStyle = UI.MapboxMapStyle || (UI.MapboxMapStyle = {}));
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
+        class MaplibreMap extends UI.Control {
+            constructor(options) {
+                super('div', {
+                    height: '400px',
+                    mapStyle: MaplibreMapStyle.nextAdmin_bright,
+                    initialLocation: { lat: 47, lng: 2 },
+                    initialZoom: 8,
+                    initializeMap: true,
+                    ...options
+                });
+                this.onMapInitialized = new NextAdmin.EventHandler();
+                this.element.style.height = this.options.height;
+                if (this.options.initializeMap) {
+                    this.initializeMap();
+                }
+            }
+            async initializeMap() {
+                this.initialLocation = this.options.initialLocation;
+                if (!NextAdmin.String.isNullOrEmpty(this.options.maplibreDependencyRootUrl)) {
+                    this.element.startSpin();
+                    await NextAdmin.DependenciesController.load([this.options.maplibreDependencyRootUrl + '/maplibre-gl.css', this.options.maplibreDependencyRootUrl + '/maplibre-gl.js']);
+                    this.element.stopSpin();
+                }
+                await NextAdmin.Timer.sleep(1);
+                this.map = new maplibregl.Map({
+                    container: this.element,
+                    style: this.options.mapStyle,
+                    center: this.initialLocation,
+                    zoom: this.options.initialZoom,
+                    minZoom: this.options.minZoom,
+                    maxZoom: this.options.maxZoom,
+                });
+                this.map.addControl(new maplibregl.NavigationControl({
+                    showCompass: false
+                }), 'bottom-left');
+                if (this.options.hasMarkerToInitialLocation) {
+                    this.addMarker(this.initialLocation);
+                }
+                this.onMapInitialized.dispatch(this, this.map);
+            }
+            addMarker(location, options) {
+                let marker = new maplibregl.Marker(options).setLngLat(location);
+                marker.addTo(this.map);
+                return marker;
+            }
+        }
+        UI.MaplibreMap = MaplibreMap;
+        let MaplibreMapStyle;
+        (function (MaplibreMapStyle) {
+            MaplibreMapStyle["nextAdmin_basic"] = "https://map.nextadmin.io/mbtiles/pbf-vector-tile-style/basic";
+            MaplibreMapStyle["nextAdmin_bright"] = "https://map.nextadmin.io/mbtiles/pbf-vector-tile-style/bright";
+            MaplibreMapStyle["nextAdmin_aliflux"] = "https://map.nextadmin.io/mbtiles/pbf-vector-tile-style/aliflux";
+            MaplibreMapStyle["nextAdmin_dark"] = "https://map.nextadmin.io/mbtiles/pbf-vector-tile-style/dark";
+        })(MaplibreMapStyle = UI.MaplibreMapStyle || (UI.MaplibreMapStyle = {}));
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -16808,7 +16930,8 @@ var NextAdmin;
                         body.classList.add('menu');
                     });
                 });
-                this.element.appendPerfectScrollbar();
+                this.element.hideScrollbar();
+                //this.element.appendPerfectScrollbar();
             }
             updateActivePage(activePageName, previousPageName) {
                 if (previousPageName) {
@@ -16882,7 +17005,7 @@ var NextAdmin;
         }
 
         .sidebar-wrapper .menu .sidebar-link {
-            font-size:14px;
+            font-size:13px;
             align-items:center;
             border-radius:.5rem;
             color:#25396f;

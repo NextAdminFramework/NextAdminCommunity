@@ -31,11 +31,11 @@ namespace NextAdmin.FrontEnd.API.Services
 
             if (successPaymentUrl == null)
             {
-                successPaymentUrl = NextAdminHelper.AppUrl + "/successPayment?itemId=" + item.GetItemId(DbContext);
+                successPaymentUrl = NextAdminServices.AppUrl + "/successPayment?itemId=" + item.GetItemId(DbContext);
             }
             if (cancelPaymentUrl == null)
             {
-                cancelPaymentUrl = NextAdminHelper.AppUrl + "/cancelPayment?itemId=" + item.GetItemId(DbContext);
+                cancelPaymentUrl = NextAdminServices.AppUrl + "/cancelPayment?itemId=" + item.GetItemId(DbContext);
             }
 
             Session stripeSession = service.Create(new SessionCreateOptions

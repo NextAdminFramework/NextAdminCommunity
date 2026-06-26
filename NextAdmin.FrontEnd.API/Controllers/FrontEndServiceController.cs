@@ -10,14 +10,14 @@ using NextAdmin.FrontEnd.Model;
 namespace NextAdmin.FrontEnd.API.Controllers
 {
     [ApiController, Route("/api/frontEnd/service/{action}/{id?}")]
-    public abstract class FrontEndServiceController<TUser, TContactMessage> : Controller<TUser>
+    public abstract class FrontEndServiceController<TUser, TContactMessage> : ApiController<TUser>
         where TUser : class, IFrontEndUser
         where TContactMessage : ContactMessage
     {
 
-        public virtual string ContactMessageAdminRecipientEmailAddress => NextAdminHelper.AdminEmailAddress;
+        public virtual string ContactMessageAdminRecipientEmailAddress => NextAdminServices.AdminEmailAddress;
 
-        public virtual string ContactEmailSubject => NextAdminHelper.AppName + " : New support request";
+        public virtual string ContactEmailSubject => NextAdminServices.AppName + " : New support request";
 
         public FrontEndServiceController(NextAdminDbContext dbContext = null, IConfiguration configuration = null)
             : base(dbContext, configuration)

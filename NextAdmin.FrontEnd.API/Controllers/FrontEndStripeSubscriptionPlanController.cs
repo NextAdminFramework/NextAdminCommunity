@@ -12,7 +12,7 @@ using Stripe.Checkout;
 namespace NextAdmin.FrontEnd.API.Controllers
 {
     [ApiController, Route("/api/stripe/subscription/{action}/{id?}")]
-    public abstract class FrontEndStripeSubscriptionPlanController<TUser, TStripeUserInvoice, TStripeUserSubscription, TStripeUserPaymentSession, TStripeUserPaymentEvent> : Controller<TUser>
+    public abstract class FrontEndStripeSubscriptionPlanController<TUser, TStripeUserInvoice, TStripeUserSubscription, TStripeUserPaymentSession, TStripeUserPaymentEvent> : ApiController<TUser>
         where TUser : class, IFrontEndUser
         where TStripeUserInvoice : StripeInvoice
         where TStripeUserSubscription : StripeSubscription

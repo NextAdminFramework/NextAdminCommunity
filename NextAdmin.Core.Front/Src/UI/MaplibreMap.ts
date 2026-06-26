@@ -1,28 +1,25 @@
-﻿namespace NextAdmin.UI {
+namespace NextAdmin.UI {
 
-    export class MapboxMap extends Control {
+    export class MaplibreMap extends Control {
 
 
-        options: MapboxMapOptions;
+        options: MaplibreMapOptions;
 
-        map: mapboxgl.Map;
+        map: maplibregl.Map;
 
         initialLocation: LatLng;
 
-        public onMapInitialized = new NextAdmin.EventHandler<MapboxMap, mapboxgl.Map>();
+        public onMapInitialized = new NextAdmin.EventHandler<MaplibreMap, maplibregl.Map>();
 
-        constructor(options?: MapboxMapOptions) {
+        constructor(options?: MaplibreMapOptions) {
             super('div', {
                 height: '400px',
-                mapStyle: MapboxMapStyle.mapBox_streets,
+                mapStyle: MaplibreMapStyle.nextAdmin_bright,
                 initialLocation: { lat: 47, lng: 2 },
                 initialZoom: 8,
                 initializeMap: true,
                 ...options
-            } as MapboxMapOptions);
-            if (NextAdmin.String.isNullOrEmpty(this.options.mapboxAccessToken)) {
-                throw new Error("Mapbox Access Token is required to use mapbox map style");
-            }
+            } as MaplibreMapOptions);
             this.element.style.height = this.options.height;
             if (this.options.initializeMap) {
                 this.initializeMap();
@@ -30,19 +27,14 @@
         }
 
         async initializeMap() {
-
-            this.element.startSpin();
             this.initialLocation = this.options.initialLocation;
-            if (!NextAdmin.String.isNullOrEmpty(this.options.mapboxDependencyRootUrl)) {
-                await NextAdmin.DependenciesController.load([this.options.mapboxDependencyRootUrl + '/mapbox-gl.css', this.options.mapboxDependencyRootUrl + '/mapbox-gl.js']);
-            }    
-            if (!NextAdmin.String.isNullOrEmpty(this.options.initialLocationAddress)) {
-                this.initialLocation = await this.getLocationFromAddress(this.options.initialLocationAddress);
-            }
-            this.element.stopSpin();
+            if (!NextAdmin.String.isNullOrEmpty(this.options.maplibreDependencyRootUrl)) {
+                this.element.startSpin();
+                await NextAdmin.DependenciesController.load([this.options.maplibreDependencyRootUrl + '/maplibre-gl.css', this.options.maplibreDependencyRootUrl + '/maplibre-gl.js']);
+                this.element.stopSpin();
+            }            
             await NextAdmin.Timer.sleep(1);
-            mapboxgl.accessToken = this.options.mapboxAccessToken;
-            this.map = new mapboxgl.Map({
+            this.map = new maplibregl.Map({
                 container: this.element, // container ID
                 style: this.options.mapStyle, // style URL
                 center: this.initialLocation, // starting position [lng, lat]
@@ -50,7 +42,7 @@
                 minZoom: this.options.minZoom,
                 maxZoom: this.options.maxZoom,
             });
-            this.map.addControl(new mapboxgl.NavigationControl({
+            this.map.addControl(new maplibregl.NavigationControl({
                 showCompass: false
             }), 'bottom-left');
             if (this.options.hasMarkerToInitialLocation) {
@@ -59,48 +51,25 @@
             this.onMapInitialized.dispatch(this, this.map);
         }
 
-        public async getLocationFromAddress(address: string): Promise<LatLng> {
-            let result = await new NextAdmin.Services.HttpClient().get('https://api.mapbox.com/search/geocode/v6/forward', {
-                q: address,
-                access_token: this.options.mapboxAccessToken
-            });
-            if (!result?.success) {
-                return null;
-            }
-            let features = result.parseJson<GeoJSON.FeatureCollection>();
-            let feature = features?.features?.firstOrDefault();
-            let coordinates = feature?.properties?.coordinates;
-            if (coordinates == null) {
-                return null;
-            }
-            return {
-                lat: coordinates['latitude'],
-                lng: coordinates['longitude']
-            };
-        }
 
-        public addMarker(location: LatLng, options?: mapboxgl.MarkerOptions): mapboxgl.Marker {
-            let marker = new mapboxgl.Marker(options).setLngLat(location);
+        public addMarker(location: LatLng, options?: maplibregl.MarkerOptions): maplibregl.Marker {
+            let marker = new maplibregl.Marker(options).setLngLat(location);
             marker.addTo(this.map);
             return marker;
         }
-
-
     }
 
-    export interface MapboxMapOptions extends ControlOptions {
 
-        mapboxAccessToken?: string;
+    export interface MaplibreMapOptions extends ControlOptions {
 
-        mapboxDependencyRootUrl?: string;
 
-        mapStyle?: MapboxMapStyle | string,
+        maplibreDependencyRootUrl?: string;
+
+        mapStyle?: MaplibreMapStyle | string,
 
         height?: string;
 
         initialLocation?: LatLng;
-
-        initialLocationAddress?: string,
 
         hasMarkerToInitialLocation?: boolean;
 
@@ -119,194 +88,18 @@
         lng: number
     }
 
-    export enum MapboxMapStyle {
-        mapBox_streets = 'mapbox://styles/mapbox/streets-v11',
-        mapBox_satellite_streets = 'mapbox://styles/mapbox/satellite-streets-v11',
-        mapBox_outdoors = 'mapbox://styles/mapbox/outdoors-v11',
-        mapBox_light = 'mapbox://styles/mapbox/light-v11',
-        mapBox_dark = 'mapbox://styles/mapbox/dark-v11',
-        mapBox_satellite = 'mapbox://styles/mapbox/satellite-v9',
-        mapBox_navigation = 'mapbox://styles/mapbox/navigation-day-v1',
-        mapBox_navigation_night = 'mapbox://styles/mapbox/navigation-night-v1',
-    }
-
-
-}
-
-
-
-
-declare namespace GeoJSON {
-
-    /**
-    * The valid values for the "type" property of GeoJSON geometry objects.
-    * https://tools.ietf.org/html/rfc7946#section-1.4
-    */
-    export type GeoJsonGeometryTypes = "Point" | "LineString" | "MultiPoint" | "Polygon" | "MultiLineString" |
-        "MultiPolygon" | "GeometryCollection";
-
-    /**
-     * The value values for the "type" property of GeoJSON Objects.
-     * https://tools.ietf.org/html/rfc7946#section-1.4
-     */
-    export type GeoJsonTypes = "FeatureCollection" | "Feature" | GeoJsonGeometryTypes;
-
-    /**
-     * Bounding box
-     * https://tools.ietf.org/html/rfc7946#section-5
-     */
-    export type BBox = [number, number, number, number] | [number, number, number, number, number, number];
-
-    /**
-     * A Position is an array of coordinates.
-     * https://tools.ietf.org/html/rfc7946#section-3.1.1
-     * Array should contain between two and three elements.
-     * The previous GeoJSON specification allowed more elements (e.g., which could be used to represent M values),
-     * but the current specification only allows X, Y, and (optionally) Z to be defined.
-     */
-    export type Position = number[]; // [number, number] | [number, number, number];
-
-    /**
-     * The base GeoJSON object.
-     * https://tools.ietf.org/html/rfc7946#section-3
-     * The GeoJSON specification also allows foreign members
-     * (https://tools.ietf.org/html/rfc7946#section-6.1)
-     * Developers should use "&" type in TypeScript or extend the interface
-     * to add these foreign members.
-     */
-    export interface GeoJsonObject {
-        // Don't include foreign members directly into this type def.
-        // in order to preserve type safety.
-        // [key: string]: any;
-        /**
-         * Specifies the type of GeoJSON object.
-         */
-        type: GeoJsonTypes;
-        /**
-         * Bounding box of the coordinate range of the object's Geometries, Features, or Feature Collections.
-         * https://tools.ietf.org/html/rfc7946#section-5
-         */
-        bbox?: BBox;
-    }
-
-    /**
-     * Union of GeoJSON objects.
-     */
-    export type GeoJSON = Geometry | Feature | FeatureCollection;
-
-    /**
-     * A geometry object.
-     * https://tools.ietf.org/html/rfc7946#section-3
-     */
-    export interface GeometryObject extends GeoJsonObject {
-        type: GeoJsonGeometryTypes;
-    }
-
-    /**
-     * Union of geometry objects.
-     * https://tools.ietf.org/html/rfc7946#section-3
-     */
-    export type Geometry = Point | MultiPoint | LineString | MultiLineString | Polygon | MultiPolygon | GeometryCollection;
-
-    /**
-     * Point geometry object.
-     * https://tools.ietf.org/html/rfc7946#section-3.1.2
-     */
-    export interface Point extends GeometryObject {
-        type: "Point";
-        coordinates: Position;
-    }
-
-    /**
-     * MultiPoint geometry object.
-     *  https://tools.ietf.org/html/rfc7946#section-3.1.3
-     */
-    export interface MultiPoint extends GeometryObject {
-        type: "MultiPoint";
-        coordinates: Position[];
-    }
-
-    /**
-     * LineString geometry object.
-     * https://tools.ietf.org/html/rfc7946#section-3.1.4
-     */
-    export interface LineString extends GeometryObject {
-        type: "LineString";
-        coordinates: Position[];
-    }
-
-    /**
-     * MultiLineString geometry object.
-     * https://tools.ietf.org/html/rfc7946#section-3.1.5
-     */
-    export interface MultiLineString extends GeometryObject {
-        type: "MultiLineString";
-        coordinates: Position[][];
-    }
-
-    /**
-     * Polygon geometry object.
-     * https://tools.ietf.org/html/rfc7946#section-3.1.6
-     */
-    export interface Polygon extends GeometryObject {
-        type: "Polygon";
-        coordinates: Position[][];
-    }
-
-    /**
-     * MultiPolygon geometry object.
-     * https://tools.ietf.org/html/rfc7946#section-3.1.7
-     */
-    export interface MultiPolygon extends GeometryObject {
-        type: "MultiPolygon";
-        coordinates: Position[][][];
-    }
-
-    /**
-     * Geometry Collection
-     * https://tools.ietf.org/html/rfc7946#section-3.1.8
-     */
-    export interface GeometryCollection extends GeometryObject {
-        type: "GeometryCollection";
-        geometries: Geometry[];
-    }
-
-    export type GeoJsonProperties = { [name: string]: any; } | null;
-
-    /**
-     * A feature object which contains a geometry and associated properties.
-     * https://tools.ietf.org/html/rfc7946#section-3.2
-     */
-    export interface Feature<G extends GeometryObject | null = Geometry, P = GeoJsonProperties> extends GeoJsonObject {
-        type: "Feature";
-        /**
-         * The feature's geometry
-         */
-        geometry: G;
-        /**
-         * A value that uniquely identifies this feature in a
-         * https://tools.ietf.org/html/rfc7946#section-3.2.
-         */
-        id?: string | number;
-        /**
-         * Properties associated with this feature.
-         */
-        properties: P;
-    }
-
-    /**
-     * A collection of feature objects.
-     *  https://tools.ietf.org/html/rfc7946#section-3.3
-     */
-    export interface FeatureCollection<G extends GeometryObject | null = Geometry, P = GeoJsonProperties> extends GeoJsonObject {
-        type: "FeatureCollection";
-        features: Array<Feature<G, P>>;
+    export enum MaplibreMapStyle {
+        nextAdmin_basic = 'https://map.nextadmin.io/mbtiles/pbf-vector-tile-style/basic',
+        nextAdmin_bright = 'https://map.nextadmin.io/mbtiles/pbf-vector-tile-style/bright',
+        nextAdmin_aliflux = 'https://map.nextadmin.io/mbtiles/pbf-vector-tile-style/aliflux',
+        nextAdmin_dark = 'https://map.nextadmin.io/mbtiles/pbf-vector-tile-style/dark',
     }
 
 }
 
 
-declare namespace mapboxgl {
+
+declare namespace maplibregl {
     let accessToken: string;
     let version: string;
     let baseApiUrl: string;
@@ -943,7 +736,7 @@ declare namespace mapboxgl {
         container: string | HTMLElement;
 
         /**
-         * If `true` , scroll zoom will require pressing the ctrl or ⌘ key while scrolling to zoom map,
+         * If `true` , scroll zoom will require pressing the ctrl or ? key while scrolling to zoom map,
          * and touch pan will require using two fingers while panning to move the map.
          * Touch pitch will require three fingers to activate if enabled.
          */
@@ -2889,5 +2682,6 @@ declare namespace mapboxgl {
         exaggerated: boolean;
     };
 }
+
 
 

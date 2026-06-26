@@ -114,6 +114,7 @@
     <TypeScriptCompile Include="Src\UI\Image.ts" />
     <TypeScriptCompile Include="Src\UI\Link.ts" />
     <TypeScriptCompile Include="Src\UI\MapboxMap.ts" />
+    <TypeScriptCompile Include="Src\UI\MaplibreMap.ts" />
     <TypeScriptCompile Include="Src\UI\MenuModal.ts" />
     <TypeScriptCompile Include="Src\UI\NoUiModal.ts" />
     <TypeScriptCompile Include="Src\UI\Range.ts" />

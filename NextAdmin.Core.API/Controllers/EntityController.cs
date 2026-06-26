@@ -11,7 +11,7 @@ using System.Linq.Dynamic.Core;
 namespace NextAdmin.Core.API.Controllers
 {
     [ApiController, Route("entity/{action}/{id?}")]
-    public abstract class EntityController<TUser> : Controller<TUser>
+    public abstract class EntityController<TUser> : ApiController<TUser>
         where TUser : class, IUser
     {
 

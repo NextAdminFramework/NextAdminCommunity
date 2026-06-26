@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using NextAdmin.Core;
 using NextAdmin.Core.Model;
+using NextAdminCommunity.Web.Resources;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,25 +15,28 @@ namespace NextAdminCommunity.Web.Models
     {
         public static string SuperAdminUserId = "61ff244a-21d5-4f07-b370-57cfb97273bd";
 
-        [Required, Previewable, Label("AdminUser_UserName")]
+        [Required, Previewable, Label(nameof(ResourcesEn.AdminUser_UserName))]
         public string? UserName { get; set; }
 
-        [NotMapped, Label("AdminUser_Password")]
+        [NotMapped, Label(nameof(ResourcesEn.AdminUser_Password))]
         public string? Password { get; set; }
 
-        [Label("AdminUser_Culture")]
+        [Label(nameof(ResourcesEn.AdminUser_Culture))]
         public string? Culture { get; set; }
 
         [JsonIgnore, Required]
         public string? EncryptedPassword { get; set; }
 
-        [Label("AdminUser_Disabled")]
+        [Label(nameof(ResourcesEn.AdminUser_Disabled))]
         public bool Disabled { get; set; }
 
-        [Label("AdminUser_CreationDate")]
+        [Label(nameof(ResourcesEn.AdminUser_CreationDate))]
         public DateTime? CreationDate { get; set; }
 
-        [NotMapped, Label("AdminUser_IsSuperAdmin")]
+        [Label(nameof(ResourcesEn.AdminUser_LastAuthDate))]
+        public DateTime? LastAuthDate { get; set; }
+
+        [NotMapped, Label(nameof(ResourcesEn.AdminUser_IsSuperAdmin))]
         public bool IsSuperAdmin { get; set; }
 
         public string AuthProviderName { get; set; }

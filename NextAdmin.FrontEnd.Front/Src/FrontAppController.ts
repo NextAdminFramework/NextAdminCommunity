@@ -53,19 +53,20 @@ namespace NextAdmin {
         async startApp(navigateToUrl?: boolean) {
 
             NextAdmin.Style.append('NextAdmin.FrontAppController', FrontAppController.style.replaceAll('@NextAdminDefaultFontPath', this.options.defaultFontPath));
-
-            if (this.pageContainer) {
-                this.pageContainer.startSpin();
-            }
-            let user = (await this.userClient.getUserByToken()) as TUser;
-            if (user != null) {
-                await this.logUser(user);
+            if (this.userClient) {
+                if (this.pageContainer) {
+                    this.pageContainer.startSpin();
+                }
+                let user = (await this.userClient.getUserByToken()) as TUser;
+                if (user != null) {
+                    await this.logUser(user);
+                }
+                if (this.pageContainer) {
+                    this.pageContainer.stopSpin();
+                }
             }
             if (NextAdmin.String.isNullOrEmpty(this.user?.culture)) {
                 this.setCulture(this.getCulture());
-            }
-            if (this.pageContainer) {
-                this.pageContainer.stopSpin();
             }
             if (navigateToUrl) {
                 this.navigateToUrl();

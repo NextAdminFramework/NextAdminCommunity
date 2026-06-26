@@ -5,6 +5,7 @@ declare module Models {
 		culture: string;
 		disabled: boolean;
 		creationDate?: Date;
+		lastAuthDate?: Date;
 		isSuperAdmin: boolean;
 		authProviderName: string;
 	}

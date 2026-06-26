@@ -10,6 +10,7 @@
         DbError = 5,
         LockError = 6,
         DataNotFoundError = 7,
+        MaxRequestReachedError = 8,
         Success = 1000,
     }
 }

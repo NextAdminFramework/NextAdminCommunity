@@ -9,7 +9,7 @@ using System.Linq;
 namespace NextAdminCommunity.Web.Controllers
 {
     [ApiController, Route("api/admin/service/{action}/{id?}")]
-    public class AdminServiceController : Controller<AdminUser>
+    public class AdminServiceController : ApiController<AdminUser>
     {
 
         public AdminServiceController(AppDbContext dbContext = null, IConfiguration configuration = null)

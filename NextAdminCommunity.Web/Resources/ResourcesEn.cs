@@ -15,6 +15,8 @@ namespace NextAdminCommunity.Web.Resources
 
         public virtual string AdminUser_CreationDate => "Creation date";
 
+        public virtual string AdminUser_LastAuthDate => "Modification date";
+
         public virtual string AdminUser_IsSuperAdmin => "Super admin";
 
         public virtual string AdminUser_Error_DeleteSuperAdminNotAllowed => "You are note allowed to delete SuperAdmin user.";

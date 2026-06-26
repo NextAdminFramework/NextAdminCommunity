@@ -46,18 +46,20 @@ var NextAdmin;
         }
         async startApp(navigateToUrl) {
             NextAdmin.Style.append('NextAdmin.FrontAppController', FrontAppController.style.replaceAll('@NextAdminDefaultFontPath', this.options.defaultFontPath));
-            if (this.pageContainer) {
-                this.pageContainer.startSpin();
-            }
-            let user = (await this.userClient.getUserByToken());
-            if (user != null) {
-                await this.logUser(user);
+            if (this.userClient) {
+                if (this.pageContainer) {
+                    this.pageContainer.startSpin();
+                }
+                let user = (await this.userClient.getUserByToken());
+                if (user != null) {
+                    await this.logUser(user);
+                }
+                if (this.pageContainer) {
+                    this.pageContainer.stopSpin();
+                }
             }
             if (NextAdmin.String.isNullOrEmpty(this.user?.culture)) {
                 this.setCulture(this.getCulture());
-            }
-            if (this.pageContainer) {
-                this.pageContainer.stopSpin();
             }
             if (navigateToUrl) {
                 this.navigateToUrl();
@@ -642,7 +644,7 @@ var NextAdmin;
 
             .card-image{
                 height:100%;
-                min-height:100px;
+                min-height:200px;
                 width:200px;
                 min-width:200px;
                 max-width:200px;
@@ -806,81 +808,6 @@ var NextAdmin;
 
         `;
         UI.CardsGrid = CardsGrid;
-        class CardsDataGrid extends CardsGrid {
-            constructor(options) {
-                super({
-                    paginItemCount: 50,
-                    ...options
-                });
-                this.dataset = new Array();
-                this._isFullyLoaded = false;
-                this._isLoading = false;
-            }
-            cardFactory(data) {
-                throw Error('Not implemented');
-            }
-            async retrieveDataset(take, skip) {
-                throw Error('Not implemented');
-            }
-            clear() {
-                this.dataset = new Array();
-                this.body.innerHTML = '';
-                this._isFullyLoaded = false;
-            }
-            setDataset(dataset) {
-                this.clear();
-                this.addDataset(dataset);
-            }
-            getDataset() {
-                return this.dataset;
-            }
-            addDataset(dataset) {
-                if (!dataset?.length) {
-                    return;
-                }
-                for (let data of dataset) {
-                    let card = this.cardFactory(data);
-                    card['_data'] = data;
-                    this.dataset.add(data);
-                    this.appendCard(card);
-                }
-            }
-            async load(take = this.options.paginItemCount, skip) {
-                this._isLoading = true;
-                let spinerContainer = this.body.appendHTML('div', (spinerContainer) => {
-                    spinerContainer.style.height = '200px';
-                    spinerContainer.style.width = '100%';
-                    spinerContainer.startSpin();
-                });
-                let items = await this.retrieveDataset(take, skip);
-                spinerContainer.remove();
-                if (!skip) {
-                    this.setDataset(items);
-                }
-                else {
-                    this.addDataset(items);
-                }
-                if (take == null || (take && (items?.length ?? 0) < take)) {
-                    this._isFullyLoaded = true;
-                }
-                this._isLoading = false;
-                return items;
-            }
-            enableScrollLoading(scrollElement) {
-                scrollElement = window;
-                let lastLoadedItemCount = -1;
-                let timer = new NextAdmin.Timer();
-                scrollElement.addEventListener('scroll', () => {
-                    timer.throttle(async () => {
-                        if (!this._isLoading && !this._isFullyLoaded && lastLoadedItemCount != 0 && window.scrollY + window.innerHeight > document.body.offsetHeight - 500) {
-                            let items = await this.load(this.options.paginItemCount, this.dataset?.length);
-                            lastLoadedItemCount = items?.length ?? 0;
-                        }
-                    }, 10);
-                });
-            }
-        }
-        UI.CardsDataGrid = CardsDataGrid;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;
@@ -899,6 +826,7 @@ var NextAdmin;
                     this.appendHTML('div', (mapContainer) => {
                         mapContainer.classList.add('map-container');
                         mapContainer.appendControl(new NextAdmin.UI.MapboxMap({
+                            mapStyle: NextAdmin.UI.MapboxMapStyle.mapBox_streets,
                             mapboxAccessToken: this.options.mapboxAccessToken,
                             mapboxDependencyRootUrl: this.options.mapboxDependencyRootUrl,
                             initialLocationAddress: this.options.contactAddress,
@@ -981,6 +909,93 @@ var NextAdmin;
 
         `;
         UI.ContactCard = ContactCard;
+    })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
+})(NextAdmin || (NextAdmin = {}));
+var NextAdmin;
+(function (NextAdmin) {
+    var UI;
+    (function (UI) {
+        class DataCardsGrid extends UI.CardsGrid {
+            constructor(options) {
+                super({
+                    paginItemCount: 50,
+                    ...options
+                });
+                this.dataset = new Array();
+                this._isFullyLoaded = false;
+                this._isLoading = false;
+            }
+            cardFactory(data) {
+                if (this.options.cardFactory) {
+                    return this.options.cardFactory(data);
+                }
+                throw Error('Not implemented');
+            }
+            async retrieveDataset(take, skip) {
+                if (this.options.retrieveDatasetFunc) {
+                    return await this.options.retrieveDatasetFunc(take, skip);
+                }
+                throw Error('Not implemented');
+            }
+            clear() {
+                this.dataset = new Array();
+                this.body.innerHTML = '';
+                this._isFullyLoaded = false;
+            }
+            setDataset(dataset) {
+                this.clear();
+                this.addDataset(dataset);
+            }
+            getDataset() {
+                return this.dataset;
+            }
+            addDataset(dataset) {
+                if (!dataset?.length) {
+                    return;
+                }
+                for (let data of dataset) {
+                    let card = this.cardFactory(data);
+                    card['_data'] = data;
+                    this.dataset.add(data);
+                    this.appendCard(card);
+                }
+            }
+            async load(take = this.options.paginItemCount, skip) {
+                this._isLoading = true;
+                let spinerContainer = this.body.appendHTML('div', (spinerContainer) => {
+                    spinerContainer.style.height = '200px';
+                    spinerContainer.style.width = '100%';
+                    spinerContainer.startSpin();
+                });
+                let items = await this.retrieveDataset(take, skip);
+                spinerContainer.remove();
+                if (!skip) {
+                    this.setDataset(items);
+                }
+                else {
+                    this.addDataset(items);
+                }
+                if (take == null || (take && (items?.length ?? 0) < take)) {
+                    this._isFullyLoaded = true;
+                }
+                this._isLoading = false;
+                return items;
+            }
+            enableScrollLoading(scrollElement) {
+                scrollElement = window;
+                let lastLoadedItemCount = -1;
+                let timer = new NextAdmin.Timer();
+                scrollElement.addEventListener('scroll', () => {
+                    timer.throttle(async () => {
+                        if (!this._isLoading && !this._isFullyLoaded && lastLoadedItemCount != 0 && window.scrollY + window.innerHeight > document.body.offsetHeight - 500) {
+                            let items = await this.load(this.options.paginItemCount, this.dataset?.length);
+                            lastLoadedItemCount = items?.length ?? 0;
+                        }
+                    }, 10);
+                });
+            }
+        }
+        UI.DataCardsGrid = DataCardsGrid;
     })(UI = NextAdmin.UI || (NextAdmin.UI = {}));
 })(NextAdmin || (NextAdmin = {}));
 var NextAdmin;

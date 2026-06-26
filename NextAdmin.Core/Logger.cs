@@ -8,83 +8,101 @@
 
         public bool LogIntoConsole { get; set; }
 
-        public Logger(string? logFilePath = null, bool logIntoConsole = false)
+        public int? MaximumMemoryLogSize { get; set; }
+
+        private static string _lock = "lock";
+
+        public Logger(string? logFilePath = null, bool logIntoConsole = false, int? maximumMemoryLogSize = null)
         {
             LogFilePath = logFilePath;
             LogIntoConsole = logIntoConsole;
+            MaximumMemoryLogSize = maximumMemoryLogSize;
         }
 
 
-        public Logger LogError(string message)
+        public LogEvent LogError(string message)
         {
-            Log(new LogEvent
+            return Log(new LogEvent
             {
                 Type = LogEventType.Error,
                 Message = message,
                 Date = DateTime.Now
             });
-            return this;
         }
 
-        public Logger LogException(string message)
+        public LogEvent LogException(string message)
         {
-            Log(new LogEvent
+            return Log(new LogEvent
             {
                 Type = LogEventType.Exception,
                 Message = message,
                 Date = DateTime.Now
             });
-            return this;
         }
-        public Logger LogException(string message, Exception exception)
+        public LogEvent LogException(string message, Exception exception)
         {
-            Log(new LogEvent
+            return Log(new LogEvent
             {
                 Type = LogEventType.Exception,
                 Message = string.Join(':', message, exception.Message, exception.StackTrace),
                 Date = DateTime.Now
             });
-            return this;
         }
 
-        public Logger LogException(Exception exception)
+        public LogEvent LogException(Exception exception)
         {
-            Log(new LogEvent
+            return Log(new LogEvent
             {
                 Type = LogEventType.Exception,
                 Message = string.Join(':', exception.Message, exception.StackTrace),
                 Date = DateTime.Now
             });
-            return this;
         }
 
-        public Logger Log(LogEvent logEvent)
+        public LogEvent Log(string message, LogEventType eventType)
         {
-            Events.Add(logEvent);
-            if (LogFilePath != null)
+            return Log(new LogEvent
             {
-                try
+                Type = eventType,
+                Message = message,
+                Date = DateTime.Now
+            });
+        }
+
+        public LogEvent Log(LogEvent logEvent)
+        {
+            lock (_lock)
+            {
+                if (MaximumMemoryLogSize.HasValue && Events.Count > MaximumMemoryLogSize)
                 {
-                    var logDirectoryPath = Path.GetDirectoryName(LogFilePath);
-                    if (logDirectoryPath != null)
+                    Events.RemoveAt(0);
+                }
+                Events.Add(logEvent);
+                if (LogFilePath != null)
+                {
+                    try
                     {
-                        if (!Directory.Exists(logDirectoryPath))
+                        var logDirectoryPath = Path.GetDirectoryName(LogFilePath);
+                        if (logDirectoryPath != null)
                         {
-                            Directory.CreateDirectory(logDirectoryPath);
+                            if (!Directory.Exists(logDirectoryPath))
+                            {
+                                Directory.CreateDirectory(logDirectoryPath);
+                            }
                         }
                     }
-                }
-                catch
-                {
+                    catch
+                    {
 
+                    }
+                    File.AppendAllLines(LogFilePath, new List<string> { logEvent.GetTrace() });
                 }
-                File.AppendAllLines(LogFilePath, new List<string> { logEvent.GetTrace() });
+                if (LogIntoConsole)
+                {
+                    Console.WriteLine(logEvent.GetTrace());
+                }
             }
-            if (LogIntoConsole)
-            {
-                Console.WriteLine(logEvent.GetTrace());
-            }
-            return this;
+            return logEvent;
         }
 
         public void ThrowError(string message)
@@ -105,26 +123,24 @@
             throw new TaskLoggerErrorException(message, exception);
         }
 
-        public Logger LogWarning(string message)
+        public LogEvent LogWarning(string message)
         {
-            Log(new LogEvent
+            return Log(new LogEvent
             {
                 Type = LogEventType.Warning,
                 Message = message,
                 Date = DateTime.Now
             });
-            return this;
         }
 
-        public Logger LogInfo(string message)
+        public LogEvent LogInfo(string message)
         {
-            Log(new LogEvent
+            return Log(new LogEvent
             {
                 Type = LogEventType.Info,
                 Message = message,
                 Date = DateTime.Now
             });
-            return this;
         }
 
         public string GetHtmlTrace()

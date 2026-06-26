@@ -10,7 +10,7 @@ using Stripe.Checkout;
 namespace NextAdmin.FrontEnd.API.Controllers
 {
     [ApiController, Route("/api/stripe/webhook/{action}/{id?}")]
-    public abstract class FrontEndStripeWebhookController<TUser, TStripeUserInvoice, TStripeUserSubscription, TStripeUserPaymentSession> : Controller<TUser>
+    public abstract class FrontEndStripeWebhookController<TUser, TStripeUserInvoice, TStripeUserSubscription, TStripeUserPaymentSession> : ApiController<TUser>
         where TUser : class, IFrontEndUser
         where TStripeUserInvoice : StripeInvoice
         where TStripeUserSubscription : StripeSubscription

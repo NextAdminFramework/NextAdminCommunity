@@ -17,6 +17,8 @@ namespace NextAdmin.Core.Model
 
         public DateTime? CreationDate { get; set; }
 
+        public DateTime? LastAuthDate { get; set; }
+
         public bool Disabled { get; set; }
 
         public string AuthProviderName { get; set; }

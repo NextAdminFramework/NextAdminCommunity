@@ -7,7 +7,7 @@ using NextAdmin.Core.Model;
 namespace NextAdmin.Core.API.Controllers
 {
     [ApiController, Route("user/{action}/{id?}")]
-    public abstract class UserController<TUser> : Controller<TUser>
+    public abstract class UserController<TUser> : ApiController<TUser>
         where TUser : class, IUser
     {
 
@@ -30,14 +30,26 @@ namespace NextAdmin.Core.API.Controllers
             AuthTokenResponse response = new AuthTokenResponse();
             try
             {
+                string userIp = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                var nowLessTwoMinutes = DateTime.Now.AddMinutes(-2);
+                var unsuccessfulTwoMinuteAttemptCount = DbContext.Set<AppEvent>().Where(a => a.Type == "ATTEMPT_GET_AUTH_TOKEN_UNSUCCESSFUL" && (a.IpAddress == userIp || a.Data == userName) && a.Date > nowLessTwoMinutes).Count();
+                if (unsuccessfulTwoMinuteAttemptCount > 5)
+                {
+                    NextAdminServices.LogUserEvent(userIp, "MAXIMUM_GET_AUTH_TOKEN_ATTEMPT", userName);
+                    AppEvent.SaveAppEvent(DbContext, "MAXIMUM_GET_AUTH_TOKEN_ATTEMPT", userName, null, userIp);
+                    response.Code = "MAXIMUM_AUTH_ATTEMPT";
+                    return response;
+                }
                 var user = FindUser(userName, password) as TUser;
                 if (user == null || user.Disabled)
                 {
+                    AppEvent.SaveAppEvent(DbContext, "ATTEMPT_GET_AUTH_TOKEN_UNSUCCESSFUL", userName, user, userIp);
                     response.Code = ApiResponseCode.AuthError.ToString();
                     return response;
                 }
                 var token = user.CreateAuthToken(DbContext, new AuthTokenSerializer(), AuthTokenIssuer, TokenDayValidity);
-                AppEvent.AddAppEvent(DbContext, user, "CREATE_USER_AUTH_TOKEN", Request.HttpContext.Connection.RemoteIpAddress?.ToString());
+                AppEvent.SaveAppEvent(DbContext, "CREATE_USER_AUTH_TOKEN", userName, user, userIp);
                 var saveResult = DbContext.ValidateAndSave();
                 if (!saveResult.Success)
                 {
@@ -64,34 +76,6 @@ namespace NextAdmin.Core.API.Controllers
             return response;
         }
 
-        [HttpGet, HttpPost]
-        public virtual UserResponse GetUser(string userName, string password)
-        {
-            var response = new UserResponse();
-            try
-            {
-                var user = FindUser(userName, password);
-                if (user == null || user.Disabled)
-                {
-                    response.Code = ApiResponseCode.AuthError.ToString();
-                }
-                else
-                {
-                    response.User = GetUserDto(User);
-                    response.Code = ApiResponseCode.Success.ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                response.Exception = ex;
-                if (response.Message == null)
-                {
-                    response.Message = response.Exception.Message + " : " + response.Exception.StackTrace;
-                }
-                response.Code = ApiResponseCode.UnknownError.ToString();
-            }
-            return response;
-        }
 
         [HttpGet, HttpPost]
         public ApiResponse SetUserCulture(string culture)
@@ -128,14 +112,15 @@ namespace NextAdmin.Core.API.Controllers
             {
                 if (User == null)
                 {
-                    response.Code = ApiResponseCode.AuthError.ToString(); ;
+                    response.Code = ApiResponseCode.AuthError.ToString();
+
                 }
                 else
                 {
                     response.User = GetUserDto(User);
                     response.UserType = User.GetType().Name;
                     response.Code = ApiResponseCode.Success.ToString();
-                    AppEvent.AddAppEvent(DbContext, User, "AUTH_BY_TOKEN", Request.HttpContext.Connection.RemoteIpAddress?.ToString());
+                    AppEvent.AddAppEvent(DbContext, "AUTH_BY_TOKEN", null, User, Request.HttpContext.Connection.RemoteIpAddress?.ToString());
                     DbContext.SaveChanges();
                 }
             }

@@ -67,14 +67,6 @@ namespace NextAdmin.Services {
             return userResponse?.user;
         }
 
-        public async getUserByLogin(userName: string, password: string): Promise<NextAdmin.Models.UserResponse> {
-            let httpResponse = await this.get('getUser', { userName: userName, password: password });
-            if (httpResponse == null || !httpResponse.success) {
-                return null;
-            }
-            return httpResponse.parseJson<NextAdmin.Models.UserResponse>();
-        }
-
         public async setUserCulture(culture?: string, authToken?: string): Promise<boolean> {
             if (authToken == null) {
                 authToken = this.getCurrentAuthToken();

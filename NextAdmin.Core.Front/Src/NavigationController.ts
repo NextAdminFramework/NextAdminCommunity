@@ -21,7 +21,8 @@
         constructor(options?: NavigationControllerOptions) {
             this.options = {
                 pagesContainer: document.body,
-                isSinglePageApplicationNavigationEnabled: true,
+                singlePageApplicationNavigationEnabled: true,
+                urlRewritingEnabled: true,
                 ...options
             };
             this.pageContainer = this.options.pagesContainer;
@@ -31,7 +32,7 @@
             window.addEventListener('popstate', () => {
                 this.navigateToUrl();
             });
-            if (this.options.isSinglePageApplicationNavigationEnabled) {
+            if (this.options.singlePageApplicationNavigationEnabled) {
                 document.addEventListener('click', (e) => {
 
                     let element = e.srcElement as HTMLElement;
@@ -262,7 +263,7 @@
         }
 
         public updateNavigatorHistory(pageName: string, parameters?: {}, psuhState = true) {
-            if (!window?.history?.pushState) {
+            if (!window?.history?.pushState || !this.options?.urlRewritingEnabled) {
                 return;
             }
 
@@ -357,7 +358,9 @@
 
         pagesContainer?: HTMLElement;
 
-        isSinglePageApplicationNavigationEnabled?: boolean;
+        singlePageApplicationNavigationEnabled?: boolean;
+
+        urlRewritingEnabled?: boolean;
 
     }
 
